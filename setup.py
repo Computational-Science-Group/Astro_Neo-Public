@@ -24,7 +24,7 @@ setup(
     author=__author__,
     author_email=__email__,
     keywords=['Genetic Algorithm', 'AI', 'analysis'],
-    description='exafs AI analysis using GA',
+    description='Genetic Algorthims Material Optimizer (GAMO)',
     long_description=long_description(),
     url='https://github.com/laumiulun/GAMO',
     download_url='https://github.com/laumiulun/GAMO/tarball/master',

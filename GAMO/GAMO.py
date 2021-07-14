@@ -1,10 +1,13 @@
 from .helper import *
 from .import_lib import *
 from .ini_parser import *
-# from larch import Interpreter
-from .pathObj import PathObject
-from .individual import Individual
-# from .pathrange import Pathrange_limits
+from larch import Interpreter
+from .pathObj import VoigtObj
+from .individual import Individual,BackgroundObj
+from .pathrange import Pathrange_limits
+from .background_function import shirley,nobg,shirley_temp
+from .voigt_shape import voigt_fuc
+
 # from .run_verbose import *
 
 class GAMO:
@@ -14,63 +17,49 @@ class GAMO:
         Initialize Parameters
         """
 
-        self.Kmin = Kmin
-        self.Kmax = Kmax
-        self.Kweight = KWEIGHT
-        self.deltak = deltak
-
-        self.rbkg = rbkg
-        self.bkgkw = bkgkw
-        self.bkgkmax = bkgkmax
-
-        self.small = int(self.Kmin/self.deltak)
-        self.big = int(self.Kmax/self.deltak)
-        self.mid = int(self.big - self.small + 1)
-        self.intervalK = np.linspace(self.small,self.big,self.mid)
-
-        self.path_optimize = path_optimize
-        self.path_optimize_percent = path_optimize_percent
-        self.path_optimize_only = optimize_only
-        self.ind_options = individual_path
-        self.ncomp = num_compounds
-        self.printgraph = printgraph
-        self.pathrange_file = pathrange_file
-        self.debug_mode = debug_mode
-
-    def initialize_variable(self,firstpass=False):
+        print("Initialize Parameters")
+        self.intervalK = 0.05
+    def initialize_variable(self):
         """
         Initalize variables
         """
         self.genNum = 0
-        self.nChild = 3
-        self.globBestFit = [0,99999]
-        self.currBestFit = [0,99999]
-        self.bestDiff = 9999
-        self.bestBest = 999999999
+        self.nChild = 4
+        self.globBestFit = [0,99e5]
+        self.currBestFit = [0,99e5]
+        self.bestDiff = 9999e11
+        self.bestBest = 999999999e11
         self.diffCounter = 0
 
         self.pathDictionary = {}
+        # self.MetaDictionary = {}
+        # Not used
+        # self.sortedFourier = 0
+        # self.bestFitIndi = (())
+        # self.bestChir_magTotal = [0]*(326)
+        # self.bestYTotal = [0]*(401)
 
-        self.bestChir_magTotal = [0]*(326)
-        self.bestYTotal = [0]*(401)
         # Typical INI parameters
-        if self.ind_options == True:
-            if firstpass==True:
-                self.path_lists = path_list
-        else:
-            self.path_lists = list(range(1,pathrange+1))
-            for i in range(len(self.path_lists)):
-                self.path_lists[i] = str(self.path_lists[i])
+        # self.ind_options = individual_path
+        # if self.ind_options == True:
+            # self.path_lists = path_list
+        # else:
+            # self.path_lists = list(range(1,pathrange+1))
+            # for i in range(len(self.path_lists)):
+                # self.path_lists[i] = str(self.path_lists[i])
+        # self.npaths = len(self.path_lists)
+        # Inputs
+        self.data_file = data_file
 
-        # Calcualte total number of paths
-        if self.ncomp > 1:
-            self.npaths = 0
-            for i in range(self.ncomp):
-                self.npaths += len(self.path_lists[i])
-        else:
-            self.npaths = len(self.path_lists)
+        # Paths
+        self.npaths = npaths
+        self.fits = fits.split(",")
 
+        self.center = center
+        # self.corr = corr
+        # self.corr_list = corr_list
 
+        # Populations
         self.npops = size_population
         self.ngen = number_of_generation
         self.steady_state = steady_state
@@ -78,9 +67,7 @@ class GAMO:
         # Mutation Parameters
         self.mut_opt = mutated_options
         self.mut_chance = chance_of_mutation
-        self.mut_chance_e0 = chance_of_mutation_e0
-        self.sel_opt = selection_options
-        self.cro_opt = crossover_options
+        # self.mut_chance_e0 = chance_of_mutation_e0
 
         # Crosover Parameters
         self.n_bestsam = int(best_sample*self.npops*(0.01))
@@ -91,56 +78,34 @@ class GAMO:
         self.tt = 0
 
         # CSV-Series check
-        self.csv_percent = 0.2
+        # self.csv_percent = 0.2
+    # def reinitialize_varshirleiable():
+    #     self.genNum = 0
+    #     self.globBestFit = [0,99999]
+    #     self.currBestFit = [0,99999]
+    #     self.bestDiff = 9999
+    #     self.bestBest = 999999999
+    #     self.diffCounter = 0
 
-        # reset e0
-        self.secondhalf = False
-        self.bestE0 = 0
-    def initialize_file_path(self,i=0,firstpass=False,path_optimize=False):
+    def initialize_file_path(self,i=0):
         """
         Initalize file paths for each of the file first
         """
-        self.csv_series = csv_series
+        # self.csv_series = csv_series
         self.base = os.getcwd()
         # self.front = os.path.join(self.base,feff_file)
-        if self.ncomp > 1:
-            self.front = []
-            for i in range(self.ncomp):
-                self.front.append(os.path.join(self.base,feff_file[i]))
-        else:
-            self.front = os.path.join(self.base,feff_file)
-
-        if self.csv_series == True:
-            self.data_path = os.path.join(self.base,csv_file[i])
-            self.output_path = os.path.splitext(os.path.join(self.base,output_file))[0] + "_" + str(i) + ".csv"
-            self.log_path = os.path.splitext(copy.deepcopy(self.output_path))[0] + ".log"
-
-        else:
-            self.data_path = os.path.join(self.base,csv_file)
-            self.output_path = os.path.join(self.base,output_file)
-            self.log_path = os.path.splitext(copy.deepcopy(self.output_path))[0] + ".log"
-        if path_optimize:
-            self.output_path = os.path.splitext(os.path.join(self.base,output_file))[0] + "_optimized.csv"
-
-        self.end ='.dat'
+        # self.front = self.base
+        # print(output_file)
+        # if self.csv_series == True:
+            # self.data_path = os.path.join(self.base,csv_file[i])
+            # self.output_path = os.path.splitext(os.path.join(self.base,output_file))[0] + "_" + str(i) + ".csv"
+            # os.path.splitext(file)[0] + '_data.csv'
+        # else:
+            # self.data_path = os.path.join(self.base,csv_file)
+            # self.output_path = os.path.join(self.base,output_file)
+        # self.end ='.dat'
+        self.output_path = os.path.join(self.base,output_file)
         self.check_output_file(self.output_path)
-        if not firstpass:
-            self.check_if_exists(self.log_path)
-        # Initialize logger
-        self.logger = logging.getLogger('')
-        # Delete handler
-        self.logger.handlers=[]
-        file_handler = logging.FileHandler(self.log_path,mode='a+',encoding='utf-8')
-        stdout_handler = logging.StreamHandler(sys.stdout)
-
-        formatter= logging.Formatter('%(message)s')
-        file_handler.setFormatter(formatter)
-        stdout_handler.setFormatter(formatter)
-        self.logger.addHandler(file_handler)
-        self.logger.addHandler(stdout_handler)
-
-        self.logger.setLevel(logging.INFO)
-        self.logger.info(banner())
 
     def check_if_exists(self,path_file):
         """
@@ -161,7 +126,7 @@ class GAMO:
         self.file = file
 
         self.file_initial = open(self.output_path,"a+")
-        self.file_initial.write("Gen,TPS,FITTNESS,CO_Score,Mut_Score,CURRFIT,CURRIND,BESTFIT,BESTIND\n")  # writing header
+        self.file_initial.write("Gen,TPS,FITTNESS,CURRFIT,CURRIND,BESTFIT,BESTIND\n")  # writing header
         self.file_initial.close()
 
         # Not using right now
@@ -172,7 +137,6 @@ class GAMO:
         file_data = os.path.splitext(file)[0] + '_data.csv'
         self.check_if_exists(file_data)
         self.file_data = file_data
-
         # Not using right now
         # file_gen = os.path.splitext(file)[0] + '_generations.csv'
         # self.check_if_exists(file_gen)
@@ -186,163 +150,110 @@ class GAMO:
             in series, therefore the ranges will self-adjust
         """
 
+        # print(self.path_lists)
+        # print("Initialize Range")
+        """
         if i == 0:
             self.pathrange_Dict = []
-            if self.pathrange_file == None:
-                for i in range(self.npaths):
-                    self.pathrange_Dict.append(Pathrange_limits(i))
+            for i in self.path_lists:
+                self.pathrange_Dict.append(Pathrange_limits(i))
 
-            else:
-                # Read the path range file
-                pathrange_file = read_pathrange_file(self.pathrange_file,self.npaths)
-                for i in range(self.npaths):
-                    path_range_obj = Pathrange_limits(i,pathrange_file[i,:])
-                    self.pathrange_Dict.append(path_range_obj)
-
+            # print(self.pathrange_Dict)
+            # sys.exit()
+            # test = self.pathrange_Dict[-1]
+            # print(test)
+            # print(test.get_paths())
+            # print(test.get_rangeS02())
+            #
+            self.dt_S02 = [0.01,2]
+            self.dt_Sigma2 = [0.001,2]
+            self.dt_DeltaR = [0.01,2]
+            # sys.exit()
+            # self.rangeS02 = (np.linspace(5, 95, 91) * 0.01)  # <- should be separate
             self.rangeE0 = (np.linspace(-100, 100, 201) * 0.01) # <- e0, for everything
             self.rangeE0_large = (np.linspace(-600, 600, 1201) * 0.01)  # <- Larger range B
-        else:
-            for k in range(self.npaths):
-                path_bestfit = BestIndi.get_path(k)
-                self.pathrange_Dict[k].mod_s02(path_bestfit[0])
-                # self.pathrange_Dict[k].mod_e0(path_bestfit[1])
-                self.pathrange_Dict[k].mod_sigma2(path_bestfit[2])
-                self.pathrange_Dict[k].mod_deltaR(path_bestfit[3])
-
-    def initialize_group(self):
         """
-        initalize larch group
-        """
-        # Create 3 empty group
-        self.mylarch = Interpreter()
-        self.g = read_ascii(self.data_path)
-        self.best = read_ascii(self.data_path)
-        self.sumgroup = read_ascii(self.data_path)
 
-        # Check if using k space, else autobk
-        try:
-            self.g.k
-            self.g.chi
-        except AttributeError:
-            autobk(self.g, rbkg=rbkg, kweight=bkgkw, kmax=bkgkmax, _larch=self.mylarch)
-            autobk(self.best, rbkg=rbkg, _larch=self.mylarch)
-            autobk(self.sumgroup, rbkg=rbkg, _larch=self.mylarch)
+        data = np.loadtxt(self.data_file,delimiter=',',skiprows=1)
+        # print(data[:,0])
+        self.x_raw = data[:,0]
+        self.y_raw = data[:,1]
+        # print(data[:,1])
+        # print(self.x_raw)
+        # print(self.y_raw)
+        # plt.plot(self.x_raw,self.y_raw)
+        # plt.show()
+        # Background subtraction
+        self.bg = nobg(self.x_raw,self.y_raw)
+        # self.Bg_obj = Background_Obj(1,'ShirleyExp')
+        # self.bg = shirley(self.x_raw,self.y_raw)
+        # self.
+        self.y_background = self.y_raw - self.bg
+        self.center_range = [np.min(self.x_raw),np.max(self.x_raw)]
 
+        self.y_scaler = MinMaxScaler()
+        self.y_normal = self.y_scaler.fit_transform(self.y_background.reshape(-1,1))
 
-    def initialize_paths(self):
-        """
-        Initalize paths
-        # Not being used right now
-        To do: Need to adjust this for multiple compounds
-        """
-        self.e0 = np.random.choice(self.rangeE0)
-        if self.ncomp == 1:
-            for i,paths in enumerate(self.path):
-                self.pathDictionary[paths] = pathObject(self.rangeS02,
-                                                        self.e0,
-                                                        self.rangeSigma2,
-                                                        self.rangeDeltaR)
-        # else:
+        self.x_scaler = MinMaxScaler()
+        self.x_normal = self.x_scaler.fit_transform(self.x_raw.reshape(-1,1))
 
-        #     for i,paths in enumerate(path_list):
-    def loadPaths(self):
-        """
-        Load paths:
-            Initialize paths in various files.
+    def create_range(self,value,percentage,dt,prec):
+        minus = round(value - percentage*value,prec)
+        plus = round(value + percentage*value,prec)
+        range = np.arange(minus,plus+dt,dt)
+        return range
 
-        """
-        self.pathname = []
-        if self.ncomp > 1:
-            if self.ind_options == True:
-                for i in range(self.ncomp):
-                    comp_path = len(self.path_lists[i])
-                    for j in range(comp_path):
+    def generateIndividual(self):
 
-                        filename = self.front[i] + str(self.path_lists[i][j]).zfill(4) + self.end
-
-                        pathName = "Comp"+ str(i) + "Path" + self.path_lists[i][j]
-                        self.pathname.append(pathName)
-                        self.pathDictionary.update({pathName: feffdat.feffpath(filename,_larch = self.mylarch)})
-        else:
-            if self.ind_options == True:
-                for i in range(self.npaths):
-                    filename = self.front + str(self.path_lists[i]).zfill(4) + self.end
-                    pathName = "Path" + self.path_lists[i]
-                    self.pathname.append(pathName)
-                    self.pathDictionary.update({pathName: feffdat.feffpath(filename, _larch=self.mylarch)})
-            else:
-                for i in range(1, self.npaths+1):
-                    filename = self.front + str(i).zfill(4) + self.end
-                    pathName = f"Path{i}"
-                    self.pathname.append(pathName)
-                    self.pathDictionary.update({pathName: feffdat.feffpath(filename, _larch=self.mylarch)})
-
-    def generateIndividual(self,e0=None):
-
-        if self.secondhalf == False:
-            e0 = np.random.choice(self.rangeE0)
-        # print(self.pathrange_Dict)
-        ind = Individual(self.npaths,self.pathDictionary,self.pathrange_Dict,self.path_lists,e0,self.pathname)
+        ind = Individual(self.npaths,self.fits,self.center,self.x_raw,self.y_raw)
         return ind
 
     def generateFirstGen(self):
         self.Populations=[]
+
         for i in range(self.npops):
             self.Populations.append(self.generateIndividual())
 
-    # @profile
     def fitness(self,indObj):
         """
         Evaluate fitness of a individual
         """
-        # from larch_plugins.xafs import feffdat
-        # t1 = time.time()
         loss = 0
-        yTotal = [0] * (401)
-        for i in range(self.npaths):
-            path = self.pathDictionary.get(self.pathname[i])
-            Individual = indObj.get()
-            path.e0 = Individual[i][1]
-            path.s02 = Individual[i][0]
-            path.sigma2 = Individual[i][2]
-            path.deltar = Individual[i][3]
-            feffdat.path2chi(path, _larch=self.mylarch)
-            y = path.chi
-            for k in self.intervalK:
-                yTotal[int(k)] += y[int(k)]
-        # compute loss function
-        for j in self.intervalK:
-            loss = loss + (yTotal[int(j)] * self.g.k[int(j)] ** self.Kweight - self.exp[int(j)] * self.g.k[int(j)] ** self.Kweight) ** 2
+
+        Individual = indObj.get_func()
+        yTotal = np.zeros(len(self.x_raw))
+
+        for i,paths in enumerate(Individual):
+            y = paths.get_func(self.x_raw,self.y_normal)
+            # print(y)
+            yTotal += y
+
+        for j in range(len(self.x_normal)):
+            loss = loss + (yTotal[j]*self.x_normal[j]**2 - self.y_normal[j]* self.x_normal[j]**2 )**2
+
         return loss
 
-    def eval_Population(self,replace=True,sorting=True):
+    def eval_Population(self):
         """
         Evalulate populations
         """
 
-        # fittness_pool = Pool(os.cpu_count())
-        # result = fittness_pool.map(self.fitness,self.Populations)
 
-        # output = mp.Queue()
-        # processes = [mp.Process(target=self.fitness, args=(, self.output)) for x in range(4)]
-        # pool = mp.Pool(processes=4)
-        #
-        # results  = [pool.apply(self.fitness,args=(x)) for x in self.Populations]
-        #
-        # print(result)
 
-        # ray.init()
-        # print(type(self.Populations))
-        # score = []
         score = []
         populationPerf = {}
 
         for i,individual in enumerate(self.Populations):
-
+            # print(i)
+            # print(i,individual)
+            # t1 = time.time()
+            # print(individual)
+            # individual.correlate_update()
             temp_score = self.fitness(individual)
             score.append(temp_score)
 
             populationPerf[individual] = temp_score
+
             # self.time == True:
             # t2 = time.time()
             # print(t2-t1)
@@ -357,127 +268,78 @@ class GAMO:
         # self.pop
         # print(populationPerf.items())
         # print(operator.itemgetter(1))
-        if sorting:
-            self.sorted_population = sorted(populationPerf.items(), key=operator.itemgetter(1), reverse=False)
-        if replace:
-            self.currBestFit = list(self.sorted_population[0])
+        self.sorted_population = sorted(populationPerf.items(), key=operator.itemgetter(1), reverse=False)
+
+        self.currBestFit = self.sorted_population[0]
+
         return score
 
-    def next_generation(self,detect_limits=False):
+    def next_generation(self):
         self.st = time.time()
         # ray.init()
-        self.logger.info("---------------------------------------------------------")
-        self.logger.info(datetime.datetime.fromtimestamp(self.st).strftime('%Y-%m-%d %H:%M:%S'))
-        self.logger.info(f"{bcolors.BOLD}Gen: {bcolors.ENDC}{self.genNum+1}")
+        print("---------------------------------------------------------")
+        print(datetime.datetime.fromtimestamp(self.st).strftime('%Y-%m-%d %H:%M:%S'))
+        print(f"{bcolors.BOLD}Gen: {bcolors.ENDC}{self.genNum+1}")
 
         self.genNum += 1
 
         # Evaluate Fittness
         score = self.eval_Population()
-
+        # self.sorted_population()
+        # print(score)
         self.bestDiff = abs(self.globBestFit[1]-self.currBestFit[1])
         # print(self.bestDiff)
         if self.currBestFit[1] < self.globBestFit[1]:
             self.globBestFit = self.currBestFit
 
-        # detecting if limits is hit on the bestfit
-        # if detect_limits:
-            # self.detect_and_adjust_limits()
 
-            # elif self.mut_chance > 100:
-                # self.mut_chance -= 20
-        self.logger.info(f"Best Fit: {bcolors.BOLD}{self.sorted_population[0][1].round(3)}{bcolors.ENDC}")
-        self.logger.info("2nd Fit: " + str(self.sorted_population[1][1].round(3)))
-        self.logger.info("3rd Fit: " + str(self.sorted_population[2][1].round(3)))
-        self.logger.info("4th Fit: " + str(self.sorted_population[3][1].round(3)))
-        self.logger.info("Last Fit: " + str(self.sorted_population[-1][1].round(3)))
-        # sys.exit()
-        with np.printoptions(precision=3, suppress=True):
-            # print(self.intervalK)
-            self.logger.info("Different from last best fit: " +str(self.bestDiff))
-            self.logger.info(bcolors.BOLD + "Best fit: " + bcolors.OKBLUE + str(self.currBestFit[1]) + bcolors.ENDC)
-            CurrchiR = str(self.currBestFit[1]/(len(self.intervalK)-3*self.npaths+1))
-            self.logger.info(bcolors.BOLD + "Best fit ChiR: " + bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
-            self.logger.info("Best fit combination:\n" + str(np.asarray(self.sorted_population[0][0].get())))
-            self.logger.info(bcolors.BOLD + "History Best: " + bcolors.OKBLUE + str(self.globBestFit[1]) +bcolors.ENDC)
-            GlobchiR = str(self.globBestFit[1]/(len(self.intervalK)-3*self.npaths+1))
-            self.logger.info(bcolors.BOLD + "History Best ChiR: " + bcolors.OKBLUE + str(GlobchiR) + bcolors.ENDC)
-            self.logger.info("History Best Indi:\n" + str(np.asarray(self.globBestFit[0].get())))
+        # Rechenberg mutation
+        if self.genNum > 20:
+            if self.bestDiff < 0.1:
+                self.diffCounter += 1
+            else:
+                self.diffCounter -= 1
+            if (abs(self.diffCounter)/ float(self.genNum)) > 0.2:
+                self.mut_chance += 0.5
+                self.mut_chance = abs(self.mut_chance)
+            elif (abs(self.diffCounter) / float(self.genNum)) < 0.2:
+                self.mut_chance -= 0.5
+                self.mut_chance = abs(self.mut_chance)
+
+
+        with np.printoptions(precision=5, suppress=True):
+            print(f"Best Fit: {bcolors.BOLD}{self.sorted_population[0][1].round(5)}{bcolors.ENDC}")
+            print("2nd Fit:", self.sorted_population[1][1].round(5))
+            print("3rd Fit:", self.sorted_population[2][1].round(5))
+            print("4th Fit:", self.sorted_population[3][1].round(5))
+            print("Last Fit:", self.sorted_population[-1][1].round(5))
+            print("Different from last best fit:", self.bestDiff)
+            print(bcolors.BOLD + "Best fit :", bcolors.OKBLUE + str(self.currBestFit[1]) +bcolors.ENDC)
+            CurrchiR = self.currBestFit[1]/(len(self.x_raw)-4*self.npaths)
+            print(bcolors.BOLD + "Best fit ChiR:", bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
+            # print()
+            # print(bcolors.BOLD + "Best fit ChiR:", bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
+
+            print("Best fit combination:\n", np.asarray(self.currBestFit[0].get()))
+            print(bcolors.BOLD + "History Best:", bcolors.OKBLUE + str(self.globBestFit[1]) +bcolors.ENDC)
+            GlobchiR = self.globBestFit[1]/(len(self.x_raw)-4*self.npaths)
+            print(bcolors.BOLD + "History Best ChiR:", bcolors.OKBLUE + str(GlobchiR) + bcolors.ENDC)
+            print("History Best Indi:\n", np.asarray(self.globBestFit[0].get()))
+
 
         nextBreeders = self.selectFromPopulation()
-
-        # self.createChildren()
-        if self.debug_mode:
-            self.eval_Population(replace=False)
-            self.crossover_score = self.sorted_population[0][1]
-        else:
-            self.crossover_score = 0
+        print("Number of Breeders: " + str(len(self.parents)))
+        # print(self.parents)
+        self.createChildren()
+        print("DiffCounter: ", self.diffCounter)
+        print("Diff %:", self.diffCounter / self.genNum)
+        print("Mutation Chance: ", self.mut_chance)
         self.mutatePopulation()
-        if self.debug_mode:
-            self.eval_Population(replace=False)
-            self.mutation_score = self.sorted_population[0][1]
-        else:
-            self.mutation_score = 0
+
         self.et = timecall()
         self.tdiff = self.et - self.st
         self.tt = self.tt + self.tdiff
-        self.report_after_generation()
-
-    def report_after_generation(self):
-
-        self.logger.info(f"Best Fit: {bcolors.BOLD}{self.sorted_population[0][1].round(3)}{bcolors.ENDC}")
-        self.logger.info("2nd Fit: " + str(self.sorted_population[1][1].round(3)))
-        self.logger.info("3rd Fit: " + str(self.sorted_population[2][1].round(3)))
-        self.logger.info("4th Fit: " + str(self.sorted_population[3][1].round(3)))
-        self.logger.info("Last Fit: " + str(self.sorted_population[-1][1].round(3)))
-        # sys.exit()
-        with np.printoptions(precision=3, suppress=True):
-            # print(self.intervalK)
-            self.logger.info("Different from last best fit: " +str(self.bestDiff))
-            self.logger.info(bcolors.BOLD + "Best fit: " + bcolors.OKBLUE + str(self.currBestFit[1]) + bcolors.ENDC)
-            CurrchiR = str(self.currBestFit[1]/(len(self.intervalK)-3*self.npaths+1))
-            self.logger.info(bcolors.BOLD + "Best fit ChiR: " + bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
-            self.logger.info("Best fit combination:\n" + str(np.asarray(self.sorted_population[0][0].get())))
-            self.logger.info(bcolors.BOLD + "History Best: " + bcolors.OKBLUE + str(self.globBestFit[1]) +bcolors.ENDC)
-            GlobchiR = str(self.globBestFit[1]/(len(self.intervalK)-3*self.npaths+1))
-            self.logger.info(bcolors.BOLD + "History Best ChiR: " + bcolors.OKBLUE + str(GlobchiR) + bcolors.ENDC)
-            self.logger.info("History Best Indi:\n" + str(np.asarray(self.globBestFit[0].get())))
-
-        self.logger.info("Number of Breeders: " + str(len(self.parents)))
-        self.logger.info("DiffCounter: " + str(self.diffCounter))
-        self.logger.info("Diff %: " + str(self.diffCounter / self.genNum))
-        self.logger.info("Mutation Chance: " + str(self.mut_chance))
-        if self.mut_opt == 2:
-            self.logger.info("Mutation Percentage" + str(np.round(self.nmutate_success/self.nmutate,4)))
-        self.logger.info("Time: "+ str(round(self.tdiff,5))+ "s")
-        if self.printgraph:
-            total = self.globBestFit[0].verbose_yTotal(self.intervalK)
-            plt.figure()
-            plt.plot(self.g.k,self.g.chi*self.g.k**self.Kweight,label='exp')
-            plt.plot(self.g.k[self.small:self.big],total[self.small:self.big]*self.g.k[self.small:self.big]**self.Kweight,label='Machine Learning')
-            plt.legend()
-            plt.pause(0.01)
-            plt.show()
-
-    def detect_and_adjust_limits(self):
-        best_Fit = self.globBestFit[0].get()
-
-        for i in range(len(self.pathrange_Dict)):
-            temp_range = self.pathrange_Dict[i].getrange()
-
-            self.logger.info(best_Fit[i,0])
-
-            # if temp_range[0] == bestFit[i]
-        exit()
-
-    def check_steady_state(self):
-        if self.diffCounter > int(0.2 * number_of_generation):
-            self.logger.info("---------------------")
-            self.logger.info("Steady State Detected")
-            self.logger.info("---------------------")
-            return True
-        else:
-            return False
+        print("Time: "+ str(round(self.tdiff,5))+ "s")
 
     def mutatePopulation(self):
         """
@@ -492,40 +354,19 @@ class GAMO:
         self.nmutate = 0
 
         if self.mut_opt == 0:
-            # Rechenberg mutation
-            if self.genNum > 20:
-                if self.bestDiff < 0.1:
-                    self.diffCounter += 1
-                else:
-                    self.diffCounter -= 1
-                if (abs(self.diffCounter)/ float(self.genNum)) > 0.2:
-                    self.mut_chance += 2.5
-                    self.mut_chance = abs(self.mut_chance)
-                elif (abs(self.diffCounter) / float(self.genNum)) < 0.2:
-                    self.mut_chance -= 2.5
-                    self.mut_chance = abs(self.mut_chance)
-            # Mutation
-        for i in range(self.npops):
-            if random.random()*100 < self.mut_chance:
-                self.nmutate += 1
-                self.Populations[i] = self.mutateIndi(i)
-        # elif self.mut_opt == 1:
-        #     for i in range(self.npops):
-        #         if random.random()*100 < self.mut_chance:
-        #             self.nmutate += 1
-        #             self.Populations[i] = self.mutate_Indi()
-
-        if self.secondhalf == False:
-            if random.random() * 100 < self.mut_chance_e0:
-                e0 = random.choice(self.rangeE0)
-                self.logger.info("Mutate e0 to: " + str(np.round(e0,3)))
-                for individual in self.Populations:
-                    individual.set_e0(e0)
-
+            for i in range(self.npops):
+                if random.random()*100 < self.mut_chance:
+                    self.nmutate += 1
+                    self.Populations[i] = self.mutateIndi()
 
         # if self.mut_opt == 1:
 
-        self.logger.info("Mutate Times: " + str(self.nmutate))
+        # if random.random() * 100 < self.mut_chance_e0:
+        #     e0 = random.choice(self.rangeE0)
+        #     print("Mutate e0 to:", e0)
+        #     for individual in self.Populations:
+        #         individual.set_e0(e0)
+        print("Mutate Times:", self.nmutate)
         """
         if mutated_options == 1:
             for i in range(len(population)):
@@ -559,333 +400,186 @@ class GAMO:
                                 population[i][j] == mutate_val
         """
 
-    def mutateIndi(self,indi):
+    def mutateIndi(self):
         """
         Generate new individual during mutation operator
         """
-        if self.mut_opt == 0:
-            # Create a new individual with Rechenberg
-            newIndi = self.generateIndividual(self.bestE0)
-        # Random pertubutions
-        if self.mut_opt == 1:
-            # Random Pertubutions
-            self.Populations[indi].mutate_paths(self.mut_chance)
-            newIndi = self.Populations[indi]
-            # Mutate every gene in the Individuals
-        if self.mut_opt == 2:
-            # initalize_variable:
-            self.nmutate_success = 0
-            og_indi = copy.deepcopy(self.Populations[indi])
-            og_score = self.fitness(og_indi)
-            mut_indi = copy.deepcopy(self.Populations[indi])
-            mut_indi.mutate_paths(self.mut_chance)
-            mut_score = self.fitness(mut_indi)
-
-            T = - self.bestDiff/np.log(1-(self.genNum/self.ngen))
-            if mut_score < og_score:
-                self.nmutate_success = self.nmutate_success + 1;
-                newIndi = mut_indi
-            elif np.exp(-(mut_score-og_score)/T) > np.random.uniform():
-                self.nmutate_success = self.nmutate_success + 1;
-                newIndi = mut_indi
-            else:
-                newIndi = og_indi
-
-        return newIndi
+        mutatIndi = self.generateIndividual()
+        return mutatIndi
 
     def selectFromPopulation(self):
         self.parents = []
         # choose the top samples
-        if self.sel_opt == 0:
-            for i in range(self.n_bestsam):
-                self.parents.append(self.sorted_population[i][0])
-
-        self.createChildren()
+        for i in range(self.n_bestsam):
+            self.parents.append(self.sorted_population[i][0])
 
     def crossover(self,individual1, individual2):
         """
         Uniform Cross-Over, 50% percentage chance
         """
-        if self.cro_opt == 0:
-            child = self.generateIndividual(self.bestE0)
-            if np.random.randint(0,1) ==True:
-                child.set_e0(individual1.get_e0())
-            else:
-                child.set_e0(individual2.get_e0())
+        child = self.generateIndividual()
 
-            for i in range(self.npaths):
-                individual1_path = individual1.get_path(i)
-                individual2_path = individual2.get_path(i)
+        for i in range(self.npaths):
+            individual1_path = individual1.get_path(i)
+            individual2_path = individual2.get_path(i)
 
-                temp_path = []
-                for j in range(4):
-                    if np.random.randint(0,2) == True:
-                        temp_path.append(individual1_path[j])
-                    else:
-                        temp_path.append(individual2_path[j])
+            n_params = len(individual1_path)
+            temp_path = []
+            for j in range(n_params):
+                if np.random.randint(0,2) == True:
+                    temp_path.append(individual1_path[j])
+                else:
+                    temp_path.append(individual2_path[j])
 
-                child.set_path(i,temp_path[0],temp_path[2],temp_path[3])
-        elif self.cro_opt == 1:
-            # AND Arithmetric
-            child = self.generateIndividual(self.bestE0)
-            if np.random.randint(0,1) ==True:
-                child.set_e0(individual1.get_e0())
-            else:
-                child.set_e0(individual2.get_e0())
-
-            for i in range(self.npaths):
-                individual1_path = individual1.get_path(i)
-                individual2_path = individual2.get_path(i)
-
-                temp_path = []
-                for j in range(4):
-                    ind_1 = np.random.randint(0,2)
-                    ind_2 = np.random.randint(0,2)
-                    if np.logical_and(ind_1,ind_2):
-                        temp_path.append(individual1_path[j])
-                    else:
-                        temp_path.append(individual2_path[j])
-
-                child.set_path(i,temp_path[0],temp_path[2],temp_path[3])
-
-        elif self.cro_opt == 2:
-            # AND Arithmetric
-            child = self.generateIndividual(self.bestE0)
-            if np.random.randint(0,1) ==True:
-                child.set_e0(individual1.get_e0())
-            else:
-                child.set_e0(individual2.get_e0())
-
-            for i in range(self.npaths):
-                individual1_path = individual1.get_path(i)
-                individual2_path = individual2.get_path(i)
-
-                temp_path = []
-                for j in range(4):
-                    ind_1 = np.random.randint(0,2)
-                    ind_2 = np.random.randint(0,2)
-                    if np.logical_or(ind_1,ind_2):
-                        temp_path.append(individual1_path[j])
-                    else:
-                        temp_path.append(individual2_path[j])
-
-                child.set_path(i,temp_path[0],temp_path[2],temp_path[3])
+            child.set_path(i,temp_path)
 
         return child
-
-    def paths_optimization_process(self):
-        if timeing_mode:
-            t0 = timecall()
-        self.logger.info("-------------------")
-        self.logger.info("Paths Optimization")
-        self.logger.info("-------------------")
-
-        arr = np.asarray(self.globBestFit[0].get())
-        total = 0
-        contrib = []
-
-        for i, (key, value) in enumerate(self.pathDictionary.items()):
-            # print(index, key, value)
-
-            path = feffdat.feffpath(value.filename, s02=str(arr[i, 0]), e0=str(arr[i, 1]),
-                                    sigma2=str(arr[i, 2]), deltar=str(arr[i, 3]), _larch=self.mylarch)
-            feffdat.path2chi(path, _larch=self.mylarch)
-
-            xftf(path.k,path.chi*path.k**2,kmin=self.Kmin,kmax=self.Kmax,dk=4,
-                window='hanning',kweight=self.Kweight,group=path,_larch = self.mylarch)
-
-            area = simps(path.chir_mag,path.r)
-            total += area
-            contrib.append(area)
-        contrib_p = [i/total for i in contrib]
-        new_path_ind = (np.argwhere(np.array(contrib_p)>=self.path_optimize_percent)).flatten()
-
-        if timeing_mode:
-            t1 = timecall() - t0
-            self.logger.info('Path Optimization took %.2f second' % t1)
-
-        new_path = []
-        for i in new_path_ind:
-            if i in new_path_ind:
-                new_path.append(self.path_lists[i])
-
-        self.path_lists = new_path
-        self.ind_options = True
-
-        self.logger.info(f"New Paths: {self.path_lists}")
-        self.logger.info(f"Percentage: {str(contrib_p)}")
-
 
     def createChildren(self):
         """
         Generate Children
-
-        Todo.
-            Need to separate this into multiple functions
         """
         self.nextPopulation = []
-        # --- append the breeder to there first ---
-        # Rank selection
-        if self.sel_opt == 0:
-            for i in range(len(self.parents)):
-                self.nextPopulation.append(self.parents[i])
-            # --- use the breeder to crossover
-            for i in range(abs(self.npops-self.n_bestsam)-self.n_lucksam):
-                par_ind = np.random.choice(len(self.parents),size=2,replace=False)
-                child = self.crossover(self.parents[par_ind[0]],self.parents[par_ind[1]])
-                self.nextPopulation.append(child)
+        # --- append the breeder ---
+        for i in range(len(self.parents)):
+            self.nextPopulation.append(self.parents[i])
+        # print(len(self.nextPopulation))
+        # --- use the breeder to crossover
+        for i in range(abs(self.npops-self.n_bestsam)-self.n_lucksam):
+            par_ind = np.random.choice(len(self.parents),size=2,replace=False)
+            child = self.crossover(self.parents[par_ind[0]],self.parents[par_ind[1]])
+            self.nextPopulation.append(child)
+        # print(len(self.nextPopulation))
 
-            for i in range(self.n_lucksam):
-                self.nextPopulation.append(self.generateIndividual(self.bestE0))
-            # Shuffle the populations
-            random.shuffle(self.nextPopulation)
-        # Roulette Wheel Selection
-        elif self.sel_opt == 1:
-            totalFitness = 0
-            fitness_arr = []
-            for i in range(self.npops):
-                totalFitness += self.sorted_population[i][1]
-                fitness_arr.append(self.sorted_population[i][1])
+        for i in range(self.n_lucksam):
+            self.nextPopulation.append(self.generateIndividual())
 
-            cum_prob= np.array(fitness_arr)/totalFitness
-            print(np.sum(cum_prob))
-            print(totalFitness)
-            print(cum_prob)
-            sys.exit()
+        random.shuffle(self.nextPopulation)
         self.Populations = self.nextPopulation
 
-    def findE0(self,mess=None):
-        """
-        Optimize E0 in the middle of the generations
-        """
-        if mess == None:
-            self.logger.info("Finished First Half of Generation, Optimizing E0...")
-        else :
-            self.logger.info(mess)
-        lowestX = 99999
-        lowestY = 99999
-        listOfX = []
-        listOfY = []
-        # print(type(self.globBestFit[0]))
-        # print(self.globBestFit[0].get_e0())
-        bestFitlist = copy.deepcopy(self.globBestFit[0])
-        # print(self.globBestFit[0].get_e0())
-
-        for i in self.rangeE0_large:
-            bestFitlist.set_e0(i)
-            fit = self.fitness(bestFitlist)
-            if fit < lowestY:
-                lowestY = fit
-                lowestX = i
-            listOfX.append(i)
-            listOfY.append(fit)
-        self.logger.info("Continue With E0= " + str(round(lowestX,3)))
-        newE0 = lowestX
-        self.bestE0 = newE0
-        print(self.bestE0)
-        self.mut_chance_e0 = 0
-        self.globBestFit[0].set_e0(newE0)
-        self.globBestFit[1] = lowestY
-
-        for i in self.Populations:
-            i.set_e0(self.bestE0)
 
     def run_verbose_start(self):
-        """
-        Visualize the verbose start place
-        """
-        if self.debug_mode:
-            self.logger.info(f"{bcolors.BOLD}DEBUG-MODE{bcolors.ENDC}")
-        self.logger.info("------------Inputs File Stats--------------")
-        self.logger.info(f"{bcolors.BOLD}Data File{bcolors.ENDC}: {self.data_path}")
-        self.logger.info(f"{bcolors.BOLD}Output File{bcolors.ENDC}: {self.output_path}")
-        self.logger.info(f"{bcolors.BOLD}Log File{bcolors.ENDC}: {self.log_path}")
-        self.logger.info(f"{bcolors.BOLD}Paths Range File{bcolors.ENDC}: {self.pathrange_file}")
-        self.logger.info(f"{bcolors.BOLD}CSV series{bcolors.ENDC}: {self.csv_series}")
-        self.logger.info("--------------Populations------------------")
-        # self.logger.info(f"{bcolors.BOLD}Population{bcolors.ENDC}:")
-        self.logger.info(f"{bcolors.BOLD}Population{bcolors.ENDC}: {self.npops}")
-        self.logger.info(f"{bcolors.BOLD}Num Gen{bcolors.ENDC}: {self.ngen}")
-        self.logger.info(f"{bcolors.BOLD}Best Individuals{bcolors.ENDC}: {best_sample}")
-        self.logger.info(f"{bcolors.BOLD}Lucky Survior{bcolors.ENDC}: {lucky_few}")
-        self.logger.info("-----------------Paths---------------------")
-        self.logger.info(f"{bcolors.BOLD}Individual Path{bcolors.ENDC}: {self.ind_options}")
-        self.logger.info(f"{bcolors.BOLD}Population{bcolors.ENDC}: {self.npops}")
-        self.logger.info(f"{bcolors.BOLD}Num Path{bcolors.ENDC}: {self.npaths}")
-        #self.logger.info(f"{bcolors.BOLD}Path{bcolors.ENDC}: {list(map(int,self.path_lists))}")
-        self.logger.info(f"{bcolors.BOLD}Path Optimize{bcolors.ENDC}: {self.path_optimize}")
-        self.logger.info(f"{bcolors.BOLD}Path Optimize Percent{bcolors.ENDC}: {self.path_optimize_percent}")
-        self.logger.info(f"{bcolors.BOLD}Path Optimize Only{bcolors.ENDC}: {self.path_optimize_only}")
-        self.logger.info("----------------Mutations------------------")
-        self.logger.info(f"{bcolors.BOLD}Mutations{bcolors.ENDC}: {self.mut_chance}")
-        self.logger.info(f"{bcolors.BOLD}E0 Mutations{bcolors.ENDC}: {self.mut_chance_e0}")
-        self.logger.info(f"{bcolors.BOLD}Mutation Options{bcolors.ENDC}: {self.mut_opt}")
-        self.logger.info(f"{bcolors.BOLD}Selection Options{bcolors.ENDC}: {self.sel_opt}")
-        self.logger.info("---------------Larch Paths-----------------")
-        self.logger.info(f"{bcolors.BOLD}Kmin{bcolors.ENDC}: {self.Kmin}")
-        self.logger.info(f"{bcolors.BOLD}Kmax{bcolors.ENDC}: {self.Kmax}")
-        self.logger.info(f"{bcolors.BOLD}Kweight{bcolors.ENDC}: {self.Kweight}")
-        self.logger.info(f"{bcolors.BOLD}Delta k{bcolors.ENDC}: {self.deltak}")
-        self.logger.info(f"{bcolors.BOLD}R BKG{bcolors.ENDC}: {self.rbkg}")
-        self.logger.info(f"{bcolors.BOLD}BKG Kw{bcolors.ENDC}: {self.bkgkw}")
-        self.logger.info(f"{bcolors.BOLD}BKG Kmax{bcolors.ENDC}: {self.bkgkmax}")
-        self.logger.info("-------------------------------------------")
-        # self.logger.info(f"{bcolors.BOLD}Print Out{bcolors.END}: {self.printgraph})
+        print("-----------Inputs File Stats---------------")
+        print(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.data_file}")
+        print(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.output_path}")
+        # print(f"{bcolors.BOLD}CSV series{bcolors.ENDC}: {self.csv_series}")
+        print(f"{bcolors.BOLD}Population{bcolors.ENDC}: {self.npops}")
+        print(f"{bcolors.BOLD}Num Gen{bcolors.ENDC}: {self.ngen}")
+        print(f"{bcolors.BOLD}Num Path{bcolors.ENDC}: {self.npaths}")
+        print(f"{bcolors.BOLD}Fits{bcolors.ENDC}: {self.fits}")
+        # print(f"{bcolors.BOLD}Path{bcolors.ENDC}: {self.path_lists}")
+        # print(f"{bcolors.BOLD}Path Optimize{bcolors.ENDC}: {self.}")
         # print(f"{bcolors.BOLD}Printout{bcolors.ENDC}: {self.printgraph}")
-        self.logger.info(f"{bcolors.BOLD}Steady State{bcolors.ENDC}: {self.steady_state}")
-        self.logger.info(f"{bcolors.BOLD}Print Graph{bcolors.ENDC}: {self.printgraph}")
-        # self.logger.info(f"{bcolors.BOLD}Output Paths{bcolors.ENDC}: {num_output_paths}")
-        self.logger.info("-------------------------------------------")
+        # print(f"{bcolors.BOLD}Steady State{bcolors.ENDC}: {steady_state}")
+        # print(f"{bcolors.BOLD}Output Paths{bcolors.ENDC}: {num_output_paths}")
+        print("-------------------------------------------")
 
     def run_verbose_end(self):
-        """
-        Verbose end
-        """
-        self.logger.info("-----------Output Stats---------------")
-        self.logger.info(f"{bcolors.BOLD}Total Time(s){bcolors.ENDC}: {round(self.tt,4)}")
-        self.logger.info(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.data_path}")
-        self.logger.info(f"{bcolors.BOLD}Path{bcolors.ENDC}: {self.path_lists}")
-        self.logger.info(f"{bcolors.BOLD}Final Fittness Score{bcolors.ENDC}: {self.globBestFit[1]}")
-        self.logger.info("-------------------------------------------")
+        print("-----------Output Stats---------------")
+        print(f"{bcolors.BOLD}Total Time(s){bcolors.ENDC}: {round(self.tt,4)}")
+        # print(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.data_path}")
+        # print(f"{bcolors.BOLD}{bcolors.ENDC}: {self.npops}")
+        # print(f"{bcolors.BOLD}Num Gen{bcolors.ENDC}: {self.ngen}")
+        # print(f"{bcolors.BOLD}Num Path{bcolors.ENDC}: {self.npaths}")
+        # print(f"{bcolors.BOLD}Path{bcolors.ENDC}: {self.path_lists}")
+        print("-------------------------------------------")
 
-    def run(self,detect_limits=False):
-        """
-        Run the actual code
-        """
+    def active_background(self,indObj):
+        if  self.genNum %5 == 0 and self.genNum > 1:
+            # 1. Inverse transfer
+            # construct new background using the bestfit
+            Individual = indObj.get_func()
+            yTotal = np.zeros(len(self.x_raw))
+            for i,paths in enumerate(Individual):
+                y = paths.get_func(self.x_raw)
+                yTotal += y
+            self.bg = shirley_temp(self.x_raw,yTotal)
+            self.y_background = self.y_raw - self.bg
+            # self.y_scaler = MinMaxScaler()
+            self.y_normal = self.y_scaler.fit_transform(self.y_background.reshape(-1,1))
+
+            file_name = 'array' + str(self.genNum/10) + ".txt"
+            out_array = np.concatenate((self.x_raw.reshape(-1,1),self.bg.reshape(-1,1)),axis=1)
+
+            np.savetxt(file_name,out_array,delimiter=',')
+
+
+    def run(self):
         self.run_verbose_start()
         self.historic = []
         self.historic.append(self.Populations)
         for i in range(self.ngen):
-            temp_gen = self.next_generation(detect_limits=detect_limits)
+            # self.active_background(self.globBestFit[0])
+            temp_gen = self.next_generation()
             self.output_generations()
             # print(0.5*self.ngen)
-            if i == int(0.5*self.ngen)-1:
-                self.findE0()
-            if i > int(0.5*self.ngen)-1:
-                self.secondhalf = True
-            # print(self.bestE0)
-            # print(self.ngen)
-            # print(self.secondhalf)
-            exit = self.check_steady_state()
-            if exit == True:
-                break
+            # if i == int(0.5*self.ngen)-1:
+                # self.findE0()
 
-        self.findE0(mess='Finished Second Half of Generations, Optimizing E0...')
         self.run_verbose_end()
+        # print(self.globBestFit)
+
+        self.fig,self.ax = plt.subplots(nrows=1,ncols=1)
+
+        test_y = self.export_paths(self.globBestFit[0])
+        real_y = np.array(self.y_scaler.inverse_transform(test_y.reshape(-1,1))).flatten() + self.bg
+
+        self.ax.plot(self.x_scaler.inverse_transform(self.x_normal.reshape(-1,1)),real_y,'k--',label='Fit')
+
+        # print(test.reshape(1,-1))
+        self.ax.scatter(self.x_raw,self.y_background+self.bg,s=10,label='data')
+        self.ax.plot(self.x_raw,self.bg,label='background')
+
+        # plt.plot(self.x_raw,test_y,'k--',label='fit')
+        self.out_str = str(np.asarray(self.currBestFit[0].get()))
+        self.ax.text(0.1,0.8,s=self.out_str,transform=self.ax.transAxes)
+
+        plt.legend()
+        plt.show()
+
+    def fwhm(self,indObj):
+        fg = 2*indObj.get_sigma() *np.sqrt(2*np.log(2))
+        fl = 2*indObj.get_gamma()
+        fv = 0.5346 *fl + np.sqrt(0.2166*fl**2 + fg**2)
+        return (fg,fl,fv)
+
+    def export_paths(self,indObj):
+        area_list=[]
+        Individual = indObj.get_func()
+        # print(type(indObj))
+        yTotal = np.zeros(len(self.x_raw))
+        for i,paths in enumerate(Individual):
+            y = paths.get_func(self.x_raw,self.y_normal)
+
+            yTotal += y
+            area = np.trapz(y.flatten(),x=self.x_normal.flatten())
+            y_peak = self.y_scaler.inverse_transform(y.reshape(-1,1)).flatten() + self.bg
+            self.ax.plot(self.x_scaler.inverse_transform(self.x_normal.reshape(-1,1)),y_peak,label='peak'+ str(i) )
+            # component = paths.Voigt1.get_func(self.x_raw).reshape(-1,1)
+            # component2 = paths.S_Voigt.get_func(self.x_raw).reshape(-1,1)
+            # plt.plot(self.x_scaler.inverse_transform(self.x_normal.reshape(-1,1)),self.y_scaler.inverse_transform(component),'--',label='peak'+ str(i) )
+            # plt.plot(self.x_scaler.inverse_transform(self.x_normal.reshape(-1,1)),self.y_scaler.inverse_transform(component2),'--',label='peak'+ str(i) )
+            # print(paths.Voigt1.verbose())
+            # print(paths.S_Voigt.verbose())
+
+            # print(self.fwhm(paths))
+            area_list.append(area)
+        # return self.y_scaler.inverse_transform(yTotal.reshape(-1,1))
+
+        Total_area = np.sum(area_list)
+        print(area_list/Total_area)
+        return yTotal
     def output_generations(self):
         """
         Output generations result into two files
-
         """
         try:
             f1 = open(self.file,"a")
+        # f1.write(str(self.genNum) + "," + str(self.tdiff) + "," + str(self.currBestFit[1]) + "," + str(self.currBestFit[0].get()) + "," +
+            # str(self.globBestFit[1]) + "," + str(self.globBestFit[0].get()) + "\n")
             f1.write(str(self.genNum) + "," + str(self.tdiff) + "," +
-            str(self.currBestFit[1]) + "," + str(self.crossover_score)+ "," +
-            str(self.mutation_score) + "\n")
-            # f1.write(str(self.genNum) + "," + str(self.tdiff) + "," +
-            #     str(self.crossover_score)+ "," + str(self.mutation_score) + "," +
-            #     str(self.currBestFit[1]) + "," + str(self.currBestFit[0].get()) +"," +
-            #     str(self.globBestFit[1]) + "," + str(self.globBestFit[0].get()) +"\n")
+                str(self.currBestFit[1]) + "," + str(self.currBestFit[0].get()) +"," +
+                str(self.globBestFit[1]) + "," + str(self.globBestFit[0].get()) +"\n")
         finally:
             f1.close()
         try:
@@ -894,7 +588,11 @@ class GAMO:
             bestFit = self.globBestFit[0].get()
             # print(bestFit)
             for i in range(self.npaths):
-                write.writerow((bestFit[i][0], bestFit[i][1], bestFit[i][2], bestFit[i][3]))
+                write_row_data = []
+                for j in range(len(bestFit[i])):
+                    write_row_data.append(bestFit[i][j])
+                write.writerow(write_row_data)
+                # write.writerow((bestFit[i][0], bestFit[i][1], bestFit[i][2], bestFit[i][3]))
             f2.write("#################################\n")
         finally:
             f2.close()
@@ -907,97 +605,15 @@ class GAMO:
         # initialize params
         self.initialize_params()
         # variables
-        self.initialize_variable(firstpass=True)
+        self.initialize_variable()
         # initialze file paths
         self.initialize_file_path()
         # initialize range
         self.initialize_range()
-        self.initialize_group()
-
-        # #  Initalize uses the following:
-        # Initalization Step:
-        #
-        # For automatic range selection between different series, this requries
-        # the following
-        #
-        # Intialize ranges:
-        #
-        # Secondary, calculate the percentages of each chances
-        xftf(self.g.k, self.g.chi, kmin=self.Kmin, kmax=self.Kmax, dk=4, window='hanning',
-         kweight=self.Kweight, group=self.g, _larch=self.mylarch)
-        xftf(self.best.k, self.best.chi, kmin=self.Kmin, kmax=self.Kmax, dk=4, window='hanning',
-         kweight=self.Kweight, group=self.best, _larch=self.mylarch)
-        xftf(self.sumgroup.k, self.sumgroup.chi, kmin=self.Kmin, kmax=self.Kmax, dk=4, window='hanning',
-         kweight=self.Kweight, group=self.sumgroup, _larch=self.mylarch)
-
-        self.exp = self.g.chi
-        self.loadPaths()
-
+        # Generate first generation
         self.generateFirstGen()
 
         self.run()
-        if self.path_optimize_only:
-            self.paths_optimization_process()
-
-        if self.path_optimize:
-            self.paths_optimization_process()
-
-            # variables
-            self.initialize_variable()
-            # initialze file paths
-            self.initialize_file_path(path_optimize=True)
-            # initialize range
-            self.initialize_range()
-
-            self.initialize_group()
-
-            xftf(self.g.k, self.g.chi, kmin=self.Kmin, kmax=self.Kmax, dk=4, window='hanning',
-             kweight=self.Kweight, group=self.g, _larch=self.mylarch)
-            xftf(self.best.k, self.best.chi, kmin=self.Kmin, kmax=self.Kmax, dk=4, window='hanning',
-             kweight=self.Kweight, group=self.best, _larch=self.mylarch)
-            xftf(self.sumgroup.k, self.sumgroup.chi, kmin=self.Kmin, kmax=self.Kmax, dk=4, window='hanning',
-             kweight=self.Kweight, group=self.sumgroup, _larch=self.mylarch)
-
-            self.exp = self.g.chi
-
-            self.loadPaths()
-            self.generateFirstGen()
-
-            self.run()
-
-        if self.csv_series == True:
-            for i in range(1,len(csv_file)):
-                self.total_bestFit = self.globBestFit
-                # variables
-                self.initialize_variable()
-                # initialze file paths
-                self.initialize_file_path(i)
-                # initialize range
-                self.initialize_range(i,self.total_bestFit[0])
-                self.initialize_group()
-
-                xftf(self.g.k, self.g.chi, kmin=self.Kmin, kmax=self.Kmax, dk=4, window='hanning',
-                 kweight=self.Kweight, group=self.g, _larch=self.mylarch)
-                xftf(self.best.k, self.best.chi, kmin=self.Kmin, kmax=self.Kmax, dk=4, window='hanning',
-                 kweight=self.Kweight, group=self.best, _larch=self.mylarch)
-                xftf(self.sumgroup.k, self.sumgroup.chi, kmin=self.Kmin, kmax=self.Kmax, dk=4, window='hanning',
-                 kweight=self.Kweight, group=self.sumgroup, _larch=self.mylarch)
-
-                self.exp = self.g.chi
-                # print(self.path_lists)
-                # print("Load Path")
-                self.loadPaths()
-                #
-                self.generateFirstGen()
-                self.run(detect_limits=True)
 
 def main():
-    # from .helper import *
-    # from .input_arg import *
-    # from .import_lib import *
-    # from .parser import read_input_file
-    # from .ini_parser import *
-    # from .initialization import loadPaths
-    # from .exafs import *
-
-    EXAFS_GA()
+    XPS_GA()
