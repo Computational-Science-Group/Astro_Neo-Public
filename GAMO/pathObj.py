@@ -1,0 +1,570 @@
+import numpy as np
+import lmfit
+from lmfit import Model
+from lmfit.models import GaussianModel,VoigtModel,DoniachModel,ExponentialModel
+# from .background_function import shirley
+from scipy import integrate
+from scipy.special import gammaln,wofz
+
+#----
+## DEBUG:
+##
+import sys
+"""
+Author: Andy Lau
+"""
+tiny = 1.0e-15
+
+def not_zero(value):
+    """Return value with a minimal absolute size of tiny, preserving the sign.
+    This is a helper function to prevent ZeroDivisionError's.
+    Parameters
+    ----------
+    value : scalar
+        Value to be ensured not to be zero.
+    Returns
+    -------
+    scalar
+        Value ensured not to be zero.
+    """
+    return float(np.copysign(np.max(tiny, abs(value)), value))
+
+def combine_params(prefix,params):
+    out_params = []
+    if prefix == '':
+        out_params = params
+    else:
+        for i in params:
+            # print(i)
+            out_params.append(prefix + "_" + str(i))
+    return out_params
+
+def separate_dicts(source_dict,prefixs):
+    """
+    Separate out dictionary into separete folder based on their prefix
+    """
+    assert len(prefixs) > 1
+    out_dict = {}
+    for i in prefixs:
+        out_dict[i] = {}
+    for i,value in enumerate(source_dict.keys()):
+        for j,key in enumerate(out_dict.keys()):
+            # print(j)
+            val_split = value.split("_")
+            # print(key,val_split)
+            if key == val_split[0]:
+                out_dict[key][val_split[1]] = source_dict[value]
+
+    return out_dict
+
+
+class ParamsDict:
+    def __init__(self,params):
+        self.params = params
+        self.nparams = len(params)
+        self.dicts = {}
+        # Initalize the whole dictionary first
+        for i in range(self.nparams):
+            self.dicts[self.params[i]] = None
+
+    def update_val(self,val,key):
+        self.dicts[val] = key
+
+    def set(self,params):
+        for i in self.params:
+            self.dicts[i] = params[i]
+
+    def get(self):
+        return self.dicts
+
+    def initialize_range(self,range_dicts):
+        self.range_dicts = range_dicts
+        for i in range(self.nparams):
+            # range = np.arange()
+            limits = self.range_dicts[self.params[i]]
+            if type(limits) == int or type(limits) == float:
+                self.dicts[self.params[i]] = limits
+            else:
+
+                limits_range = np.arange(limits[0],limits[1],limits[2])
+                self.dicts[self.params[i]] = np.random.choice(limits_range)
+
+class BaseObj:
+    """
+    Each Base Objects requires the following methods and var:
+    Var:
+    # Number of independent variables (ex, gaussian: 3, voigt, 4)
+    Methods:
+
+    """
+    def __init__(self,center=None,_prefix=''):
+        self._prefix = _prefix
+        self._indep = 1
+        self._params_names = []
+
+    def set(self,param_dicts):
+
+        self._Params.set(param_dicts)
+
+    def get(self):
+        params_list = []
+        params = self._Params.get()
+        for i in self._params_names:
+            params_list.append(params[i])
+
+        return params_list
+
+    def get_indept(self):
+        """Return the number of indepedent variable
+        :return x: return a list of independent var
+        :rtype: list
+        """
+        return self._indep
+
+    def get_func(self,x,*args):
+        """Return the list of value using the model shape function
+        :param x: x value
+        :type x: int, list, nparray
+        :returns: the list of value under the shape function
+        :rtype: int, nparray
+        """
+        return None
+
+    def calculate_area(self,x):
+        return integrate.simps(self.get_func(x),x)
+
+    def get_params_names(self):
+        return combine_params(self._prefix,self._params_names)
+
+    # def verbose(self):
+    #     return self._params.pretty_print()
+
+class GaussianObj(BaseObj):
+    def __init__(self,center=None,amplitude=None,sigma=None,prefix=''):
+        self._prefix = prefix
+        self._params_names = ['amplitude','center','sigma']
+        self._indep = 3
+
+        self.range_dicts = {
+            'amplitude':(0.00,1.5,0.001),
+            'center':(center-20,center+20,0.01),
+            'sigma':(0,1.5,0.001)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+    def get_func(self,x,*args):
+        """Return the list of value using the model shape function
+        :param x: x value
+        :type x: int, list, nparray
+        :returns: the list of value under the shape function
+        :rtype: int, nparray
+        """
+
+        Params = self._Params.get()
+        amplitude = Params['amplitude']
+        center = Params['center']
+        sigma = Params['sigma']
+
+        return ((amplitude/(max(tiny, np.sqrt(2*np.pi)*sigma)))
+            * np.exp(-(1.0*x-center)**2 / max(tiny, (2*sigma**2))))
+
+class VoigtObj(BaseObj):
+    def __init__(self,center=None,amplitude=None,gamma=None,sigma=None):
+        self._params_names = ['amplitude','center','gamma','sigma']
+        self._indep = 4
+        self.range_dicts = {
+            'amplitude':(0.00,1.01,0.001),
+            'sigma':(0.0,1.5,0.001),
+            'gamma':(0.0,1.5,0.001),
+            'center':(center-20,center+20,0.01)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+    def get_func(self,x,*args):
+        Params = self._Params.get()
+        amplitude = Params['amplitude']
+        center = Params['center']
+        gamma = Params['gamma']
+        sigma = Params['sigma']
+
+        return amplitude*np.real(wofz((x - center + 1j*gamma)/sigma/np.sqrt(2))) / sigma\
+                                                                   /np.sqrt(2*np.pi)
+class DoubleVoigtObj(VoigtObj):
+    def __init__(self,center=None):
+        # voigt function
+        self._model1 = VoigtObj(center)
+        orbit_split = 5
+        self._model2 = VoigtObj(center - orbit_split)
+
+    def get_func(self,x):
+        return self._model1.get_func(x) + self._model2.get_func(x)
+
+
+class DoubleVoigtObj_fix(VoigtObj):
+    def __init__(self,center=None):
+        # voigt function
+        self._model1 = VoigtObj(center)
+        orbit_split = 5
+        params = self._model1.get()
+        # self.Bg_obj = Background_Obj(1,'ShirleyExp')
+
+        self._model2 = VoigtObj(center-orbit_split,amplitude=params[0]/2,
+                        gamma = params[2],
+                        sigma = params[3])
+
+    def get_func(self,x):
+        return self._model1.get_func(x) + self._model2.get_func(x)
+
+
+
+class DoniachObj(BaseObj):
+    def __init__(self,center=None,amplitude=None,gamma=None,sigma=None,prefix=''):
+        self._prefix = prefix
+        self._params_names = ['amplitude','center','gamma','sigma']
+        self._indep = 4
+        # self._model = DoniachModel(['x'])
+        self.range_dicts = {
+            'amplitude':(0.00,1.5,0.001),
+            'center':(center-20,center+20,0.01),
+            'sigma':(0,1.0,0.001),
+            'gamma':(0,1.5,0.001)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+
+    def get_func(self,x,*args):
+        Params = self._Params.get()
+        amplitude = Params['amplitude']
+        center = Params['center']
+        gamma = Params['gamma']
+        sigma = Params['sigma']
+
+        arg = (x-center)/max(tiny, sigma)
+        gm1 = (1.0 - gamma)
+        scale = amplitude/max(tiny, (sigma**gm1))
+        return scale*np.cos(np.pi*gamma/2 + gm1*np.arctan(arg))/(1 + arg**2)**(gm1/2)
+
+
+class DoniachObj_Test(BaseObj):
+    def __init__(self,center=None,amplitude=None,gamma=None,sigma=None,prefix=''):
+        self._prefix = prefix
+        self._params_names = ['amplitude','asymmetry','center','F']
+        self._indep = 4
+        # self._model = DoniachModel(['x'])
+        self.range_dicts = {
+            'amplitude':(0.00,1.5,0.001),
+            'asymmetry':(0.00,0.5,0.01),
+            'center':(center-20,center+20,0.01),
+            'F':(0,1.0,0.001)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+
+    def get_func(self,x,*args):
+        Params = self._Params.get()
+        amplitude = Params['amplitude']
+        asymmetry = Params['asymmetry']
+        center = Params['center']
+        F = Params['F']
+
+
+        arg = (x-center)/max(tiny, F)
+        # gm1 = (1.0 - gamma)
+        # scale = amplitude/max(tiny, (sigma**gm1))
+        top = np.cos(((np.pi*asymmetry)/2) + (1-asymmetry)*np.arctan(arg))
+        bot = (F**2 + (x-center)**2)**((1-asymmetry)/2)
+
+        return amplitude* top/bot
+
+    def calculate_fhwm(self):
+        fg = 2*self._params['sigma']*np.sqrt(2*np.log(2))
+        fl = 2*self._params['gamma']
+        return (fg,fl)
+
+
+class DoniachObjGauss(DoniachObj,GaussianObj):
+    def __init__(self,center=None,prefix=''):
+        self._prefix_1 = 'DH'
+        self._prefix_2 = 'Gauss'
+        self._params_names = ['amplitude','center','gamma','sigma']
+        self._params2_names = ['amplitude','center','sigma']
+        self._model1 = DoniachObj(center,prefix=self._prefix_1)
+        params = self._model1.get()
+        # self._model2 = GaussianObj(center = params[1],
+        #                 amplitude=params[0],
+        #                 sigma = params[3])
+        self._model2 = GaussianObj(center = params[1],prefix=self._prefix_2)
+
+    def set(self,dicts):
+        dicts = separate_dicts(dicts,[self._prefix_1,self._prefix_2])
+        self._model1.set(dicts[self._prefix_1])
+        dicts[self._prefix_2]['center'] = dicts[self._prefix_1]['center']
+        self._model2.set(dicts[self._prefix_2])
+
+    def get(self):
+        return self._model1.get() + self._model2.get()
+
+    def get_func(self,x,*args):
+        # return np.convolve(self._model1.get_func(x),self._model2.get_func(x),'same')
+        # return self._model1.get_func(x) +self._model2.get_func(x)
+
+        total = np.convolve(self._model1.get_func(x),self._model2.get_func(x),mode='same')
+        return total
+        # return np.convolve(self._model1)
+    def verbose(self):
+        self._model1.verbose()
+        print("------------------------------------------------")
+        self._model2.verbose()
+    #
+    # def get_indept(self):
+    #     return self._model1.get_indept() + self._model2.get_indept()
+
+    def get_params_names(self):
+        # print(self._model1.get_params_names())
+        return self._model1.get_params_names() + self._model2.get_params_names()
+class DoubletDoniachObj(DoniachObj):
+    def __init__(self,center=None):
+        # voigt function
+        self._model1 = DoniachObj(center)
+        orbit_split = 5
+        params = self._model1.get()
+
+        self._model2 = DoniachObj(center-orbit_split,amplitude=params[0]/2,
+                        gamma = params[2],
+                        sigma = params[3])
+
+    def get_func(self,x):
+        return self._model1.get_func(x) + self._model2.get_func(x)
+
+class ExponentialObj(BaseObj):
+    def __init__(self,center=None,prefix=''):
+        self._prefix = ''
+        self._params_names = ['amplitude','decay']
+        self._indep = 2
+
+        amp_range= np.arange(50,100,0.05)
+        decay_range = np.arange(0.8,15,0.001)
+        self.range_dicts = {
+            'amplitude':(0.00,100,0.05),
+            'decay':(0.8,15,0.001),
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+    def get_func(self,x,*args):
+        Params = self._Params.get()
+        amplitude = Params['amplitude']
+        decay = Params['decay']
+
+        return amplitude*np.exp(-x/decay)
+
+# Gaussian Lorentization Product Form
+class GLPObj(BaseObj):
+    def __init__(self,center=None):
+        """
+        A - 0.1
+        center
+        m - percentage of gaussian/lorentization
+        """
+        self._params_names = ['A','center','m','F']
+        self._indep = 4
+        def func(x,center,A,m,F):
+            first_term = A*np.exp(-4*np.log(2)*(1-m)*(x-center)**2/(F**2))
+            second_term = 1/(1+4*m*(x-center)**2/(F**2))
+            return first_term*second_term
+        self._model = Model(func)
+
+        A_range = np.arange(0,1.5,0.05)
+        m_range = np.arange(0.00,1.001,0.001)
+        center_range = np.arange(center-0.5,center+0.5,0.01)
+        F_range = np.arange(0.0,1,0.01)
+
+        self._model.set_param_hint('A',
+                vary = True,
+                expr = None,
+                value = np.random.choice(A_range))
+
+        self._model.set_param_hint('center',
+                vary = True,
+                expr = None,
+                value = np.random.choice(center_range))
+
+        self._model.set_param_hint('m',
+                vary = True,
+                expr = None,
+                value = np.random.choice(m_range),
+                min=0.0,max=1.0)
+
+        self._model.set_param_hint('F',
+                vary = True,
+                expr = None,
+                value = np.random.choice(F_range),
+                min=0.0,max=1.0)
+
+        self._params = self._model.make_params()
+
+# Temp Shirley Exponential Obj
+class ShirleyExpObj(BaseObj):
+
+    def __init__(self,center=None):
+        self._params_names = ['amplitude','decay']
+        self._indep = 2
+        amp_range= np.arange(0,100,0.05)
+        decay_range = np.arange(0.8,15,0.001)
+        # center_range = np.arange(center-20,center+20,0.01)
+
+        self.range_dicts = {
+            'amplitude':(0.00,100,0.05),
+            'decay':(0.0,1.5,0.001)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+
+    def get_func(self,x,*args):
+        Params = self._Params.get()
+        amplitude = Params['amplitude']
+        decay = Params['decay']
+
+        background_y = shirley(x,args[0])
+        exp_y = amplitude*np.exp(-x/decay)
+        total = exp_y + background_y
+        return total
+
+class ShirleyBG_Obj(BaseObj):
+    def __init__(self,center=None):
+        self._params_names = ['gwid','lwid','center','amplitude']
+        self._indep = 4
+
+        self.range_dicts = {
+            'amplitude':(0.00,1.0,0.001),
+            'center': center,
+            'gwid':(0,1.0,0.001),
+            'lwid':(0,1.0,0.001)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+    def get_func(self,x,*args):
+        """Return the list of value using the model shape function
+        :param x: x value
+        :type x: int, list, nparray
+        :returns: the list of value under the shape function
+        :rtype: int, nparray
+        """
+        Params = self._Params.get()
+        amplitude = Params['amplitude']
+        gwid = Params['gwid']
+        lwid = Params['lwid']
+        center = Params['center']
+
+        thewid_1 = np.sqrt((gwid/2)**2+np.sqrt(lwid*1.233)**2)
+        thewid_2 = (gwid/2) + (lwid*1.233)
+        comb_thewid = (thewid_1 + thewid_2)/2
+        return amplitude*(1-(1-1/(1+np.exp((x-center)/comb_thewid))))
+
+
+class DS_Jeff(BaseObj):
+    """
+    Calculate DoniachSunjic convoluted with Gaussian Width
+
+
+    """
+    def __init__(self,center=None):
+        """
+        :param center: inital center
+        :type center: float
+
+        """
+        self._params_names = ['alpha','lwid','center']
+        self._indep = 3
+
+        self.range_dicts = {
+            'alpha':(0.00,1.5,0.001),
+            'center':(center-20,center+20,0.01),
+            'lwid':(0,1.0,0.001),
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+    def get_func(self,x,*args):
+        Params = self._Params.get()
+        alpha = Params['alpha']
+        center = Params['center']
+        lwid = Params['lwid']
+
+        top = gammaln(1-alpha)*np.cos(np.pi*(alpha/2) + (1-alpha)*np.arctan((x-center)/lwid))
+        bot = ((lwid *lwid) + ((x-center)*(x-center)))**((1-alpha)/2)
+        return top/bot
+
+
+class Thermal(BaseObj):
+    """
+    Bose form Thermal
+    """
+
+    def __init__(self,center=None,_prefix=''):
+        """
+        :param center: inital center
+        :type center: float
+
+        """
+        self._prefix=''
+        self._params_names = ['amplitude','kt','center']
+        self._indep = 3
+
+        self.range_dicts = {
+            'amplitude':(0.00,1.5,0.001),
+            'center':(center-20,center+20,0.01),
+            'kt':(0,1.0,0.001),
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+    def get_func(self,x,*args):
+        Params = self._Params.get()
+        amplitude = Params['amplitude']
+        center = Params['center']
+        kt = Params['kt']
+        # print(kt)
+        # sys.exit()
+        offset = -1
+        # test_no_zero = not_zero(kt)
+        return 1/(amplitude*np.exp((x - center)/kt) + offset)
+
+
+class Eggholder:
+    def __init__(self,center=None,_prefix=''):
+        """
+        :param center: inital center
+        :type center: float
+
+        """
+        self._prefix=''
+        self._params_names = ['y']
+        self._indep = 1
+
+        self.range_dicts = {
+            # 'x':(0.00,512,0.0001),
+            'y':(0.00,512,0.0001),
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+    def get_func(self,x,*args):
+        Params = self._Params.get()
+        y = Params['y']
+
+        return -(y+47) *np.sin(np.sqrt(np.abs(y + 0.5*x + 47))) - x*np.sin(np.sqrt(np.abs(x-(y+47))))
