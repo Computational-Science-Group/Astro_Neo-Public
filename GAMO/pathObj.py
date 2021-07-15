@@ -1,4 +1,5 @@
 import numpy as np
+import os
 # import lmfit
 # from lmfit import Model
 # from lmfit.models import GaussianModel,VoigtModel,DoniachModel,ExponentialModel
@@ -570,7 +571,7 @@ class Eggholder:
         return -(y+47) *np.sin(np.sqrt(np.abs(y + 0.5*x + 47))) - x*np.sin(np.sqrt(np.abs(x-(y+47))))
 
 class XspecSpectrum(BaseObj):
-    def __init__(self,_prefix=''):
+    def __init__(self,center,fits_file,_prefix=''):
         """
         :param center: inital center
         :type center: float
@@ -593,11 +594,16 @@ class XspecSpectrum(BaseObj):
         self.xspec.Plot.perHz = False
         self.xspec.Plot.area = True
         self.xspec.Plot.background = True
-
+        # print(os.getcwd())
+        fits_full_path = os.path.join(os.getcwd(),str(fits_file))
+        print(fits_full_path)
+        # sys.exit()
         # Standard paramters:
-        self.l_src = self.xspec.Spectrum("left_pha_grp.fits")
+        self.l_src = self.xspec.Spectrum(str(fits_full_path))
         self.l_src.ignore("**-7.0 30.0-**")
         self.xspec.AllData.show()
+        # sys.exit()
+
         self.model = self.xspec.Model("tbabs*po+lsmooth*vapec")
 
         self.model.TBabs.nH.frozen = True
@@ -634,6 +640,7 @@ class XspecSpectrum(BaseObj):
         self._Params = ParamsDict(self._params_names)
         self._Params.initialize_range(self.range_dicts)
 
+
     def get_func(self,x,*args):
         Params = self._Params.get()
         # Get the parameters
@@ -644,7 +651,7 @@ class XspecSpectrum(BaseObj):
         self.model.powerlaw.norm = Params['Plnorm']
         # lsmooth
         self.model.lsmooth.Sig_6keV = Params['Sig_6keV']
-        # vapec
+        # Vapec
         self.model.vapec.kT = Params['kT']
         self.model.vapec.C = Params['C']
         self.model.vapec.N = Params['N']

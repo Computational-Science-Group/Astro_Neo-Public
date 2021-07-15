@@ -16,6 +16,7 @@ Outputs_dict = file_dict['Outputs']
 # Input
 data_file = Inputs_dict['data_file']
 output_file = Inputs_dict['output_file']
+fits_file = Inputs_dict['fits_file']
 # feff_file = Inputs_dict['feff_file']
 
 # try:

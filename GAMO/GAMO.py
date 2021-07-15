@@ -1,7 +1,7 @@
 from .helper import *
 from .import_lib import *
 from .ini_parser import *
-from larch import Interpreter
+# from larch import Interpreter
 from .pathObj import VoigtObj
 from .individual import Individual,BackgroundObj
 from .pathrange import Pathrange_limits
@@ -50,7 +50,8 @@ class GAMO:
         # self.npaths = len(self.path_lists)
         # Inputs
         self.data_file = data_file
-
+        self.fits_file = fits_file
+        print(self.fits_file)
         # Paths
         self.npaths = npaths
         self.fits = fits.split(",")
@@ -205,7 +206,8 @@ class GAMO:
 
     def generateIndividual(self):
 
-        ind = Individual(self.npaths,self.fits,self.center,self.x_raw,self.y_raw)
+        ind = Individual(self.npaths,self.fits,self.center,self.x_raw,self.y_raw,self.fits_file)
+        # sys.exit()
         return ind
 
     def generateFirstGen(self):
@@ -616,4 +618,4 @@ class GAMO:
         self.run()
 
 def main():
-    XPS_GA()
+    GAMO()

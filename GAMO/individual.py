@@ -1,5 +1,5 @@
 from .pathObj import GaussianObj,VoigtObj,DoniachObj,ShirleyBG_Obj,ShirleyExpObj,\
-        ExponentialObj,DoniachObjGauss,DoniachObj_Test,DS_Jeff,Thermal
+        ExponentialObj,DoniachObjGauss,DoniachObj_Test,DS_Jeff,Thermal,XspecSpectrum
 
 from .pathObj import Eggholder
 # from pathObj import VoigtObj,DoniachObj,GaussianObj,ExponentialObj,ShirleyExpObj
@@ -20,7 +20,8 @@ def shape_function_parser(Fit,center_range=0,*args):
         "ShirleyExp": ShirleyExpObj(center_range),
         "DS_Jeff": DS_Jeff(center_range),
         "Thermal": Thermal(center_range),
-        "EggHolder": Eggholder(center_range)
+        "EggHolder": Eggholder(center_range),
+        "XspecSpectrum": XspecSpectrum(center_range,args[2])
     }
     return switch.get(Fit,"Invalid")
 
@@ -45,7 +46,7 @@ class BackgroundObj():
 
         return y
 class Individual():
-    def __init__(self,npaths,fits,center,x,y):
+    def __init__(self,npaths,fits,center,x,y,fits_file):
         self.npaths = npaths
         self.Population = [None]* self.npaths
         self.center = center
@@ -53,7 +54,7 @@ class Individual():
 
         for i in range(self.npaths):
 
-            obj = shape_function_parser(self.fits[i],self.center[i],x,y)
+            obj = shape_function_parser(self.fits[i],self.center[i],x,y,fits_file)
             if obj == 'Invalid':
                 print("Invalid Fits selection: " + str(self.fits[i]))
                 sys.exit()

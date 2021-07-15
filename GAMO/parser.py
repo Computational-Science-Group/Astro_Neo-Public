@@ -39,7 +39,7 @@ def read_input_file(input_file,verbose=False):
     Outputs_dict = config['Outputs']
 
     # Checking for minimum inputs
-    input_min = ['data_file','output_file']
+    input_min = ['data_file','output_file','fits_file']
     CheckKey(Inputs_dict,input_min)
 
     population_min = ['population','num_gen','best_sample','lucky_few']
