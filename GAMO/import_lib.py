@@ -18,7 +18,7 @@ import datetime,time
 from operator import itemgetter
 import numpy as np
 # import larch
-import lmfit
+# import lmfit
 import pathlib
 # from larch_plugins.io import read_ascii
 # from larch_plugins.xafs import autobk
@@ -27,7 +27,7 @@ import pathlib
 # from larch import Interpreter
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from scipy.integrate import simps
+# from scipy.integrate import simps
 # from multiprocessing import Pool
 # import multiprocessing as mp
 # import ray

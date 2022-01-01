@@ -7,7 +7,7 @@ from .individual import Individual,BackgroundObj
 from .pathrange import Pathrange_limits
 from .background_function import shirley,nobg,shirley_temp
 from .voigt_shape import voigt_fuc
-
+import cProfile,pstats
 # from .run_verbose import *
 
 class GAMO:
@@ -48,10 +48,11 @@ class GAMO:
             # for i in range(len(self.path_lists)):
                 # self.path_lists[i] = str(self.path_lists[i])
         # self.npaths = len(self.path_lists)
+
         # Inputs
         self.data_file = data_file
-        self.fits_file = fits_file
-        print(self.fits_file)
+        # self.fits_file = fits_file
+        # print(self.fits_file)
         # Paths
         self.npaths = npaths
         self.fits = fits.split(",")
@@ -206,7 +207,7 @@ class GAMO:
 
     def generateIndividual(self):
 
-        ind = Individual(self.npaths,self.fits,self.center,self.x_raw,self.y_raw,self.fits_file)
+        ind = Individual(self.npaths,self.fits,self.center)
         # sys.exit()
         return ind
 
@@ -599,12 +600,14 @@ class GAMO:
         finally:
             f2.close()
 
+
     def __init__(self):
         """
         Steps to Initalize EXAFS
             EXAFS
         """
         # initialize params
+        print(sys.executable)
         self.initialize_params()
         # variables
         self.initialize_variable()
@@ -618,4 +621,13 @@ class GAMO:
         self.run()
 
 def main():
+    profiler = cProfile.Profile()
+
+    profiler.enable()
     GAMO()
+    profiler.disable()
+    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    # stats.print_stats()
+    stats.dump_stats('Export_Data.txt')
+
+    # GAMO()
