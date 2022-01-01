@@ -148,7 +148,7 @@ class GaussianObj(BaseObj):
 
         self.range_dicts = {
             'amplitude':(0.00,1.5,0.001),
-            'center':(center-20,center+20,0.01),
+            'center':(center,center+1,0.01),
             'sigma':(0,1.5,0.001)
         }
 

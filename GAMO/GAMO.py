@@ -79,6 +79,12 @@ class GAMO:
         self.time = False
         self.tt = 0
 
+        # Figure related:
+        self.printgraph = printgraph
+        if self.printgraph:
+            self.fig = plt.figure()
+            # Add one figs
+            self.ax = self.fig.add_subplot(111)
         # Profile related:
         self.profile_toggle = profile
         if self.profile_toggle:
@@ -478,7 +484,8 @@ class GAMO:
         print(f"{bcolors.BOLD}Fits{bcolors.ENDC}: {self.fits}")
         # print(f"{bcolors.BOLD}Path{bcolors.ENDC}: {self.path_lists}")
         # print(f"{bcolors.BOLD}Path Optimize{bcolors.ENDC}: {self.}")
-        # print(f"{bcolors.BOLD}Printout{bcolors.ENDC}: {self.printgraph}")
+        print(f"{bcolors.BOLD}Printout{bcolors.ENDC}: {self.printgraph}")
+        print(f"{bcolors.BOLD}profiler{bcolors.ENDC}: {self.profile_toggle}")
         # print(f"{bcolors.BOLD}Steady State{bcolors.ENDC}: {steady_state}")
         # print(f"{bcolors.BOLD}Output Paths{bcolors.ENDC}: {num_output_paths}")
         print("-------------------------------------------")
@@ -513,6 +520,8 @@ class GAMO:
             np.savetxt(file_name,out_array,delimiter=',')
 
 
+
+
     def run(self):
         self.run_verbose_start()
         self.historic = []
@@ -524,10 +533,23 @@ class GAMO:
             # print(0.5*self.ngen)
             # if i == int(0.5*self.ngen)-1:
                 # self.findE0()
+            if printgraph:
+                test_y = self.export_paths(self.globBestFit[0])
+                real_y = np.array(self.y_scaler.inverse_transform(test_y.reshape(-1,1))).flatten() + self.bg
+                self.ax.plot(self.x_scaler.inverse_transform(self.x_normal.reshape(-1,1)),real_y,'k--',label='Fit')
+                self.ax.scatter(self.x_raw,self.y_background+self.bg,s=10,label='data')
+                self.out_str = str(np.asarray(self.currBestFit[0].get()))
+                self.ax.text(0.1,0.8,s=self.out_str,transform=self.ax.transAxes)
+                plt.show(block=False)
+                plt.pause(0.001)
+                plt.cla()
+                if i < self.ngen:
+                    time.sleep(10)
+                    plt.close('all')
 
         self.run_verbose_end()
         # print(self.globBestFit)
-
+        # Final
         self.fig,self.ax = plt.subplots(nrows=1,ncols=1)
 
         test_y = self.export_paths(self.globBestFit[0])
@@ -544,11 +566,11 @@ class GAMO:
         self.ax.text(0.1,0.8,s=self.out_str,transform=self.ax.transAxes)
 
         # Exit profiler
-        self.profiler.disable()
-        stats = pstats.Stats(profiler).sort_stats('cumtime')
-        # stats.print_stats()
-        ('Visualze result using Snakeviz')
-        stats.dump_stats('Export_Data.txt')
+        if self.profile_toggle:
+            self.profiler.disable()
+            stats = pstats.Stats(self.profiler).sort_stats('cumtime')
+            ('Visualze result using Snakeviz')
+            stats.dump_stats('Export_Data.txt')
 
         plt.legend()
         plt.show()
