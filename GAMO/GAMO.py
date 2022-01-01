@@ -530,22 +530,20 @@ class GAMO:
             # self.active_background(self.globBestFit[0])
             temp_gen = self.next_generation()
             self.output_generations()
-            # print(0.5*self.ngen)
-            # if i == int(0.5*self.ngen)-1:
-                # self.findE0()
             if printgraph:
                 test_y = self.export_paths(self.globBestFit[0])
                 real_y = np.array(self.y_scaler.inverse_transform(test_y.reshape(-1,1))).flatten() + self.bg
                 self.ax.plot(self.x_scaler.inverse_transform(self.x_normal.reshape(-1,1)),real_y,'k--',label='Fit')
+                self.ax.set_title('Generation: ' + str(i+1))
                 self.ax.scatter(self.x_raw,self.y_background+self.bg,s=10,label='data')
                 self.out_str = str(np.asarray(self.currBestFit[0].get()))
                 self.ax.text(0.1,0.8,s=self.out_str,transform=self.ax.transAxes)
                 plt.show(block=False)
                 plt.pause(0.001)
                 plt.cla()
-                if i < self.ngen:
-                    time.sleep(10)
-                    plt.close('all')
+                # if i == self.ngen:
+                    # time.sleep(10)
+                    # plt.close('all')
 
         self.run_verbose_end()
         # print(self.globBestFit)

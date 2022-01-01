@@ -5,7 +5,7 @@ import os
 # from lmfit.models import GaussianModel,VoigtModel,DoniachModel,ExponentialModel
 # from .background_function import shirley
 # from scipy import integrate
-# from scipy.special import gammaln,wofz
+from scipy.special import gammaln,wofz
 # import xspec
 #----
 ## DEBUG:
@@ -172,14 +172,15 @@ class GaussianObj(BaseObj):
             * np.exp(-(1.0*x-center)**2 / max(tiny, (2*sigma**2))))
 
 class VoigtObj(BaseObj):
-    def __init__(self,center=None,amplitude=None,gamma=None,sigma=None):
+    def __init__(self,center=None,amplitude=None,gamma=None,sigma=None,prefix=''):
+        self._prefix= prefix
         self._params_names = ['amplitude','center','gamma','sigma']
         self._indep = 4
         self.range_dicts = {
             'amplitude':(0.00,1.01,0.001),
             'sigma':(0.0,1.5,0.001),
             'gamma':(0.0,1.5,0.001),
-            'center':(center-20,center+20,0.01)
+            'center':(center-1,center+1,0.01)
         }
 
         self._Params = ParamsDict(self._params_names)
