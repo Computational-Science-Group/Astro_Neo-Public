@@ -58,7 +58,7 @@ def read_input_file(input_file,verbose=False):
     # CheckKey(Larch_dict,larch_min)
 
     output_min =['print_graph','num_output_paths']
-    output_optional = ['steady_state']
+    output_optional = ['steady_state','profile']
     CheckKey(Outputs_dict,output_min)
     output_missing = CheckOptionalKey(Outputs_dict,output_min)
 

@@ -73,3 +73,9 @@ try:
 	steady_state = str_to_bool(Outputs_dict['steady_state'])
 except KeyError:
 	steady_state = False
+
+try:
+	profile = str_to_bool(Outputs_dict['profile'])
+
+except KeyError:
+	profile = False

@@ -79,6 +79,12 @@ class GAMO:
         self.time = False
         self.tt = 0
 
+        # Profile related:
+        self.profile_toggle = profile
+        if self.profile_toggle:
+            self.profiler= cProfile.Profile()
+            self.profiler.enable()
+
         # CSV-Series check
         # self.csv_percent = 0.2
     # def reinitialize_varshirleiable():
@@ -537,6 +543,13 @@ class GAMO:
         self.out_str = str(np.asarray(self.currBestFit[0].get()))
         self.ax.text(0.1,0.8,s=self.out_str,transform=self.ax.transAxes)
 
+        # Exit profiler
+        self.profiler.disable()
+        stats = pstats.Stats(profiler).sort_stats('cumtime')
+        # stats.print_stats()
+        ('Visualze result using Snakeviz')
+        stats.dump_stats('Export_Data.txt')
+
         plt.legend()
         plt.show()
 
@@ -607,7 +620,6 @@ class GAMO:
             EXAFS
         """
         # initialize params
-        print(sys.executable)
         self.initialize_params()
         # variables
         self.initialize_variable()
@@ -621,6 +633,7 @@ class GAMO:
         self.run()
 
 def main():
+
     profiler = cProfile.Profile()
 
     profiler.enable()

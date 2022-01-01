@@ -571,8 +571,31 @@ class Eggholder:
         return -(y+47) *np.sin(np.sqrt(np.abs(y + 0.5*x + 47))) - x*np.sin(np.sqrt(np.abs(x-(y+47))))
 
 
+class Gaussian_Abs:
+    def __init__(self,center=None,_prefix=''):
 
-#
+        self._prefix =''
+        self._params_names = ['par1','par2','par3']
+        self._indep = 3
+
+        self.range_dicts = {
+            'par1' : (0.00,1500,0.01),
+            'par2' : (0.00,1500,0.01),
+            'par3' : (0.00,1500,0.01)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+    def get_func(self,x,*args):
+        Params = self._Params.get()
+        par1 = Params['par1']
+        par2 = Params['par2']
+        par3 = Params['par3']
+
+        term_1 = -(par3/np.sqrt(2*pi)*par2)
+        term_2 = np.exp(-0.5((x-par1)/par2)**2)
+        return np.exp(term1*term2)
 # class XspecSpectrum(BaseObj):
 #     def __init__(self,center,fits_file,_prefix=''):
 #         """

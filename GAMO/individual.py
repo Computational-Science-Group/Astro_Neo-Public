@@ -1,5 +1,5 @@
 from .pathObj import GaussianObj,VoigtObj,DoniachObj,ShirleyBG_Obj,ShirleyExpObj,\
-        ExponentialObj,DoniachObjGauss,DoniachObj_Test,DS_Jeff,Thermal
+        ExponentialObj,DoniachObjGauss,DoniachObj_Test,DS_Jeff,Thermal,Gaussian_Abs
 
 from .pathObj import Eggholder
 # from pathObj import VoigtObj,DoniachObj,GaussianObj,ExponentialObj,ShirleyExpObj
@@ -21,6 +21,7 @@ def shape_function_parser(Fit,center_range=0,*args):
         "DS_Jeff": DS_Jeff(center_range),
         "Thermal": Thermal(center_range),
         "EggHolder": Eggholder(center_range),
+        "Gauss_Abs": Gaussian_Abs(center_range)
         # "XspecSpectrum": XspecSpectrum(center_range,args[2])
     }
     return switch.get(Fit,"Invalid")
