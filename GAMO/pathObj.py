@@ -177,9 +177,9 @@ class VoigtObj(BaseObj):
         self._params_names = ['amplitude','center','gamma','sigma']
         self._indep = 4
         self.range_dicts = {
-            'amplitude':(0.00,1.01,0.001),
-            'sigma':(0.0,1.5,0.001),
-            'gamma':(0.0,1.5,0.001),
+            'amplitude':(0.00,10,0.001),
+            'sigma':(0.0,10,0.001),
+            'gamma':(0.0,10,0.001),
             'center':(center-1,center+1,0.01)
         }
 
@@ -193,8 +193,8 @@ class VoigtObj(BaseObj):
         gamma = Params['gamma']
         sigma = Params['sigma']
 
-        return amplitude*np.real(wofz((x - center + 1j*gamma)/sigma/np.sqrt(2))) / sigma\
-                                                                   /np.sqrt(2*np.pi)
+        return amplitude*np.real(wofz((x - center + 1j*gamma)/max(tiny,sigma)/np.sqrt(2))) / max(tiny,sigma)\
+                                                                   / max(tiny,np.sqrt(2*np.pi))
 class DoubleVoigtObj(VoigtObj):
     def __init__(self,center=None):
         # voigt function
@@ -572,15 +572,15 @@ class Eggholder:
         return -(y+47) *np.sin(np.sqrt(np.abs(y + 0.5*x + 47))) - x*np.sin(np.sqrt(np.abs(x-(y+47))))
 
 
-class Gaussian_Abs:
+class Gaussian_Abs(BaseObj):
     def __init__(self,center=None,_prefix=''):
 
         self._prefix =''
-        self._params_names = ['par1','par2','par3']
+        self._params_names = ['center','par2','par3']
         self._indep = 3
 
         self.range_dicts = {
-            'par1' : (0.00,1500,0.01),
+            'center' : (center,center+1,0.01),
             'par2' : (0.00,1500,0.01),
             'par3' : (0.00,1500,0.01)
         }
@@ -590,13 +590,13 @@ class Gaussian_Abs:
 
     def get_func(self,x,*args):
         Params = self._Params.get()
-        par1 = Params['par1']
+        center = Params['center']
         par2 = Params['par2']
         par3 = Params['par3']
 
-        term_1 = -(par3/np.sqrt(2*pi)*par2)
-        term_2 = np.exp(-0.5((x-par1)/par2)**2)
-        return np.exp(term1*term2)
+        term_1 = -(par3/np.sqrt(2*np.pi)*par2)
+        term_2 = np.exp(-0.5*((x-center)/par2)**2)
+        return np.exp(term_1*term_2)
 # class XspecSpectrum(BaseObj):
 #     def __init__(self,center,fits_file,_prefix=''):
 #         """

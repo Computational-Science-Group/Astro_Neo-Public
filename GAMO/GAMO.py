@@ -521,7 +521,6 @@ class GAMO:
 
 
 
-
     def run(self):
         self.run_verbose_start()
         self.historic = []
@@ -541,9 +540,9 @@ class GAMO:
                 plt.show(block=False)
                 plt.pause(0.001)
                 plt.cla()
-                # if i == self.ngen:
-                    # time.sleep(10)
-                    # plt.close('all')
+                if i == self.ngen-1:
+                    time.sleep(10)
+                    plt.close('all')
 
         self.run_verbose_end()
         # print(self.globBestFit)
