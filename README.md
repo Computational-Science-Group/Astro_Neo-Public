@@ -1,8 +1,8 @@
-# GAMO
+# Astro Neo
 #### Versions: 0.0.1
-#### Last update: Jul 14, 2021
+#### Last update: Oct 25, 2022
 
-Genetic Algorthims Material Optimizer (GAMO)
+Astro Neo 
 ## Prerequisites
 <!-- It is highly recommend to utilize `anaconda` or `pipx` package managers to prevent unforseen dependency conflicts. EXAFS Neo uses [`larch`](https://xraypy.github.io/xraylarch/) to process the x-ray spectrum.
 
@@ -18,13 +18,33 @@ It is highly recommend to create a new environment in `anaconda` to run EXAFS Ne
         conda install -yc GSECARS xraylarch -->
 
 ## Installations
+
+Create new environment using the environment files given:
+
+Linux:
+
+        conda env create ciao -f models/ciao-4.13-Linux-environment.yml
+
+Mac:
+        
+        conda env create ciao -f models/ciao-4.13-macOS-environment.yml
+
+
+Afterward install the Astro Neo packages by:
+
+        pip install setup.py
 <!-- To install EXAFS Neo, simply clone the repo:
 
         git clone https://github.com/laumiulun/EXAFS-Neo-Public.git
         cd EXAFS-Neo-Public/
         python setup.py install -->
 
+
+
 ## Usage:
+
+To perform a simple test,
+
 <!-- To run a sample test, make sure the enviornment is set correctly, and select a input file:
 
         exafs -i test/test.ini -->
@@ -41,8 +61,8 @@ It is highly recommend to create a new environment in `anaconda` to run EXAFS Ne
         cd gui
         python XAFS_GUI.py
 
-The GUI contains helper function which -->
 
+The GUI contains helper function which -->
 ## Potential Errors
 <!-- If you get an error message involving psutl, make sure you are in the right conda environment and reinstall psutl and xraylarch:
 

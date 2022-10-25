@@ -3,7 +3,7 @@ from __future__ import print_function, unicode_literals
 import sys
 import codecs
 from setuptools import setup, find_packages
-from GAMO import __version__, __author__, __email__
+from AstroNeo import __version__, __author__, __email__
 
 
 with open('requirements.txt') as f:
@@ -17,24 +17,27 @@ def long_description():
 
 
 setup(
-    name='GAMO',
+    name='Astro Neo ',
     version=__version__,
     packages=find_packages(),
 
     author=__author__,
     author_email=__email__,
-    keywords=['Genetic Algorithm', 'AI', 'analysis'],
-    description='Genetic Algorthims Material Optimizer (GAMO)',
+    keywords=['Genetic Algorithm','X-Ray','AI', 'analysis'],
+    description='Astro GA',
     long_description=long_description(),
-    url='https://github.com/laumiulun/GAMO',
-    download_url='https://github.com/laumiulun/GAMO/tarball/master',
+    url='https://github.com/Computational-Science-Group/astro-neo',
+    download_url='https://github.com/Computational-Science-Group/astro-neo/tarball/master',
     include_package_data=True,
     zip_safe=False,
 
     install_requires=requirements,
     entry_points={
+        # 'console_scripts': [
+        #     'GAMO = GAMO.GAMO:main',
+        # ]
         'console_scripts': [
-            'GAMO = GAMO.GAMO:main',
+            'AstroNeo=AstroNeo.AstroNeo:main',
         ]
     },
     license='GPLv3',
