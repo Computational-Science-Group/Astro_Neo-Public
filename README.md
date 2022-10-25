@@ -43,7 +43,9 @@ Afterward install the Astro Neo packages by:
 
 ## Usage:
 
-To perform a simple test,
+To perform a simple test, make sure the right environment is set, and select a input file as a input arguments:
+
+        astro-neo -i test/test.ini
 
 <!-- To run a sample test, make sure the enviornment is set correctly, and select a input file:
 
@@ -55,6 +57,12 @@ To perform a simple test,
         git pull --rebase
         python setup.py install -->
 
+Astro Neo is under active development, to update the code after pulling the latest changes from the repository:
+
+        git pull --rebase
+        pip install setup.py
+        
+
 ## GUI
 <!-- We also have provided a GUI for use in additions to our program, with additional helper script to facilitate post-analysis. To use the GUI:
 
@@ -63,15 +71,22 @@ To perform a simple test,
 
 
 The GUI contains helper function which -->
-## Potential Errors
-<!-- If you get an error message involving psutl, make sure you are in the right conda environment and reinstall psutl and xraylarch:
+
+We also have provided a GUI for use in additions to our program, with additional helper script to facilitate pre and post-analysis. The GUI is under active development and in beta still:
+
+        cd gui
+        python Astro_GUI.py
+
+
+<!-- ## Potential Errors
+If you get an error message involving psutl, make sure you are in the right conda environment and reinstall psutl and xraylarch:
 
         conda activate exafs
         conda install psutl
-        conda install -yc GSECARS xraylarch -->
+        conda install -yc GSECARS xraylarch --> 
 
-## Video Demonstration
-<!-- You can see a list of video demonstrations of the EXAFS Neo package presented, future presentation related to this software will be posted as they are available
+<!-- ## Video Demonstration
+You can see a list of video demonstrations of the EXAFS Neo package presented, future presentation related to this software will be posted as they are available
 
 - https://youtu.be/KwhItvwhapg [Feb 15, 2021] (University of Washington)
 - https://youtu.be/jqISqq_FFR8 [Dec 10, 2020] (Canadian Light Source) -->
