@@ -41,6 +41,8 @@ Afterward install the Astro Neo packages by:
         cd EXAFS-Neo-Public/
         python setup.py install -->
 
+1. First create conda environment:
+
 Linux:
 
         conda create -n ciao -c <https://cxc.cfa.harvard.edu/conda/ciao> -c conda-forge ciao sherpa ds9 ciao-contrib caldb_main marx
@@ -52,6 +54,16 @@ Mac (x86 Intel):
 Mac (M1):
 
         CONDA_SUBDIR=osx-64 conda create -n ciao -c https://cxc.cfa.harvard.edu/conda/ciao -c conda-forge ciao sherpa ds9 ciao-contrib caldb_main marx
+
+This should install all require dep packages and create a conda environment named ``ciao``. Active the environment via:
+
+        conda activate ciao
+
+2. Clone and Install software:
+
+        git clone https://github.com/laumiulun/Astro_Neo.git
+
+        pip install .
 
 ## Usage
 

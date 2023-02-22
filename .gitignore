@@ -50,4 +50,4 @@ build/
 __pycache__/
 *.pyc
 .ipynb_checkpoints
-GAMO.egg-info/
+AstroNeo.egg-info/
