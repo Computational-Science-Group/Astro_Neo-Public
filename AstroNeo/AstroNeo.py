@@ -10,7 +10,7 @@ from .voigt_shape import voigt_fuc
 import cProfile,pstats
 # from .run_verbose import *
 
-class GAMO:
+class AstroNEO:
 
     def initialize_params(self,verbose = False):
         """
@@ -656,7 +656,7 @@ def main():
     profiler = cProfile.Profile()
 
     profiler.enable()
-    GAMO()
+    AstroNEO()
     profiler.disable()
     stats = pstats.Stats(profiler).sort_stats('cumtime')
     # stats.print_stats()

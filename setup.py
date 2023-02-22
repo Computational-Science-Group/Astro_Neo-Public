@@ -17,7 +17,7 @@ def long_description():
 
 
 setup(
-    name='Astro Neo ',
+    name='AstroNeo',
     version=__version__,
     packages=find_packages(),
 
@@ -33,9 +33,6 @@ setup(
 
     install_requires=requirements,
     entry_points={
-        # 'console_scripts': [
-        #     'GAMO = GAMO.GAMO:main',
-        # ]
         'console_scripts': [
             'AstroNeo=AstroNeo.AstroNeo:main',
         ]
