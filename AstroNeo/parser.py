@@ -1,8 +1,9 @@
 # Parser for Inputs files
 
-import os
+import sys
 import configparser
 from .helper import bcolors
+
 
 def CheckKey(dict, key_list):
     for i in range(len(key_list)):
@@ -10,26 +11,32 @@ def CheckKey(dict, key_list):
             dict[key_list[i]]
 
         except KeyError:
-            raise KeyError(str(key_list[i]) + ' is missing')
+            # raise KeyError(str(key_list[i]) + ' is missing')
+            print(f"Key '{key_list[i]}' is missing")
+            sys.exit()
             # break
-def CheckOptionalKey(dict,optional_key_list):
-	optional_key = []
-	for i in range(len(optional_key_list)):
-		try:
-			dict[optional_key_list[i]]
-		except KeyError:
-			optional_key.append(optional_key_list[i])
 
-	return optional_key
+
+def CheckOptionalKey(dict, optional_key_list):
+    optional_key = []
+    for i in range(len(optional_key_list)):
+        try:
+            dict[optional_key_list[i]]
+        except KeyError:
+            optional_key.append(optional_key_list[i])
+
+    return optional_key
 # config the parser to the right order:
-def read_input_file(input_file,verbose=False):
+
+
+def read_input_file(input_file, verbose=False):
     config = configparser.ConfigParser()
     config.read(input_file)
     config = config._sections
 
     # read into each dict
-    file_min = ['Inputs','Populations','Mutations','Paths','Outputs']
-    CheckKey(config,file_min)
+    file_min = ['Inputs', 'Populations', 'Mutations', 'Paths', 'Outputs']
+    CheckKey(config, file_min)
 
     Inputs_dict = config['Inputs']
     Populations_dict = config['Populations']
@@ -39,28 +46,28 @@ def read_input_file(input_file,verbose=False):
     Outputs_dict = config['Outputs']
 
     # Checking for minimum inputs
-    input_min = ['data_file','output_file','fits_file']
-    CheckKey(Inputs_dict,input_min)
+    input_min = ['data_file', 'output_file']
+    CheckKey(Inputs_dict, input_min)
 
-    population_min = ['population','num_gen','best_sample','lucky_few']
-    CheckKey(Populations_dict,population_min)
+    population_min = ['population', 'num_gen', 'best_sample', 'lucky_few']
+    CheckKey(Populations_dict, population_min)
 
-    mutation_min = ['chance_of_mutation','original_chance_of_mutation','mutated_options']
-    CheckKey(Mutations_dict,mutation_min)
+    mutation_min = ['chance_of_mutation',
+                    'original_chance_of_mutation', 'mutated_options']
+    CheckKey(Mutations_dict, mutation_min)
 
-    path_min = ['npaths','fits']
-    path_optional = ['path_optimize','steady_state','corr_paths']
-    CheckKey(Paths_dict,path_min)
-    path_missing = CheckOptionalKey(Paths_dict,path_optional)
-
+    path_min = ['npaths', 'center']
+    path_optional = ['path_optimize', 'steady_state', 'corr_paths']
+    CheckKey(Paths_dict, path_min)
+    path_missing = CheckOptionalKey(Paths_dict, path_optional)
 
     # larch_min = ['kmin','kmax','kweight','deltak','rbkg','bkgkw','bkgkmax']
     # CheckKey(Larch_dict,larch_min)
 
-    output_min =['print_graph','num_output_paths']
-    output_optional = ['steady_state','profile']
-    CheckKey(Outputs_dict,output_min)
-    output_missing = CheckOptionalKey(Outputs_dict,output_min)
+    output_min = ['print_graph', 'num_output_paths']
+    output_optional = ['steady_state', 'profile']
+    CheckKey(Outputs_dict, output_min)
+    output_missing = CheckOptionalKey(Outputs_dict, output_min)
 
     # Adjust values
 
@@ -78,14 +85,15 @@ def read_input_file(input_file,verbose=False):
 
     return file_dict
 
+
 def print_input_file(file_dict):
-    for key,value in file_dict.items():
-        print("[" +bcolors.BOLD + str(key)+ bcolors.ENDC +"]")
-        for inner_key,inner_value in value.items():
-            print('---'  +  inner_key + ": " +inner_value)
+    for key, value in file_dict.items():
+        print("[" + bcolors.BOLD + str(key) + bcolors.ENDC + "]")
+        for inner_key, inner_value in value.items():
+            print('---' + inner_key + ": " + inner_value)
 
 
-## Need to run some sample:
+# Need to run some sample:
 # if __name__ == '__main__':
 #
 #     checkKey()

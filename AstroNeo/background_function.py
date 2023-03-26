@@ -1,15 +1,21 @@
-from numpy import amax,amin,zeros,array
+from numpy import amax, amin, zeros, array
 from numpy.linalg import norm
 import sys
 from scipy import integrate
 # import larch.math as lm
 
-def nobg(x,y):
+
+def nobg(x, y):
     len_array = len(x)
     bg = zeros(len_array)
     return bg
 
-DEBUG=0
+
+DEBUG = 0
+
+
+# def Xtab_PL(x, y):
+
 
 def shirley(x, y, tol=1e3, maxit=1):
     """
@@ -27,7 +33,7 @@ def shirley(x, y, tol=1e3, maxit=1):
 
     # Sanity check: Do we actually have data to process here?
     if not (x.any() and y.any()):
-        print ("specs.shirley_calculate: One of the arrays x or y is empty. Returning zero background.")
+        print("specs.shirley_calculate: One of the arrays x or y is empty. Returning zero background.")
         return zeros(x.shape)
 
     # Next ensure the energy values are *decreasing* in the array,
@@ -42,7 +48,7 @@ def shirley(x, y, tol=1e3, maxit=1):
     # Locate the biggest peak.
     maxidx = abs(y - amax(y)).argmin()
 
-    #print('valor:',maxidx)
+    # print('valor:',maxidx)
     # It's possible that maxidx will be 0 or -1. If that is the case,
     # we can't use this algorithm, we return a zero background.
 
@@ -115,7 +121,7 @@ def shirley_temp(x, y, tol=1e-5, maxit=50):
 
     # Sanity check: Do we actually have data to process here?
     if not (x.any() and y.any()):
-        print ("specs.shirley_calculate: One of the arrays x or y is empty. Returning zero background.")
+        print("specs.shirley_calculate: One of the arrays x or y is empty. Returning zero background.")
         return zeros(x.shape)
 
     # Next ensure the energy values are *decreasing* in the array,
@@ -129,7 +135,7 @@ def shirley_temp(x, y, tol=1e-5, maxit=50):
 
     # Locate the biggest peak.
     maxidx = abs(y - amax(y)).argmin()
-    #print('valor:',maxidx)
+    # print('valor:',maxidx)
     # It's possible that maxidx will be 0 or -1. If that is the case,
     # we can't use this algorithm, we return a zero background.
     if maxidx == 0 or maxidx >= len(y) - 1:

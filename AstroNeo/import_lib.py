@@ -1,41 +1,44 @@
 # Import Library
+import os
+from psutil import cpu_count
+import time
+import datetime
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+import csv
+import sys
+import sherpa
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import pathlib
+import numpy as np
+from operator import itemgetter
+import operator
+import random
 from .import_lib import *
 from .input_arg import *
 from .helper import *
+from sherpa.astro.ui import load_rmf, set_analysis, notice_id, set_method, set_xsabund, set_xsxsect, set_xscosmo
 
 if timeing_mode:
-# %matplotlib inline
+    # %matplotlib inline
     t1 = timecall()
 
-from psutil import cpu_count
 # Set the number of threads
-import os
 os.environ['NUMEXPR_MAX_THREADS'] = str(cpu_count())
-import random
-import operator
-import sys, csv
-import datetime,time
-from operator import itemgetter
-import numpy as np
 # import larch
 # import lmfit
-import pathlib
 # from larch_plugins.io import read_ascii
 # from larch_plugins.xafs import autobk
 # from larch_plugins.xafs import feffdat
 # from larch_plugins.xafs import xftf
 # from larch import Interpreter
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 # from scipy.integrate import simps
 # from multiprocessing import Pool
 # import multiprocessing as mp
 # import ray
 # from multiprocessing import Pool as ProcessPool
 # from multiprocessing.dummy import Pool as ThreadPool  ### this uses threads
-from sklearn.preprocessing import StandardScaler,MinMaxScaler
-
 
 if timeing_mode:
-    initial_elapsed = timecall()- t1
-    print('Inital import function took %.2f second' %initial_elapsed)
+    initial_elapsed = timecall() - t1
+    print('Inital import function took %.2f second' % initial_elapsed)
