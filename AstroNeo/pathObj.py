@@ -643,9 +643,9 @@ class EmissionLorentz(BaseObj):
         self._indep = 4
 
         self.range_dicts = {
-            'center': (center, center+1, 0.01),
-            'fwhm': (0, 1e6, 1e-3),
-            'flux': (0, 1, 1e-5),
+            'center': (center-0.5, center+0.5, 0.001),
+            'fwhm': (0, 1e6, 1e-2),
+            'flux': (0, 1, 1e-4),
             'kurt': (0, 2, 1e-3)
         }
 

@@ -28,10 +28,10 @@ class AstroNEO:
         """
         self.genNum = 0
         self.nChild = 4
-        self.globBestFit = [0, 99e5]
-        self.currBestFit = [0, 99e5]
-        self.bestDiff = 9999e11
-        self.bestBest = 999999999e11
+        self.globBestFit = [0, np.inf]
+        self.currBestFit = [0, np.inf]
+        self.bestDiff = np.inf
+        self.bestBest = np.inf
         self.diffCounter = 0
 
         self.pathDictionary = {}
@@ -203,8 +203,10 @@ class AstroNEO:
             self.dt_DeltaR = [0.01,2]
             # sys.exit()
             # self.rangeS02 = (np.linspace(5, 95, 91) * 0.01)  # <- should be separate
-            self.rangeE0 = (np.linspace(-100, 100, 201) * 0.01) # <- e0, for everything
-            self.rangeE0_large = (np.linspace(-600, 600, 1201) * 0.01)  # <- Larger range B
+            self.rangeE0 = (np.linspace(-100, 100, 201) * \
+                            0.01) # <- e0, for everything
+            # <- Larger range B
+            self.rangeE0_large = (np.linspace(-600, 600, 1201) * 0.01)
         """
 
         data = np.loadtxt(self.data_file, delimiter=',', skiprows=1)
