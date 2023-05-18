@@ -2,7 +2,7 @@
 
 #### Versions: 0.0.1
 
-#### Last update: Jan 28, 2023
+#### Last update: Feb 22, 2023
 
 Astro Neo
 
@@ -37,7 +37,7 @@ Afterward install the Astro Neo packages by:
         pip install setup.py
 <!-- To install EXAFS Neo, simply clone the repo:
 
-        git clone https://github.com/laumiulun/EXAFS-Neo-Public.git
+        git clone https://github.com/laumiulun/Astro-Neo-Public.git
         cd EXAFS-Neo-Public/
         python setup.py install -->
 
@@ -69,7 +69,7 @@ This should install all require dep packages and create a conda environment name
 
 To perform a simple test, make sure the right environment is set, and select a input file as a input arguments:
 
-        astro-neo -i test/test.ini
+        Astro_Neo -i test/test.ini
 
 <!-- To run a sample test, make sure the enviornment is set correctly, and select a input file:
 

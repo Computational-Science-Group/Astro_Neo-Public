@@ -9,6 +9,7 @@ from .background_function import shirley, nobg, shirley_temp
 from .voigt_shape import voigt_fuc
 import cProfile
 import pstats
+
 # from .run_verbose import *
 
 
@@ -159,7 +160,7 @@ class AstroNEO:
         # file_gen = os.path.splitext(file)[0] + '_generations.csv'
         # self.check_if_exists(file_gen)
 
-    def intitalize_fits(self):
+    def intitialize_fits(self):
         # file = 'data/G130M_G160M.fits'
         file = {}
         file['fits'] = '/Users/andy/projects/Astro_Neo/input_files/uv/data/left_pha_grp.fits'
@@ -173,6 +174,8 @@ class AstroNEO:
         set_xsabund('angr')
         set_xsxsect('vern')
         set_xscosmo(70, 0, 0.73)
+
+        # set_stat("chi2xspecvar")
 
     def initialize_range(self, i=0, BestIndi=None):
         """
@@ -209,10 +212,10 @@ class AstroNEO:
             self.rangeE0_large = (np.linspace(-600, 600, 1201) * 0.01)
         """
 
-        data = np.loadtxt(self.data_file, delimiter=',', skiprows=1)
+        # data = np.loadtxt(self.data_file, delimiter=',', skiprows=1)
         # print(data[:,0])
-        self.x_raw = data[:, 0]
-        self.y_raw = data[:, 1]
+        # self.x_raw = data[:, 0]
+        # self.y_raw = data[:, 1]
 
         # print(data[:,1])
         # print(self.x_raw)
@@ -220,21 +223,21 @@ class AstroNEO:
         # plt.plot(self.x_raw,self.y_raw)
         # plt.show()
         # Background subtraction
-        self.intitalize_fits()
+        # self.intitalize_fits()
 
-        self.bg = nobg(self.x_raw, self.y_raw)
-        # self.Bg_obj = Background_Obj(1,'ShirleyExp')
-        # self.bg = shirley(self.x_raw,self.y_raw)
-        # self.
-        self.y_background = self.y_raw - self.bg
-        self.center_range = [np.min(self.x_raw), np.max(self.x_raw)]
+        # self.bg = nobg(self.x_raw, self.y_raw)
+        # # self.Bg_obj = Background_Obj(1,'ShirleyExp')
+        # # self.bg = shirley(self.x_raw,self.y_raw)
+        # # self.
+        # self.y_background = self.y_raw - self.bg
+        # self.center_range = [np.min(self.x_raw), np.max(self.x_raw)]
 
-        self.y_scaler = MinMaxScaler()
-        self.y_normal = self.y_scaler.fit_transform(
-            self.y_background.reshape(-1, 1))
+        # self.y_scaler = MinMaxScaler()
+        # self.y_normal = self.y_scaler.fit_transform(
+        #     self.y_background.reshape(-1, 1))
 
-        self.x_scaler = MinMaxScaler()
-        self.x_normal = self.x_scaler.fit_transform(self.x_raw.reshape(-1, 1))
+        # self.x_scaler = MinMaxScaler()
+        # self.x_normal = self.x_scaler.fit_transform(self.x_raw.reshape(-1, 1))
 
     def create_range(self, value, percentage, dt, prec):
         minus = round(value - percentage*value, prec)
@@ -258,56 +261,49 @@ class AstroNEO:
     def fitness(self, indObj):
         """
         Evaluate fitness of a individual
+
+        To do
         """
         loss = 0
 
-        Individual = indObj.get_func()
-        yTotal = np.zeros(len(self.x_raw))
+        Individual = indObj.get_func()[0]
 
-        for i, paths in enumerate(Individual):
-            y = paths.get_func(self.x_raw, self.y_normal)
-            # print(y.shape)
-            yTotal += y
-        # Least Square
-        for j in range(len(self.x_normal)):
-            loss = loss + (yTotal[j]*self.x_raw[j] **
-                           2 - self.y_normal[j] * self.x_raw[j]**2)**2
+        model = Individual.get_func()
+        # yTotal = np.zeros(len(self.x_raw))
 
+        # for i, paths in enumerate(Individual):
+        #     y = paths.get_func(self.x_raw, self.y_normal)
+        #     # print(y.shape)
+        #     yTotal += y
+        # # Least Square
+        # for j in range(len(self.x_normal)):
+        #     loss = loss + (yTotal[j]*self.x_raw[j] **
+        #                    2 - self.y_normal[j] * self.x_raw[j]**2)**2
+        # print(Individual)
+        set_source(1, model)
+
+        # loss = (get_staterror(1, filter=True))
+        loss = get_stat_info()[0].statval
+        # print(loss)
         return loss
 
     def eval_Population(self):
-        """
-        Evalulate populations
+        """Evaluate the population for GA
+
+        Returns:
+            _type_: _description_
         """
 
         score = []
         populationPerf = {}
 
         for i, individual in enumerate(self.Populations):
-            # print(i)
-            # print(i,individual)
-            # t1 = time.time()
-            # print(individual)
-            # individual.correlate_update()
+
             temp_score = self.fitness(individual)
             score.append(temp_score)
 
             populationPerf[individual] = temp_score
 
-            # self.time == True:
-            # t2 = time.time()
-            # print(t2-t1)
-            # Average
-            # print(individualTuple)
-        # pool = ThreadPool(processes=2)
-        # pool.map(self.fitness,range(self.npops))
-        # pool.close()
-        # pool.join()
-        # print(score)
-        # score
-        # self.pop
-        # print(populationPerf.items())
-        # print(operator.itemgetter(1))
         self.sorted_population = sorted(
             populationPerf.items(), key=operator.itemgetter(1), reverse=False)
 
@@ -316,6 +312,8 @@ class AstroNEO:
         return score
 
     def next_generation(self):
+        """Next Generation for GA
+        """
         self.st = time.time()
         # ray.init()
         print("---------------------------------------------------------")
@@ -349,43 +347,40 @@ class AstroNEO:
 
         with np.printoptions(precision=5, suppress=True):
             print(
-                f"Best Fit: {bcolors.BOLD}{self.sorted_population[0][1].round(5)}{bcolors.ENDC}")
-            print("2nd Fit:", self.sorted_population[1][1].round(5))
-            print("3rd Fit:", self.sorted_population[2][1].round(5))
-            print("4th Fit:", self.sorted_population[3][1].round(5))
-            print("Last Fit:", self.sorted_population[-1][1].round(5))
-            print("Different from last best fit:", self.bestDiff)
-            print(bcolors.BOLD + "Best fit :", bcolors.OKBLUE +
-                  str(self.currBestFit[1]) + bcolors.ENDC)
-            CurrchiR = self.currBestFit[1]/(len(self.x_raw)-4*self.npaths)
-            print(bcolors.BOLD + "Best fit ChiR:",
-                  bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
-            # print()
-            # print(bcolors.BOLD + "Best fit ChiR:", bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
+                f"Best Fit: {bcolors.BOLD}{self.sorted_population[0][1]}{bcolors.ENDC}")
+            print(f"2nd Fit: {self.sorted_population[1][1]}")
+            print(f"3rd Fit: {self.sorted_population[2][1]}")
+            print(f"4th Fit: {self.sorted_population[3][1]}")
+            print(f"Last Fit: {self.sorted_population[-1][1]}")
+            print(f"Different from last best fit: {self.bestDiff}")
+            # print(bcolors.BOLD + "Best fit :", bcolors.OKBLUE +
+            #       str(self.currBestFit[1]) + bcolors.ENDC)
+            # CurrchiR = self.currBestFit[1]/(len(self.x_raw)-4*self.npaths)
+            # print(bcolors.BOLD + "Best fit ChiR:",
+            #       bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
 
             print("Best fit combination:\n",
                   np.asarray(self.currBestFit[0].get()))
             print(bcolors.BOLD + "History Best:", bcolors.OKBLUE +
                   str(self.globBestFit[1]) + bcolors.ENDC)
-            GlobchiR = self.globBestFit[1]/(len(self.x_raw)-4*self.npaths)
-            print(bcolors.BOLD + "History Best ChiR:",
-                  bcolors.OKBLUE + str(GlobchiR) + bcolors.ENDC)
-            print("History Best Indi:\n", np.asarray(
-                self.globBestFit[0].get()))
+            # GlobchiR = self.globBestFit[1]/(len(self.x_raw)-4*self.npaths)
+            # print(bcolors.BOLD + "History Best ChiR:",
+            #       bcolors.OKBLUE + str(GlobchiR) + bcolors.ENDC)
+            # print("History Best Indi:\n", np.asarray(
+            #     self.globBestFit[0].get()))
 
         nextBreeders = self.selectFromPopulation()
-        print("Number of Breeders: " + str(len(self.parents)))
-        # print(self.parents)
         self.createChildren()
-        print("DiffCounter: ", self.diffCounter)
-        print("Diff %:", self.diffCounter / self.genNum)
-        print("Mutation Chance: ", self.mut_chance)
+        print(f"Number of Breeders: {str(len(self.parents))}")
+        print(f"DiffCounter: {self.diffCounter}")
+        print(f"Diff %: {self.diffCounter / self.genNum}")
+        print(f"Mutation Chance: {self.mut_chance}")
         self.mutatePopulation()
 
         self.et = timecall()
         self.tdiff = self.et - self.st
         self.tt = self.tt + self.tdiff
-        print("Time: " + str(round(self.tdiff, 5)) + "s")
+        print(f"Time: {str(round(self.tdiff, 5))} s")
 
     def mutatePopulation(self):
         """
@@ -506,6 +501,8 @@ class AstroNEO:
         self.Populations = self.nextPopulation
 
     def run_verbose_start(self):
+        """Generate Verbose output at the start
+        """
         print("-----------Inputs File Stats---------------")
         print(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.data_file}")
         print(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.output_path}")
@@ -523,6 +520,8 @@ class AstroNEO:
         print("-------------------------------------------")
 
     def run_verbose_end(self):
+        """Generate verbose output at the end
+        """
         print("-----------Output Stats---------------")
         print(f"{bcolors.BOLD}Total Time(s){bcolors.ENDC}: {round(self.tt,4)}")
         # print(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.data_path}")
@@ -562,17 +561,22 @@ class AstroNEO:
             temp_gen = self.next_generation()
             self.output_generations()
             if printgraph:
-                test_y = self.export_paths(self.globBestFit[0])
-                real_y = np.array(self.y_scaler.inverse_transform(
-                    test_y.reshape(-1, 1))).flatten() + self.bg
-                self.ax.plot(self.x_scaler.inverse_transform(
-                    self.x_normal.reshape(-1, 1)), real_y, 'k--', label='Fit')
-                self.ax.set_title('Generation: ' + str(i+1))
-                self.ax.scatter(self.x_raw, self.y_background +
-                                self.bg, s=10, label='data')
-                self.out_str = str(np.asarray(self.currBestFit[0].get()))
-                self.ax.text(0.1, 0.8, s=self.out_str,
-                             transform=self.ax.transAxes)
+                # test_y = self.export_paths(self.globBestFit[0])
+                # real_y = np.array(self.y_scaler.inverse_transform(
+                #     test_y.reshape(-1, 1))).flatten() + self.bg
+                # self.ax.plot(self.x_scaler.inverse_transform(
+                #     self.x_normal.reshape(-1, 1)), real_y, 'k--', label='Fit')
+                # self.ax.set_title('Generation: ' + str(i+1))
+                # self.ax.scatter(self.x_raw, self.y_background +
+                #                 self.bg, s=10, label='data')
+                # self.out_str = str(np.asarray(self.currBestFit[0].get()))
+                # self.ax.text(0.1, 0.8, s=self.out_str,
+                #              transform=self.ax.transAxes)
+
+                model = self.globBestFit[0].get_func()[0].get_func()
+                set_source(1, model)
+                plot_fit(1)
+                plt.title(f'Generation: {self.genNum}')
                 plt.show(block=False)
                 plt.pause(0.001)
                 plt.cla()
@@ -583,24 +587,10 @@ class AstroNEO:
         self.run_verbose_end()
         # print(self.globBestFit)
         # Final
-        self.fig, self.ax = plt.subplots(nrows=1, ncols=1)
-
-        test_y = self.export_paths(self.globBestFit[0])
-        real_y = np.array(self.y_scaler.inverse_transform(
-            test_y.reshape(-1, 1))).flatten() + self.bg
-
-        self.ax.plot(self.x_scaler.inverse_transform(
-            self.x_normal.reshape(-1, 1)), real_y, 'k--', label='Fit')
-
-        # print(test.reshape(1,-1))
-        self.ax.scatter(self.x_raw, self.y_background +
-                        self.bg, s=10, label='data')
-        self.ax.plot(self.x_raw, self.bg, label='background')
-
-        # plt.plot(self.x_raw,test_y,'k--',label='fit')
-        self.out_str = str(np.asarray(self.currBestFit[0].get()))
-        self.ax.text(0.1, 0.8, s=self.out_str, transform=self.ax.transAxes)
-
+        model = self.globBestFit[0].get_func()[0].get_func()
+        set_source(1, model)
+        plot_fit(1)
+        plt.title(f'Final Result')
         # Exit profiler
         if self.profile_toggle:
             self.profiler.disable()
@@ -631,16 +621,8 @@ class AstroNEO:
                 y.reshape(-1, 1)).flatten() + self.bg
             self.ax.plot(self.x_scaler.inverse_transform(
                 self.x_normal.reshape(-1, 1)), y_peak, label='peak' + str(i))
-            # component = paths.Voigt1.get_func(self.x_raw).reshape(-1,1)
-            # component2 = paths.S_Voigt.get_func(self.x_raw).reshape(-1,1)
-            # plt.plot(self.x_scaler.inverse_transform(self.x_normal.reshape(-1,1)),self.y_scaler.inverse_transform(component),'--',label='peak'+ str(i) )
-            # plt.plot(self.x_scaler.inverse_transform(self.x_normal.reshape(-1,1)),self.y_scaler.inverse_transform(component2),'--',label='peak'+ str(i) )
-            # print(paths.Voigt1.verbose())
-            # print(paths.S_Voigt.verbose())
 
-            # print(self.fwhm(paths))
             area_list.append(area)
-        # return self.y_scaler.inverse_transform(yTotal.reshape(-1,1))
 
         Total_area = np.sum(area_list)
         print(area_list/Total_area)
@@ -652,8 +634,6 @@ class AstroNEO:
         """
         try:
             f1 = open(self.file, "a")
-        # f1.write(str(self.genNum) + "," + str(self.tdiff) + "," + str(self.currBestFit[1]) + "," + str(self.currBestFit[0].get()) + "," +
-            # str(self.globBestFit[1]) + "," + str(self.globBestFit[0].get()) + "\n")
             f1.write(str(self.genNum) + "," + str(self.tdiff) + "," +
                      str(self.currBestFit[1]) + "," + str(self.currBestFit[0].get()) + "," +
                      str(self.globBestFit[1]) + "," + str(self.globBestFit[0].get()) + "\n")
@@ -676,8 +656,7 @@ class AstroNEO:
 
     def __init__(self):
         """
-        Steps to Initalize EXAFS
-            EXAFS
+        Steps to Initalize AstroNEO
         """
         # initialize params
         self.initialize_params()
@@ -686,7 +665,7 @@ class AstroNEO:
         # initialze file paths
         self.initialize_file_path()
         # initialize range
-        self.initialize_range()
+        self.intitialize_fits()
         # Generate first generation
         self.generateFirstGen()
 
@@ -695,13 +674,13 @@ class AstroNEO:
 
 def main():
 
-    profiler = cProfile.Profile()
+    # profiler = cProfile.Profile()
 
-    profiler.enable()
+    # profiler.enable()
     AstroNEO()
-    profiler.disable()
-    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    # profiler.disable()
+    # stats = pstats.Stats(profiler).sort_stats('cumtime')
     # stats.print_stats()
-    stats.dump_stats('Export_Data.txt')
+    # stats.dump_stats('Export_Data.txt')
 
     # GAMO()

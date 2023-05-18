@@ -23,7 +23,7 @@ setup(
 
     author=__author__,
     author_email=__email__,
-    keywords=['Genetic Algorithm','X-Ray','AI', 'analysis'],
+    keywords=['Genetic Algorithm', 'X-Ray', 'AI', 'analysis'],
     description='Astro GA',
     long_description=long_description(),
     url='https://github.com/Computational-Science-Group/astro-neo',
@@ -34,7 +34,7 @@ setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            'AstroNeo=AstroNeo.AstroNeo:main',
+            'Astro_Neo=AstroNeo.AstroNeo:main',
         ]
     },
     license='GPLv3',

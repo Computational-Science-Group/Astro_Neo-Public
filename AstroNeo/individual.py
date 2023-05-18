@@ -1,5 +1,6 @@
 from .pathObj import GaussianObj, VoigtObj, DoniachObj, ShirleyBG_Obj, ShirleyExpObj,\
-    ExponentialObj, DoniachObjGauss, DoniachObj_Test, DS_Jeff, Thermal, Gaussian_Abs, XStabsBG, EmissionLorentz
+    ExponentialObj, DoniachObjGauss, DoniachObj_Test, DS_Jeff, Thermal, Gaussian_Abs, \
+    XStabsBG, EmissionLorentz, XspecSpectrum, Sherpa_APEC
 
 from .pathObj import Eggholder
 # from pathObj import VoigtObj,DoniachObj,GaussianObj,ExponentialObj,ShirleyExpObj
@@ -25,7 +26,8 @@ def shape_function_parser(Fit, center_range=0, *args):
         "Gauss_Abs": Gaussian_Abs(center_range),
         "XStabsBG": XStabsBG(),
         "EmissionLorentz": EmissionLorentz(center_range),
-        # "XspecSpectrum": XspecSpectrum(center_range,args[2])
+        # "XspecSpectrum": XspecSpectrum(center_range)
+        "Sherpa_APEC": Sherpa_APEC(),
     }
     return switch.get(Fit, "Invalid")
 
@@ -52,6 +54,13 @@ class BackgroundObj():
 
 class Individual():
     def __init__(self, npaths, fits, center):
+        """_summary_
+
+        Args:
+            npaths (_type_): _description_
+            fits (_type_): _description_
+            center (_type_): _description_
+        """
         self.npaths = npaths
         self.Population = [None] * self.npaths
         self.center = center

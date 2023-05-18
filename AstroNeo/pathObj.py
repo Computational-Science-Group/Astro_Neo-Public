@@ -4,7 +4,7 @@ import os
 # from lmfit import Model
 # from lmfit.models import GaussianModel,VoigtModel,DoniachModel,ExponentialModel
 # from .background_function import shirley
-# from scipy import integrate
+from scipy import integrate
 from scipy.special import gammaln, wofz
 # import xspec
 from sherpa.astro.ui import create_model_component, set_par, set_source, get_data, get_fit_plot
@@ -16,6 +16,8 @@ import sys
 """
 Author: Andy Lau
 """
+
+# Setup some default constraints
 tiny = 1.0e-15
 MAX = 3.40282e+38
 MIN = 1.17549e-38
@@ -721,99 +723,188 @@ class XStabsBG(BaseObj):
         return ym
 
 
-# class XspecSpectrum(BaseObj):
-#     def __init__(self,center,fits_file,_prefix=''):
-#         """
-#         :param center: inital center
-#         :type center: float
-#
-#         """
-#         self._prefix=''
-#         self._params_names = [
-#             'nH',
-#             'PhoIndex','Plnorm',
-#             'Sig_6keV',
-#             'kT','C','N','O','Ne','Mg','Fe','Redshift','VapecNorm'
-#         ]
-#         self._indep = 13
-#         # initalize parameters
-#         self.xspec = xspec
-#         self.xspec.Plot.device = "/null"
-#         self.xspec.Plot.xAxis = "angstrom"
-#         self.xspec.Plot.xLog = False
-#         self.xspec.Plot.yLog = False
-#         self.xspec.Plot.perHz = False
-#         self.xspec.Plot.area = True
-#         self.xspec.Plot.background = True
-#         # print(os.getcwd())
-#         fits_full_path = os.path.join(os.getcwd(),str(fits_file))
-#         print(fits_full_path)
-#         # sys.exit()
-#         # Standard paramters:
-#         self.l_src = self.xspec.Spectrum(str(fits_full_path))
-#         self.l_src.ignore("**-7.0 30.0-**")
-#         self.xspec.AllData.show()
-#         # sys.exit()
-#
-#         self.model = self.xspec.Model("tbabs*po+lsmooth*vapec")
-#
-#         self.model.TBabs.nH.frozen = True
-#         self.model.lsmooth.Sig_6keV.frozen = True
-#         self.model.lsmooth.Index = 1
-#         self.model.vapec.C.frozen = False
-#         self.model.vapec.N.frozen = False
-#         self.model.vapec.O.frozen = False
-#         self.model.vapec.Ne.frozen = False
-#         self.model.vapec.Mg.frozen = False
-#         self.model.vapec.Fe.frozen = False
-#         self.model.vapec.Redshift.frozen = True
-#
-#         self.range_dicts = {
-#             # TBabs
-#             'nH':(0.00,0.03,0.001),
-#             # Powerlaw
-#             'PhoIndex':(0.05,1.0,0.0001),
-#             'Plnorm':(0.0005,0.0007,1e-7),
-#             # lsmooth
-#             'Sig_6keV':(0.001,0.1,0.001),
-#             # vapec
-#             'kT':(0.01,0.6,0.001),
-#             'C':(5.00,6.00,0.001),
-#             'N':(0.95,0.99,0.001),
-#             'O':(0.4,0.5,0.001),
-#             'Ne':(0.8,0.9,1e-5),
-#             'Mg':(1.5,1.6,0.0001),
-#             'Fe':(0.15,0.19,1e-4),
-#             'Redshift':(0.0001,0.00081,1e-5),
-#             'VapecNorm':(0.0008,0.0010,1e-5)
-#         }
-#
-#         self._Params = ParamsDict(self._params_names)
-#         self._Params.initialize_range(self.range_dicts)
-#
-#
-#     def get_func(self,x,*args):
-#         Params = self._Params.get()
-#         # Get the parameters
-#         # nH
-#         self.model.TBabs.nH = Params['nH']
-#         # Powerlaw
-#         self.model.powerlaw.PhoIndex = Params['PhoIndex']
-#         self.model.powerlaw.norm = Params['Plnorm']
-#         # lsmooth
-#         self.model.lsmooth.Sig_6keV = Params['Sig_6keV']
-#         # Vapec
-#         self.model.vapec.kT = Params['kT']
-#         self.model.vapec.C = Params['C']
-#         self.model.vapec.N = Params['N']
-#         self.model.vapec.O = Params['O']
-#         self.model.vapec.Ne = Params['Ne']
-#         self.model.vapec.Mg = Params['Mg']
-#         self.model.vapec.Fe = Params['Fe']
-#         self.model.vapec.Redshift = Params['Redshift']
-#         self.model.vapec.norm = Params['VapecNorm']
-#
-#         # read files
-#         self.xspec.Plot()
-#         out_array = self.xspec.Plot.model()
-#         return (-1*np.array(out_array))
+class Test_NGC_Model(BaseObj):
+    def __init__(self, center=None, prefix=''):
+        self._prefix = prefix
+        self._params_names = ['m1_h', 'm2_h', 'm3_pho', 'm3_norm']
+        self._indep = 4
+
+        self.range_dicts = {
+            'm1_h': (0.00, 1.5, 0.001),
+            # 'center':(center,center+1,0.01),
+            'm2_h': (0, 1.5, 0.001),
+            'm3_pho': (0, 1.5, 0.001),
+            'm3_norm': (0.1, 1.5, 0.001)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+
+class Sherpa_BG(BaseObj):
+    def __init__(self, _prefix=''):
+        super().__init__(_prefix)
+
+
+class Sherpa_APEC(BaseObj):
+    """Calculate the model response for APEC model
+
+    Tbabs(lsmooth*vapec)
+
+    """
+
+    def __init__(self, _prefix=''):
+        self._prefix = _prefix
+        self._params_names = [
+            'm3_kT', 'm3_C', 'm3_N', 'm3_O', 'm3_Ne', 'm3_Mg', 'm3_Fe', 'm3_norm'
+        ]
+        self._indep = len(self._params_names)
+
+        self.m1 = create_model_component('xstbabs', 'm1')
+        self.m2 = create_model_component('xslsmooth', 'm2')
+        self.m3 = create_model_component('xsvapec', 'm3')
+
+        self.range_dicts = {
+            'm3_kT': (0.1, 10, 0.001),
+            'm3_C': (0, 10, 0.001),
+            'm3_N': (0, 10, 0.001),
+            'm3_O': (0, 10, 0.001),
+            'm3_Ne': (0, 10, 0.001),
+            'm3_Mg': (0, 10, 0.001),
+            'm3_Fe': (0, 1, 0.001),
+            'm3_norm': (1e-4, 1.5, 0.001)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+        set_par(self.m1.nH, 0.0279, max=100000, frozen=True)
+        set_par(self.m2.Sig_6keV, 0.02, max=10, frozen=True)
+        set_par(self.m2.Index, 1, frozen=True)
+        # set_par(m3.kT, 0.502421)
+        set_par(self.m3.He, 1, frozen=True)
+        # set_par(m3.C, 5.5039)
+        # set_par(m3.N, 0.990385)
+        # set_par(m3.O, 6.48552e-18)
+        # set_par(m3.Ne, 0.839257)
+        # set_par(m3.Mg, 1.53165)
+        set_par(self.m3.Al, 1, frozen=True)
+        set_par(self.m3.Si, 1, frozen=True)
+        set_par(self.m3.S, 1, frozen=True)
+        set_par(self.m3.Ar, 1, frozen=True)
+        set_par(self.m3.Ca, 1, frozen=True)
+        # set_par(m3.Fe, 0.179656)
+        set_par(self.m3.Ni, 1, frozen=True)
+        set_par(m3.redshift, 0.00081, frozen=True)
+        # set_par(self.m3.norm, 0.000908296, max=1e+20)
+
+    def get_func(self):
+        Params = self._Params.get()
+        set_par(self.m3.kT, Params['m3_kT'])
+        set_par(self.m3.C, Params['m3_C'])
+        set_par(self.m3.N, Params['m3_N'])
+        set_par(self.m3.O, Params['m3_O'])
+        set_par(self.m3.Ne, Params['m3_Ne'])
+        set_par(self.m3.Mg, Params['m3_Mg'])
+        set_par(self.m3.Fe, Params['m3_Fe'])
+        set_par(self.m3.norm, Params['m3_norm'])
+
+        model = self.m1*(self.m2(self.m3))
+        return model
+
+
+class XspecSpectrum(BaseObj):
+    def __init__(self, center, fits_file, _prefix=''):
+        """
+        :param center: inital center
+        :type center: float
+
+        """
+        self._prefix = ''
+        self._params_names = [
+            'nH',
+            'PhoIndex', 'Plnorm',
+            'Sig_6keV',
+            'kT', 'C', 'N', 'O', 'Ne', 'Mg', 'Fe', 'Redshift', 'VapecNorm'
+        ]
+        self._indep = 13
+        # initalize parameters
+        self.xspec = xspec
+        self.xspec.Plot.device = "/null"
+        self.xspec.Plot.xAxis = "angstrom"
+        self.xspec.Plot.xLog = False
+        self.xspec.Plot.yLog = False
+        self.xspec.Plot.perHz = False
+        self.xspec.Plot.area = True
+        self.xspec.Plot.background = True
+        # print(os.getcwd())
+        fits_full_path = os.path.join(os.getcwd(), str(fits_file))
+        print(fits_full_path)
+        # sys.exit()
+        # Standard paramters:
+        self.l_src = self.xspec.Spectrum(str(fits_full_path))
+        self.l_src.ignore("**-7.0 30.0-**")
+        self.xspec.AllData.show()
+        # sys.exit()
+
+        self.model = self.xspec.Model("tbabs*po+lsmooth*vapec")
+
+        self.model.TBabs.nH.frozen = True
+        self.model.lsmooth.Sig_6keV.frozen = True
+        self.model.lsmooth.Index = 1
+        self.model.vapec.C.frozen = False
+        self.model.vapec.N.frozen = False
+        self.model.vapec.O.frozen = False
+        self.model.vapec.Ne.frozen = False
+        self.model.vapec.Mg.frozen = False
+        self.model.vapec.Fe.frozen = False
+        self.model.vapec.Redshift.frozen = True
+
+        self.range_dicts = {
+            # TBabs
+            'nH': (0.00, 0.03, 0.001),
+            # Powerlaw
+            'PhoIndex': (0.05, 1.0, 0.0001),
+            'Plnorm': (0.0005, 0.0007, 1e-7),
+            # lsmooth
+            'Sig_6keV': (0.001, 0.1, 0.001),
+            # vapec
+            'kT': (0.01, 0.6, 0.001),
+            'C': (5.00, 6.00, 0.001),
+            'N': (0.95, 0.99, 0.001),
+            'O': (0.4, 0.5, 0.001),
+            'Ne': (0.8, 0.9, 1e-5),
+            'Mg': (1.5, 1.6, 0.0001),
+            'Fe': (0.15, 0.19, 1e-4),
+            'Redshift': (0.0001, 0.00081, 1e-5),
+            'VapecNorm': (0.0008, 0.0010, 1e-5)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+    def get_func(self, x, *args):
+        Params = self._Params.get()
+        # Get the parameters
+        # nH
+        self.model.TBabs.nH = Params['nH']
+        # Powerlaw
+        self.model.powerlaw.PhoIndex = Params['PhoIndex']
+        self.model.powerlaw.norm = Params['Plnorm']
+        # lsmooth
+        self.model.lsmooth.Sig_6keV = Params['Sig_6keV']
+        # Vapec
+        self.model.vapec.kT = Params['kT']
+        self.model.vapec.C = Params['C']
+        self.model.vapec.N = Params['N']
+        self.model.vapec.O = Params['O']
+        self.model.vapec.Ne = Params['Ne']
+        self.model.vapec.Mg = Params['Mg']
+        self.model.vapec.Fe = Params['Fe']
+        self.model.vapec.Redshift = Params['Redshift']
+        self.model.vapec.norm = Params['VapecNorm']
+
+        # read files
+        self.xspec.Plot()
+        out_array = self.xspec.Plot.model()
+        return (-1*np.array(out_array))
