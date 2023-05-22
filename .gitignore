@@ -25,6 +25,7 @@
 *.log
 *.sql
 *.sqlite
+*.vscode
 
 # OS generated files #
 ######################
@@ -51,3 +52,6 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints
 AstroNeo.egg-info/
+
+
+#
