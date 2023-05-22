@@ -18,7 +18,7 @@ from .import_lib import *
 from .input_arg import *
 from .helper import *
 from sherpa.astro.ui import load_rmf, set_analysis, notice_id, set_method, set_xsabund, \
-    set_xsxsect, set_xscosmo, set_source, get_staterror, get_stat_info, plot_fit, set_stat
+    set_xsxsect, set_xscosmo, set_source, get_staterror, get_stat_info, plot_fit, set_stat, subtract
 
 if timeing_mode:
     # %matplotlib inline

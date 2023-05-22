@@ -795,7 +795,7 @@ class Sherpa_APEC(BaseObj):
         set_par(self.m3.Ca, 1, frozen=True)
         # set_par(m3.Fe, 0.179656)
         set_par(self.m3.Ni, 1, frozen=True)
-        set_par(m3.redshift, 0.00081, frozen=True)
+        set_par(self.m3.redshift, 0.00081, frozen=True)
         # set_par(self.m3.norm, 0.000908296, max=1e+20)
 
     def get_func(self):
@@ -810,6 +810,86 @@ class Sherpa_APEC(BaseObj):
         set_par(self.m3.norm, Params['m3_norm'])
 
         model = self.m1*(self.m2(self.m3))
+        return model
+
+
+class Sherpa_APEC_BG(BaseObj):
+    """Calculate the model response for APEC model
+
+    TBabs(TBabs*powerlaw + lsmooth(vapec))
+
+    self.m1(self.m5*self.m4 + self.m2(self.m3))
+    """
+
+    def __init__(self, _prefix=''):
+        self._prefix = _prefix
+        self._params_names = [
+            'm3_kT', 'm3_C', 'm3_N', 'm3_O', 'm3_Ne', 'm3_Mg', 'm3_Fe', 'm3_norm',
+            'm4_PhoIndex', 'm4_norm'
+        ]
+        self._indep = len(self._params_names)
+
+        self.m1 = create_model_component('xstbabs', 'm1')
+        self.m2 = create_model_component('xslsmooth', 'm2')
+        self.m3 = create_model_component('xsvapec', 'm3')
+        self.m4 = create_model_component('xspowerlaw', 'm4')
+        self.m5 = create_model_component('xstbabs', 'm5')
+
+        self.range_dicts = {
+            'm3_kT': (0.1, 10, 0.001),
+            'm3_C': (0, 10, 0.001),
+            'm3_N': (0, 10, 0.001),
+            'm3_O': (0, 10, 0.001),
+            'm3_Ne': (0, 10, 0.001),
+            'm3_Mg': (0, 10, 0.001),
+            'm3_Fe': (0, 1, 0.001),
+            'm3_norm': (1e-4, 1.5, 0.001),
+            'm4_PhoIndex': (-2, 9, 0.001),
+            'm4_norm': (0.0, 100, 0.001),
+            # 'm5_nH': (0.0, 1.0, 1e-4)
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
+
+        set_par(self.m1.nH, 0.0279, max=100000, frozen=True)
+        set_par(self.m2.Sig_6keV, 0.02, max=10, frozen=True)
+        set_par(self.m2.Index, 1, frozen=True)
+        # set_par(m3.kT, 0.502421)
+        set_par(self.m3.He, 1, frozen=True)
+        # set_par(m3.C, 5.5039)
+        # set_par(m3.N, 0.990385)
+        # set_par(m3.O, 6.48552e-18)
+        # set_par(m3.Ne, 0.839257)
+        # set_par(m3.Mg, 1.53165)
+        set_par(self.m3.Al, 1, frozen=True)
+        set_par(self.m3.Si, 1, frozen=True)
+        set_par(self.m3.S, 1, frozen=True)
+        set_par(self.m3.Ar, 1, frozen=True)
+        set_par(self.m3.Ca, 1, frozen=True)
+        # set_par(m3.Fe, 0.179656)
+        set_par(self.m3.Ni, 1, frozen=True)
+        set_par(self.m3.redshift, 0.00081, frozen=True)
+        set_par(self.m5.nH, 1.25492e-08, frozen=True)
+        # set_par(self.m3.norm, 0.000908296, max=1e+20)
+
+    def get_func(self):
+        Params = self._Params.get()
+        set_par(self.m3.kT, Params['m3_kT'])
+        set_par(self.m3.C, Params['m3_C'])
+        set_par(self.m3.N, Params['m3_N'])
+        set_par(self.m3.O, Params['m3_O'])
+        set_par(self.m3.Ne, Params['m3_Ne'])
+        set_par(self.m3.Mg, Params['m3_Mg'])
+        set_par(self.m3.Fe, Params['m3_Fe'])
+        set_par(self.m3.norm, Params['m3_norm'])
+
+        set_par(self.m4.PhoIndex, Params['m4_PhoIndex'])
+        set_par(self.m4.norm, Params['m4_norm'])
+
+        # set_par(self.m5.nH, Params['m5_nH'])
+
+        model = self.m1*(self.m5*self.m4 + self.m2(self.m3))
         return model
 
 
