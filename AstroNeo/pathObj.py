@@ -6,8 +6,8 @@ import os
 # from .background_function import shirley
 from scipy import integrate
 from scipy.special import gammaln, wofz
-# import xspec
-from sherpa.astro.ui import create_model_component, set_par, set_source, get_data, get_fit_plot
+import xspec
+# from sherpa.astro.ui import create_model_component, set_par, set_source, get_data, get_fit_plot
 
 # ----
 # DEBUG:
@@ -741,12 +741,7 @@ class Test_NGC_Model(BaseObj):
         self._Params.initialize_range(self.range_dicts)
 
 
-class Sherpa_BG(BaseObj):
-    def __init__(self, _prefix=''):
-        super().__init__(_prefix)
-
-
-class Sherpa_APEC(BaseObj):
+# class Sherpa_APEC(BaseObj):
     """Calculate the model response for APEC model
 
     Tbabs(lsmooth*vapec)
@@ -813,7 +808,7 @@ class Sherpa_APEC(BaseObj):
         return model
 
 
-class Sherpa_APEC_BG(BaseObj):
+# class Sherpa_APEC_BG(BaseObj):
     """Calculate the model response for APEC model
 
     TBabs(TBabs*powerlaw + lsmooth(vapec))
@@ -894,7 +889,7 @@ class Sherpa_APEC_BG(BaseObj):
 
 
 class XspecSpectrum(BaseObj):
-    def __init__(self, center, fits_file, _prefix=''):
+    def __init__(self, src__prefix=''):
         """
         :param center: inital center
         :type center: float
@@ -910,21 +905,29 @@ class XspecSpectrum(BaseObj):
         self._indep = 13
         # initalize parameters
         self.xspec = xspec
-        self.xspec.Plot.device = "/null"
-        self.xspec.Plot.xAxis = "angstrom"
-        self.xspec.Plot.xLog = False
-        self.xspec.Plot.yLog = False
-        self.xspec.Plot.perHz = False
-        self.xspec.Plot.area = True
-        self.xspec.Plot.background = True
+        # self.xspec.Plot.device = "/null"
+        # self.xspec.Plot.xAxis = "angstrom"
+        # self.xspec.Plot.xLog = False
+        # self.xspec.Plot.yLog = False
+        # self.xspec.Plot.perHz = False
+        # self.xspec.Plot.area = True
+        # self.xspec.Plot.background = True
         # print(os.getcwd())
-        fits_full_path = os.path.join(os.getcwd(), str(fits_file))
-        print(fits_full_path)
+
+        # fits_path = '/Users/andy/projects/Astro_Neo/input_files/astronomy_test/'
+        # fits_file = 'left_pha_grp.fits'
+
+        # fits_full_path = os.path.join(os.getcwd(), str(fits_file))
+        # print(fits_full_path)
         # sys.exit()
         # Standard paramters:
-        self.l_src = self.xspec.Spectrum(str(fits_full_path))
-        self.l_src.ignore("**-7.0 30.0-**")
-        self.xspec.AllData.show()
+
+        # old_dir = os.getcwd()
+        # file_dir = os.chdir(fits_path)
+        # self.l_src = self.xspec.Spectrum(fits_file)
+        # self.l_src.ignore("**-7.0 30.0-**")
+        # os.chdir(old_dir)
+        # self.xspec.AllData.show()
         # sys.exit()
 
         self.model = self.xspec.Model("tbabs*po+lsmooth*vapec")
