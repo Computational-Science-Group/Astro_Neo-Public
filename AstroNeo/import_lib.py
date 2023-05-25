@@ -1,12 +1,11 @@
 # Import Library
 import os
 from psutil import cpu_count
-import time
-import datetime
+import time, datetime, subprocess
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import csv
 import sys
-import sherpa
+# import sherpa
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pathlib
@@ -19,7 +18,15 @@ from .input_arg import *
 from .helper import *
 # from sherpa.astro.ui import load_rmf, set_analysis, notice_id, set_method, set_xsabund, \
 #     set_xsxsect, set_xscosmo, set_source, get_staterror, get_stat_info, plot_fit, set_stat, subtract
+
+# Need further testing to see if this is needed...
+os.environ['HEADAS'] = '/Users/andy/projects/xspec/heasoft-6.31.1/aarch64-apple-darwin22.4.0'
+os.system(f"source $HEADAS/headas-init.sh")
+
 import xspec
+
+xspec.xset.Xset.chatter = 0
+
 
 
 if timeing_mode:

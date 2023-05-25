@@ -952,7 +952,7 @@ class XspecSpectrum(BaseObj):
             # lsmooth
             'Sig_6keV': (0.001, 0.1, 0.001),
             # vapec
-            'kT': (0.01, 0.6, 0.001),
+            'kT': (0.0808, 0.6, 0.001),
             'C': (5.00, 6.00, 0.001),
             'N': (0.95, 0.99, 0.001),
             'O': (0.4, 0.5, 0.001),
@@ -966,28 +966,31 @@ class XspecSpectrum(BaseObj):
         self._Params = ParamsDict(self._params_names)
         self._Params.initialize_range(self.range_dicts)
 
-    def get_func(self, x, *args):
+    def get_func(self, *args):
         Params = self._Params.get()
         # Get the parameters
         # nH
-        self.model.TBabs.nH = Params['nH']
+        # self.model.TBabs.nH = Params['nH']
         # Powerlaw
-        self.model.powerlaw.PhoIndex = Params['PhoIndex']
-        self.model.powerlaw.norm = Params['Plnorm']
+        # self.model.powerlaw.PhoIndex = Params['PhoIndex']
+        # self.model.powerlaw.norm = Params['Plnorm']
         # lsmooth
-        self.model.lsmooth.Sig_6keV = Params['Sig_6keV']
+        # self.model.lsmooth.Sig_6keV = Params['Sig_6keV']
         # Vapec
-        self.model.vapec.kT = Params['kT']
-        self.model.vapec.C = Params['C']
-        self.model.vapec.N = Params['N']
-        self.model.vapec.O = Params['O']
-        self.model.vapec.Ne = Params['Ne']
-        self.model.vapec.Mg = Params['Mg']
-        self.model.vapec.Fe = Params['Fe']
-        self.model.vapec.Redshift = Params['Redshift']
-        self.model.vapec.norm = Params['VapecNorm']
+        # self.model.vapec.kT = Params['kT']
+        # self.model.vapec.C = Params['C']
+        # self.model.vapec.N = Params['N']
+        # self.model.vapec.O = Params['O']
+        # self.model.vapec.Ne = Params['Ne']
+        # self.model.vapec.Mg = Params['Mg']
+        # self.model.vapec.Fe = Params['Fe']
+        # self.model.vapec.Redshift = Params['Redshift']
+        # self.model.vapec.norm = Params['VapecNorm']
 
         # read files
-        self.xspec.Plot()
-        out_array = self.xspec.Plot.model()
-        return (-1*np.array(out_array))
+        # self.xspec.Plot()
+        # out_array = self.xspec.Plot.model()
+        # return self.model
+
+        return Params
+

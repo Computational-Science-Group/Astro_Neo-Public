@@ -160,20 +160,39 @@ class AstroNEO:
         # file_gen = os.path.splitext(file)[0] + '_generations.csv'
         # self.check_if_exists(file_gen)
 
-    def intitialize_fits(self):
+    def initialize_fits(self):
         # file = 'data/G130M_G160M.fits'
-        file = {}
-        file['fits'] = '/Users/andy/projects/Astro_Neo/input_files/uv/data/left_pha_grp.fits'
-        file['rsp'] = '/Users/andy/projects/Astro_Neo/input_files/uv/data/left_rmf.fits'
-        sherpa.astro.ui.load_pha(1, file['fits'], use_errors=True)
-        load_rmf(1, file['rsp'])
-        set_analysis(1, "wave")  # set the analysis methods
-        notice_id(1, 7, 30)  # select the spectrum between 7 to 30
+        # file = {}
+        # file['fits'] = '/Users/andy/projects/Astro_Neo/input_files/uv/data/left_pha_grp.fits'
+        # file['rsp'] = '/Users/andy/projects/Astro_Neo/input_files/uv/data/left_rmf.fits'
+        # sherpa.astro.ui.load_pha(1, file['fits'], use_errors=True)
+        # load_rmf(1, file['rsp'])
+        # set_analysis(1, "wave")  # set the analysis methods
+        # notice_id(1, 7, 30)  # select the spectrum between 7 to 30
 
-        set_method('levmar')
-        set_xsabund('angr')
-        set_xsxsect('vern')
-        set_xscosmo(70, 0, 0.73)
+        # set_method('levmar')
+        # set_xsabund('angr')
+        # set_xsxsect('vern')
+        # set_xscosmo(70, 0, 0.73)
+
+        old_dir = os.getcwd()
+        print(old_dir)
+        data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
+        bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_mbg.fits"
+        rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_rmf.fits"
+
+        file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
+
+        xspec.AllData.clear()
+        l_src = xspec.Spectrum(data_file,
+                            backFile=bg_file,
+                            respFile=rsp_file)
+        l_src = xspec.Spectrum('left_pha_grp.fits')
+
+        xspec.Plot.xAxis = "angstrom"
+        l_src.ignore("**-7.0 30.0-**")
+
+        # os.chdir(old_dir)
 
         # set_stat("chi2xspecvar")
 
@@ -268,7 +287,40 @@ class AstroNEO:
 
         Individual = indObj.get_func()[0]
 
-        model = Individual.get_func()
+        model_params = Individual.get_func()
+
+        model = xspec.Model("tbabs*po+lsmooth*vapec")
+        model.TBabs.nH.frozen = True
+        model.lsmooth.Sig_6keV.frozen = True
+        model.lsmooth.Index = 1
+        model.vapec.C.frozen = False
+        model.vapec.N.frozen = False
+        model.vapec.O.frozen = False
+        model.vapec.Ne.frozen = False
+        model.vapec.Mg.frozen = False
+        model.vapec.Fe.frozen = False
+        model.vapec.Redshift.frozen = True
+
+        # nH
+        model.TBabs.nH = model_params['nH']
+        # Powerlaw
+        model.powerlaw.PhoIndex = model_params['PhoIndex']
+        model.powerlaw.norm = model_params['Plnorm']
+        # lsmooth
+        model.lsmooth.Sig_6keV = model_params['Sig_6keV']
+        # Vapec
+        model.vapec.kT = model_params['kT']
+        model.vapec.C = model_params['C']
+        model.vapec.N = model_params['N']
+        model.vapec.O = model_params['O']
+        model.vapec.Ne = model_params['Ne']
+        model.vapec.Mg = model_params['Mg']
+        model.vapec.Fe = model_params['Fe']
+        model.vapec.Redshift = model_params['Redshift']
+        model.vapec.norm = model_params['VapecNorm']
+
+
+        loss = xspec.Fit.statistic
         # yTotal = np.zeros(len(self.x_raw))
 
         # for i, paths in enumerate(Individual):
@@ -280,10 +332,10 @@ class AstroNEO:
         #     loss = loss + (yTotal[j]*self.x_raw[j] **
         #                    2 - self.y_normal[j] * self.x_raw[j]**2)**2
         # print(Individual)
-        set_source(1, model)
+        # set_source(1, model)
 
         # loss = (get_staterror(1, filter=True))
-        loss = get_stat_info()[0].statval
+        # loss = get_stat_info()[0].statval
         # print(loss)
         return loss
 
@@ -587,9 +639,9 @@ class AstroNEO:
         self.run_verbose_end()
         # print(self.globBestFit)
         # Final
-        model = self.globBestFit[0].get_func()[0].get_func()
-        set_source(1, model)
-        plot_fit(1)
+        # model = self.globBestFit[0].get_func()[0].get_func()
+        # set_source(1, model)
+        # plot_fit(1)
         plt.title(f'Final Result')
         # Exit profiler
         if self.profile_toggle:
@@ -665,7 +717,7 @@ class AstroNEO:
         # initialze file paths
         self.initialize_file_path()
         # initialize range
-        self.intitialize_fits()
+        self.initialize_fits()
         # Generate first generation
         self.generateFirstGen()
 
