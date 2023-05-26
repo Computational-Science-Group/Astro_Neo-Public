@@ -182,16 +182,40 @@ class AstroNEO:
         rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_rmf.fits"
 
         file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
+        self.xspec = xspec
 
-        xspec.AllData.clear()
-        l_src = xspec.Spectrum(data_file,
-                            backFile=bg_file,
-                            respFile=rsp_file)
-        l_src = xspec.Spectrum('left_pha_grp.fits')
 
-        xspec.Plot.xAxis = "angstrom"
-        l_src.ignore("**-7.0 30.0-**")
+        self.xspec.AllData.clear()
+        # l_src = xspec.Spectrum(data_file,
+        #                       backFile=bg_file,
+        #                       respFile=rsp_file)
+        self.l_src = self.xspec.Spectrum('left_pha_grp.fits')
 
+        self.xspec.Plot.xAxis = "angstrom"
+        self.l_src.ignore("**-7.0 30.0-**")
+
+        # os.chdir(old_dir)
+        self.xspec.AllData.show()
+
+        self.xspec.Plot.xAxis = "angstrom"
+        self.xspec.Plot.xLog = False
+        self.xspec.Plot.yLog = False
+        self.xspec.Plot.perHz = False
+        self.xspec.Plot.area = True
+        self.xspec.Plot.background = True
+
+        self.xspec.Plot("data")
+        # xspec.AllModels.setEnergies("xbin.txt")   #using the specified energy bins
+
+        # l_folded = xspec.Plot.model()
+        self.l_chans = xspec.Plot.x()
+        self.l_rates = xspec.Plot.y()
+        self.l_xErrs = xspec.Plot.xErr()
+        self.l_yErrs = xspec.Plot.yErr()
+        self.l_bkg = xspec.Plot.backgroundVals()
+
+
+        print(np.min(self.l_chans))
         # os.chdir(old_dir)
 
         # set_stat("chi2xspecvar")
@@ -289,7 +313,7 @@ class AstroNEO:
 
         model_params = Individual.get_func()
 
-        model = xspec.Model("tbabs*po+lsmooth*vapec")
+        model = self.xspec.Model("tbabs*po+lsmooth*vapec")
         model.TBabs.nH.frozen = True
         model.lsmooth.Sig_6keV.frozen = True
         model.lsmooth.Index = 1
@@ -320,7 +344,7 @@ class AstroNEO:
         model.vapec.norm = model_params['VapecNorm']
 
 
-        loss = xspec.Fit.statistic
+        loss = self.xspec.Fit.statistic
         # yTotal = np.zeros(len(self.x_raw))
 
         # for i, paths in enumerate(Individual):
@@ -604,6 +628,8 @@ class AstroNEO:
 
             np.savetxt(file_name, out_array, delimiter=',')
 
+
+
     def run(self):
         self.run_verbose_start()
         self.historic = []
@@ -625,9 +651,56 @@ class AstroNEO:
                 # self.ax.text(0.1, 0.8, s=self.out_str,
                 #              transform=self.ax.transAxes)
 
-                model = self.globBestFit[0].get_func()[0].get_func()
-                set_source(1, model)
-                plot_fit(1)
+                model_params = self.globBestFit[0].get_func()[0].get_func()
+                # set_source(1, model)
+
+                model = self.xspec.Model("tbabs*po+lsmooth*vapec")
+                model.TBabs.nH.frozen = True
+                model.lsmooth.Sig_6keV.frozen = True
+                model.lsmooth.Index = 1
+                model.vapec.C.frozen = False
+                model.vapec.N.frozen = False
+                model.vapec.O.frozen = False
+                model.vapec.Ne.frozen = False
+                model.vapec.Mg.frozen = False
+                model.vapec.Fe.frozen = False
+                model.vapec.Redshift.frozen = True
+
+                # nH
+                model.TBabs.nH = model_params['nH']
+                # Powerlaw
+                model.powerlaw.PhoIndex = model_params['PhoIndex']
+                model.powerlaw.norm = model_params['Plnorm']
+                # lsmooth
+                model.lsmooth.Sig_6keV = model_params['Sig_6keV']
+                # Vapec
+                model.vapec.kT = model_params['kT']
+                model.vapec.C = model_params['C']
+                model.vapec.N = model_params['N']
+                model.vapec.O = model_params['O']
+                model.vapec.Ne = model_params['Ne']
+                model.vapec.Mg = model_params['Mg']
+                model.vapec.Fe = model_params['Fe']
+                model.vapec.Redshift = model_params['Redshift']
+                model.vapec.norm = model_params['VapecNorm']
+
+                self.l_src.ignore("**-7.0 30.0-**")
+
+                self.xspec.Plot("data")
+                self.xspec.Plot.show()
+                l_folded = self.xspec.Plot.model()
+
+
+
+                # plt.plot()
+
+                plt.step(self.l_chans,self.l_rates, where='mid', color='blue', linewidth=1.2, alpha=1)
+                plt.step(self.l_chans, l_folded, where='mid', color='red', linewidth=2,label='Fit')
+                # plt.xlim([7,30])
+                # plt.ylim([-0.00005,0.00035])
+
+
+                # plot_fit(1)
                 plt.title(f'Generation: {self.genNum}')
                 plt.show(block=False)
                 plt.pause(0.001)

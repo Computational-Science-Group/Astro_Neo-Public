@@ -25,6 +25,9 @@ os.system(f"source $HEADAS/headas-init.sh")
 
 import xspec
 
+sys.path.append("/Users/andy/projects/Astro_Neo/input_files/ACX2")
+import acx2_xspec
+
 xspec.xset.Xset.chatter = 0
 
 
