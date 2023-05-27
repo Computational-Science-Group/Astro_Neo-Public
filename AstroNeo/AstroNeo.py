@@ -204,10 +204,14 @@ class AstroNEO:
         self.xspec.Plot.area = True
         self.xspec.Plot.background = True
 
+        self.xspec.Fit.statMethod = "cstat"  # using the Cash statistic
+
+
         self.xspec.Plot("data")
         # xspec.AllModels.setEnergies("xbin.txt")   #using the specified energy bins
 
         # l_folded = xspec.Plot.model()
+
         self.l_chans = xspec.Plot.x()
         self.l_rates = xspec.Plot.y()
         self.l_xErrs = xspec.Plot.xErr()
@@ -312,38 +316,107 @@ class AstroNEO:
         Individual = indObj.get_func()[0]
 
         model_params = Individual.get_func()
+        # VAPEC
+        # model = self.xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + zashift*vacx2))")
+        # model.TBabs.nH.frozen = True
+        # model.lsmooth.Sig_6keV.frozen = True
+        # model.lsmooth.Index = 1
+        # model.vapec.C.frozen = False
+        # model.vapec.N.frozen = False
+        # model.vapec.O.frozen = False
+        # model.vapec.Ne.frozen = False
+        # model.vapec.Mg.frozen = False
+        # model.vapec.Fe.frozen = False
+        # model.vapec.Redshift.frozen = True
 
-        model = self.xspec.Model("tbabs*po+lsmooth*vapec")
+        # # nH
+        # model.TBabs.nH = model_params['nH']
+        # # Powerlaw
+        # model.powerlaw.PhoIndex = model_params['PhoIndex']
+        # model.powerlaw.norm = model_params['Plnorm']
+        # # lsmooth
+        # model.lsmooth.Sig_6keV = model_params['Sig_6keV']
+        # # Vapec
+        # model.vapec.kT = model_params['kT']
+        # model.vapec.C = model_params['C']
+        # model.vapec.N = model_params['N']
+        # model.vapec.O = model_params['O']
+        # model.vapec.Ne = model_params['Ne']
+        # model.vapec.Mg = model_params['Mg']
+        # model.vapec.Fe = model_params['Fe']
+        # model.vapec.Redshift = model_params['Redshift']
+        # model.vapec.norm = model_params['VapecNorm']
+
+
+        model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + zashift*vacx2))")
+
+        # Model
+
+        # Tbabs <1>
         model.TBabs.nH.frozen = True
+        model.TBabs.nH = 0.0279
+
+        # Tbabs <2>
+
+        # Powerlaw <3>
+
+        # lsmooth <4>
         model.lsmooth.Sig_6keV.frozen = True
+        model.lsmooth.Sig_6keV = 0.02
+        model.lsmooth.Index.frozen = True
         model.lsmooth.Index = 1
+
+        # vapec <5>
         model.vapec.C.frozen = False
         model.vapec.N.frozen = False
         model.vapec.O.frozen = False
         model.vapec.Ne.frozen = False
         model.vapec.Mg.frozen = False
         model.vapec.Fe.frozen = False
-        model.vapec.Redshift.frozen = True
+        # self.model.vapec.Redshift.frozen = True
+        model.vapec.Redshift = 0.00081
 
-        # nH
-        model.TBabs.nH = model_params['nH']
-        # Powerlaw
+        # zashift <6>
+        model.zashift.Redshift.frozen = True
+        model.zashift.Redshift = 0.00081
+
+        # vacx2 <7>
+        model.vacx2.temperature.link = model.vapec.kT
+        model.vacx2.collnpar = 280
+        model.vacx2.collntype = 4
+        model.vacx2.acxmodel = 2
+        model.vacx2.recombtype = 2
+        model.vacx2.C.frozen = False
+        model.vacx2.N.frozen = False
+        model.vacx2.O.frozen = False
+        model.vacx2.Ne.frozen = False
+        model.vacx2.Mg.link = model.vapec.Mg
+        model.vacx2.Ni.link = model.vapec.Fe
+
+        # Set up params afterward
+        model.TBabs_2.nH = model_params['TBabs_2_nH']
+        # --------
         model.powerlaw.PhoIndex = model_params['PhoIndex']
-        model.powerlaw.norm = model_params['Plnorm']
-        # lsmooth
-        model.lsmooth.Sig_6keV = model_params['Sig_6keV']
-        # Vapec
-        model.vapec.kT = model_params['kT']
-        model.vapec.C = model_params['C']
-        model.vapec.N = model_params['N']
-        model.vapec.O = model_params['O']
-        model.vapec.Ne = model_params['Ne']
-        model.vapec.Mg = model_params['Mg']
-        model.vapec.Fe = model_params['Fe']
-        model.vapec.Redshift = model_params['Redshift']
-        model.vapec.norm = model_params['VapecNorm']
+        model.powerlaw.norm = model_params['Pl_norm']
+        # --------
+        model.vapec.kT = model_params['vapec_kT']
+        model.vapec.C = model_params['vapec_C']
+        model.vapec.N = model_params['vapec_N']
+        model.vapec.O = model_params['vapec_O']
+        model.vapec.Ne = model_params['vapec_Ne']
+        model.vapec.Mg = model_params['vapec_Mg']
+        model.vapec.Fe = model_params['vapec_Fe']
+        model.vapec.norm = model_params['vapec_norm']
+        # --------
+        model.vacx2.collnpar = model_params['vacx2_collnpar']
+        # model.vacx2.C = model_params['vacx2_C']
+        model.vacx2.N = model_params['vacx2_N']
+        model.vacx2.O = model_params['vacx2_O']
+        model.vacx2.Ne = model_params['vacx2_Ne']
+        model.vacx2.norm = model_params['vacx2_norm']
 
 
+        # print(self.xspec.Fit.statMethod)
         loss = self.xspec.Fit.statistic
         # yTotal = np.zeros(len(self.x_raw))
 
@@ -435,8 +508,29 @@ class AstroNEO:
             # print(bcolors.BOLD + "Best fit ChiR:",
             #       bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
 
-            print("Best fit combination:\n",
-                  np.asarray(self.currBestFit[0].get()))
+            print("Best Fit Combination:")
+            params_list = self.currBestFit[0].get_func()[0].get_func()
+            # print(params_list)
+            print(f" TBabs_2_nH: {params_list['TBabs_2_nH']}")
+            print(f" PhoIndex: {params_list['PhoIndex']}")
+            print(f" Pl_norm: {params_list['Pl_norm']}")
+            print(f" vapec_kT: {params_list['vapec_kT']}")
+            print(f" vapec_C: {params_list['vapec_C']}")
+            print(f" vapec_N: {params_list['vapec_N']}")
+            print(f" vapec_O: {params_list['vapec_O']}")
+            print(f" vapec_Ne: {params_list['vapec_Ne']}")
+            print(f" vapec_Mg: {params_list['vapec_Mg']}")
+            print(f" vapec_Fe: {params_list['vapec_Fe']}")
+            print(f" vapec_norm: {params_list['vapec_norm']}")
+            print(f" vacx2_collnpar: {params_list['vacx2_collnpar']}")
+            # print(f" vacx2_C: {params_list['vacx2_C']}")
+            print(f" vacx2_N: {params_list['vacx2_N']}")
+            print(f" vacx2_O: {params_list['vacx2_O']}")
+            print(f" vacx2_Ne: {params_list['vacx2_Ne']}")
+            print(f" vacx2_norm: {params_list['vacx2_norm']}")
+
+            # print("Best fit combination:\n",
+            #       np.asarray(self.currBestFit[0].get()))
             print(bcolors.BOLD + "History Best:", bcolors.OKBLUE +
                   str(self.globBestFit[1]) + bcolors.ENDC)
             # GlobchiR = self.globBestFit[1]/(len(self.x_raw)-4*self.npaths)
@@ -650,9 +744,8 @@ class AstroNEO:
                 # self.out_str = str(np.asarray(self.currBestFit[0].get()))
                 # self.ax.text(0.1, 0.8, s=self.out_str,
                 #              transform=self.ax.transAxes)
-
                 model_params = self.globBestFit[0].get_func()[0].get_func()
-                # set_source(1, model)
+                """
 
                 model = self.xspec.Model("tbabs*po+lsmooth*vapec")
                 model.TBabs.nH.frozen = True
@@ -683,7 +776,77 @@ class AstroNEO:
                 model.vapec.Fe = model_params['Fe']
                 model.vapec.Redshift = model_params['Redshift']
                 model.vapec.norm = model_params['VapecNorm']
+                """
+                model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + zashift*vacx2))")
 
+                # Model
+
+                # Tbabs <1>
+                model.TBabs.nH.frozen = True
+                model.TBabs.nH = 0.0279
+
+                # Tbabs <2>
+
+                # Powerlaw <3>
+
+                # lsmooth <4>
+                model.lsmooth.Sig_6keV.frozen = True
+                model.lsmooth.Sig_6keV = 0.02
+                model.lsmooth.Index.frozen = True
+                model.lsmooth.Index = 1
+
+                # vapec <5>
+                model.vapec.C.frozen = True
+                model.vapec.C = 3.66510e-11
+                model.vapec.N.frozen = False
+                model.vapec.O.frozen = False
+                model.vapec.Ne.frozen = False
+                model.vapec.Mg.frozen = False
+                model.vapec.Fe.frozen = False
+                # self.model.vapec.Redshift.frozen = True
+                model.vapec.Redshift = 0.00081
+
+                # zashift <6>
+                model.zashift.Redshift.frozen = True
+                model.zashift.Redshift = 0.00081
+
+                # vacx2 <7>
+                model.vacx2.temperature.link = model.vapec.kT
+                model.vacx2.collnpar = 280
+                model.vacx2.collntype = 4
+                model.vacx2.acxmodel = 2
+                model.vacx2.recombtype = 2
+                model.vacx2.C = 3.66510E-11
+                model.vacx2.N.frozen = False
+                model.vacx2.O.frozen = False
+                model.vacx2.Ne.frozen = False
+                model.vacx2.Mg.link = model.vapec.Mg
+                model.vacx2.Ni.link = model.vapec.Fe
+
+                # Set up params afterward
+                model.TBabs_2.nH = model_params['TBabs_2_nH']
+                # --------
+                model.powerlaw.PhoIndex = model_params['PhoIndex']
+                model.powerlaw.norm = model_params['Pl_norm']
+                # --------
+                model.vapec.kT = model_params['vapec_kT']
+                # model.vapec.C = model_params['vapec_C']
+                model.vapec.N = model_params['vapec_N']
+                model.vapec.O = model_params['vapec_O']
+                model.vapec.Ne = model_params['vapec_Ne']
+                model.vapec.Mg = model_params['vapec_Mg']
+                model.vapec.Fe = model_params['vapec_Fe']
+                model.vapec.norm = model_params['vapec_norm']
+                # --------
+                model.vacx2.collnpar = model_params['vacx2_collnpar']
+                # model.vacx2.C = model_params['vacx2_C']
+                model.vacx2.N = model_params['vacx2_N']
+                model.vacx2.O = model_params['vacx2_O']
+                model.vacx2.Ne = model_params['vacx2_Ne']
+                model.vacx2.norm = model_params['vacx2_norm']
+
+
+                # ------
                 self.l_src.ignore("**-7.0 30.0-**")
 
                 self.xspec.Plot("data")

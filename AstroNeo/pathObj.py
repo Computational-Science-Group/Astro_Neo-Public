@@ -897,12 +897,12 @@ class XspecSpectrum(BaseObj):
         """
         self._prefix = ''
         self._params_names = [
-            'nH',
-            'PhoIndex', 'Plnorm',
-            'Sig_6keV',
-            'kT', 'C', 'N', 'O', 'Ne', 'Mg', 'Fe', 'Redshift', 'VapecNorm'
+            'TBabs_2_nH',
+            'PhoIndex', 'Pl_norm',
+            'vapec_kT','vapec_C', 'vapec_N', 'vapec_O', 'vapec_Ne', 'vapec_Mg', 'vapec_Fe', 'vapec_norm',
+            'vacx2_collnpar', 'vacx2_N', 'vacx2_O', 'vacx2_Ne','vacx2_norm'
         ]
-        self._indep = 13
+        self._indep = 17
         # initalize parameters
         self.xspec = xspec
         # self.xspec.Plot.device = "/null"
@@ -929,40 +929,82 @@ class XspecSpectrum(BaseObj):
         # os.chdir(old_dir)
         # self.xspec.AllData.show()
         # sys.exit()
+        """
+        self.model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + zashift*vacx2))")
 
-        self.model = self.xspec.Model("tbabs*po+lsmooth*vapec")
+        # Model
 
+        # Tbabs <1>
         self.model.TBabs.nH.frozen = True
+        self.model.TBabs.nH = 0.0279
+
+        # Tbabs <2>
+
+        # Powerlaw <3>
+
+        # lsmooth <4>
         self.model.lsmooth.Sig_6keV.frozen = True
+        self.model.lsmooth.Sig_6keV = 0.02
+        self.model.lsmooth.Index.frozen = True
         self.model.lsmooth.Index = 1
+
+        # vapec <5>
         self.model.vapec.C.frozen = False
         self.model.vapec.N.frozen = False
         self.model.vapec.O.frozen = False
         self.model.vapec.Ne.frozen = False
         self.model.vapec.Mg.frozen = False
         self.model.vapec.Fe.frozen = False
-        self.model.vapec.Redshift.frozen = True
+        # self.model.vapec.Redshift.frozen = True
+        self.model.vapec.Redshift = 0.00081
+
+        # zashift <6>
+        self.model.zashift.Redshift.frozen = True
+        self.model.zashift.Redshift = 0.00081
+
+        # vacx2 <7>
+        self.model.vacx2.temperaturekeV = self.model.vapec.kT
+        self.model.vacx2.collnpar = 280
+        self.model.vacx2.collntype = 4
+        self.model.vacx2.acxmodel = 2
+        self.model.vacx2.recombtype = 2
+        self.model.vacx2.C.frozen = False
+        self.model.vacx2.N.frozen = False
+        self.model.vacx2.O.frozen = False
+        self.model.vacx2.Ne.frozen = False
+        self.model.vacx2.Mg = self.model.vapec.Mg
+        self.model.vacx2.Ni = self.model.vapec.Fe
+        """
 
         self.range_dicts = {
-            # TBabs
-            'nH': (0.00, 0.03, 0.001),
+            # TBabs <1>
+            # 'nH': (0.00, 0.03, 0.001),
+            # TBabs_2 <2>
+            'TBabs_2_nH': (0.00,0.03,0.0001),
             # Powerlaw
-            'PhoIndex': (0.05, 1.0, 0.0001),
-            'Plnorm': (0.0005, 0.0007, 1e-7),
+            'PhoIndex': (0.05, 1.1, 0.0001),
+            'Pl_norm': (0.0005, 0.0007, 1e-6),
             # lsmooth
-            'Sig_6keV': (0.001, 0.1, 0.001),
-            # vapec
-            'kT': (0.0808, 0.6, 0.001),
-            'C': (5.00, 6.00, 0.001),
-            'N': (0.95, 0.99, 0.001),
-            'O': (0.4, 0.5, 0.001),
-            'Ne': (0.8, 0.9, 1e-5),
-            'Mg': (1.5, 1.6, 0.0001),
-            'Fe': (0.15, 0.19, 1e-4),
-            'Redshift': (0.0001, 0.00081, 1e-5),
-            'VapecNorm': (0.0008, 0.0010, 1e-5)
+            # 'Sig_6keV': (0.001, 0.1, 0.001),
+            # vapec <5>
+            'vapec_kT': (0.0808, 0.6, 0.001),
+            'vapec_C': (5.00, 6.00, 0.001),
+            'vapec_N': (0.95, 0.99, 0.001),
+            'vapec_O': (0.4, 0.5, 0.001),
+            'vapec_Ne': (0.8, 0.9, 1e-5),
+            'vapec_Mg': (1.5, 1.6, 0.0001),
+            'vapec_Fe': (0.15, 0.19, 1e-4),
+            # 'Redshift': (0.0001, 0.00081, 1e-5),
+            'vapec_norm': (0.0008, 0.0010, 1e-5),
+            # zashift <6>
+            # vacx2 <7>
+            'vacx2_collnpar': (0.01, 1000, 0.01),
+            # 'vacx2_C': (0, 0.00, 1e-5),
+            'vacx2_N': (0, 10, 0.01),
+            'vacx2_O': (0, 10, 0.01),
+            'vacx2_Ne': (0, 10, 0.01),
+            'vacx2_norm': (0,1e-4,1e-5),
         }
-
         self._Params = ParamsDict(self._params_names)
         self._Params.initialize_range(self.range_dicts)
 
