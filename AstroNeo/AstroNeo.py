@@ -161,19 +161,6 @@ class AstroNEO:
         # self.check_if_exists(file_gen)
 
     def initialize_fits(self):
-        # file = 'data/G130M_G160M.fits'
-        # file = {}
-        # file['fits'] = '/Users/andy/projects/Astro_Neo/input_files/uv/data/left_pha_grp.fits'
-        # file['rsp'] = '/Users/andy/projects/Astro_Neo/input_files/uv/data/left_rmf.fits'
-        # sherpa.astro.ui.load_pha(1, file['fits'], use_errors=True)
-        # load_rmf(1, file['rsp'])
-        # set_analysis(1, "wave")  # set the analysis methods
-        # notice_id(1, 7, 30)  # select the spectrum between 7 to 30
-
-        # set_method('levmar')
-        # set_xsabund('angr')
-        # set_xsxsect('vern')
-        # set_xscosmo(70, 0, 0.73)
 
         old_dir = os.getcwd()
         print(old_dir)
@@ -219,7 +206,6 @@ class AstroNEO:
         self.l_bkg = xspec.Plot.backgroundVals()
 
 
-        print(np.min(self.l_chans))
         # os.chdir(old_dir)
 
         # set_stat("chi2xspecvar")
@@ -386,12 +372,13 @@ class AstroNEO:
         model.vacx2.collntype = 4
         model.vacx2.acxmodel = 2
         model.vacx2.recombtype = 2
-        model.vacx2.C.frozen = False
+        # model.vacx2.C.frozen = False
+        model.vacx2.C.link = model.vapec.C
         model.vacx2.N.frozen = False
         model.vacx2.O.frozen = False
         model.vacx2.Ne.frozen = False
         model.vacx2.Mg.link = model.vapec.Mg
-        model.vacx2.Ni.link = model.vapec.Fe
+        model.vacx2.Fe.link = model.vapec.Fe
 
         # Set up params afterward
         model.TBabs_2.nH = model_params['TBabs_2_nH']
@@ -400,7 +387,7 @@ class AstroNEO:
         model.powerlaw.norm = model_params['Pl_norm']
         # --------
         model.vapec.kT = model_params['vapec_kT']
-        model.vapec.C = model_params['vapec_C']
+        # model.vapec.C = model_params['vapec_C']
         model.vapec.N = model_params['vapec_N']
         model.vapec.O = model_params['vapec_O']
         model.vapec.Ne = model_params['vapec_Ne']
@@ -494,6 +481,24 @@ class AstroNEO:
                 self.mut_chance -= 0.5
                 self.mut_chance = abs(self.mut_chance)
 
+
+        self.output_best_parameters()
+
+        nextBreeders = self.selectFromPopulation()
+        self.createChildren()
+        print(f"Number of Breeders: {str(len(self.parents))}")
+        print(f"DiffCounter: {self.diffCounter}")
+        print(f"Diff %: {self.diffCounter / self.genNum}")
+        print(f"Mutation Chance: {self.mut_chance}")
+        self.mutatePopulation()
+
+        self.et = timecall()
+        self.tdiff = self.et - self.st
+        self.tt = self.tt + self.tdiff
+        print(f"Time: {str(round(self.tdiff, 5))} s")
+
+
+    def output_best_parameters(self):
         with np.printoptions(precision=5, suppress=True):
             print(
                 f"Best Fit: {bcolors.BOLD}{self.sorted_population[0][1]}{bcolors.ENDC}")
@@ -508,26 +513,25 @@ class AstroNEO:
             # print(bcolors.BOLD + "Best fit ChiR:",
             #       bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
 
-            print("Best Fit Combination:")
+            print(f"Best Fit Combination:")
             params_list = self.currBestFit[0].get_func()[0].get_func()
-            # print(params_list)
-            print(f" TBabs_2_nH: {params_list['TBabs_2_nH']}")
-            print(f" PhoIndex: {params_list['PhoIndex']}")
-            print(f" Pl_norm: {params_list['Pl_norm']}")
-            print(f" vapec_kT: {params_list['vapec_kT']}")
-            print(f" vapec_C: {params_list['vapec_C']}")
-            print(f" vapec_N: {params_list['vapec_N']}")
-            print(f" vapec_O: {params_list['vapec_O']}")
-            print(f" vapec_Ne: {params_list['vapec_Ne']}")
-            print(f" vapec_Mg: {params_list['vapec_Mg']}")
-            print(f" vapec_Fe: {params_list['vapec_Fe']}")
-            print(f" vapec_norm: {params_list['vapec_norm']}")
-            print(f" vacx2_collnpar: {params_list['vacx2_collnpar']}")
+            print(f"    TBabs_2_nH: {np.round(params_list['TBabs_2_nH'],5)}")
+            print(f"    PhoIndex: {np.round(params_list['PhoIndex'],5)}")
+            print(f"    Pl_norm: {np.round(params_list['Pl_norm'],5)}")
+            print(f"    vapec_kT: {np.round(params_list['vapec_kT'],5)}")
+            print(f"    vapec_C: {np.round(params_list['vapec_C'],5)}")
+            print(f"    vapec_N: {np.round(params_list['vapec_N'],5)}")
+            print(f"    vapec_O: {np.round(params_list['vapec_O'],5)}")
+            print(f"    vapec_Ne: {np.round(params_list['vapec_Ne'],5)}")
+            print(f"    vapec_Mg: {np.round(params_list['vapec_Mg'],5)}")
+            print(f"    vapec_Fe: {np.round(params_list['vapec_Fe'],5)}")
+            print(f"    vapec_norm: {np.round(params_list['vapec_norm'],5)}")
+            print(f"    vacx2_collnpar: {np.round(params_list['vacx2_collnpar'],5)}")
             # print(f" vacx2_C: {params_list['vacx2_C']}")
-            print(f" vacx2_N: {params_list['vacx2_N']}")
-            print(f" vacx2_O: {params_list['vacx2_O']}")
-            print(f" vacx2_Ne: {params_list['vacx2_Ne']}")
-            print(f" vacx2_norm: {params_list['vacx2_norm']}")
+            print(f"    vacx2_N: {np.round(params_list['vacx2_N'],5)}")
+            print(f"    vacx2_O: {np.round(params_list['vacx2_O'],5)}")
+            print(f"    vacx2_Ne: {np.round(params_list['vacx2_Ne'],5)}")
+            print(f"    vacx2_norm: {np.round(params_list['vacx2_norm'],5)}")
 
             # print("Best fit combination:\n",
             #       np.asarray(self.currBestFit[0].get()))
@@ -538,19 +542,6 @@ class AstroNEO:
             #       bcolors.OKBLUE + str(GlobchiR) + bcolors.ENDC)
             # print("History Best Indi:\n", np.asarray(
             #     self.globBestFit[0].get()))
-
-        nextBreeders = self.selectFromPopulation()
-        self.createChildren()
-        print(f"Number of Breeders: {str(len(self.parents))}")
-        print(f"DiffCounter: {self.diffCounter}")
-        print(f"Diff %: {self.diffCounter / self.genNum}")
-        print(f"Mutation Chance: {self.mut_chance}")
-        self.mutatePopulation()
-
-        self.et = timecall()
-        self.tdiff = self.et - self.st
-        self.tt = self.tt + self.tdiff
-        print(f"Time: {str(round(self.tdiff, 5))} s")
 
     def mutatePopulation(self):
         """
@@ -816,12 +807,12 @@ class AstroNEO:
                 model.vacx2.collntype = 4
                 model.vacx2.acxmodel = 2
                 model.vacx2.recombtype = 2
-                model.vacx2.C = 3.66510E-11
+                model.vacx2.C = model.vapec.C
                 model.vacx2.N.frozen = False
                 model.vacx2.O.frozen = False
                 model.vacx2.Ne.frozen = False
                 model.vacx2.Mg.link = model.vapec.Mg
-                model.vacx2.Ni.link = model.vapec.Fe
+                model.vacx2.Fe.link = model.vapec.Fe
 
                 # Set up params afterward
                 model.TBabs_2.nH = model_params['TBabs_2_nH']
@@ -880,14 +871,16 @@ class AstroNEO:
         # plot_fit(1)
         plt.title(f'Final Result')
         # Exit profiler
+
+        plt.legend()
+        plt.show
+
         if self.profile_toggle:
             self.profiler.disable()
             stats = pstats.Stats(self.profiler).sort_stats('cumtime')
             ('Visualze result using Snakeviz')
             stats.dump_stats('Export_Data.txt')
 
-        plt.legend()
-        plt.show()
 
     def fwhm(self, indObj):
         fg = 2*indObj.get_sigma() * np.sqrt(2*np.log(2))

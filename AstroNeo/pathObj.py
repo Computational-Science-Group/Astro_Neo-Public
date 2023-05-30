@@ -900,7 +900,9 @@ class XspecSpectrum(BaseObj):
             'TBabs_2_nH',
             'PhoIndex', 'Pl_norm',
             'vapec_kT','vapec_C', 'vapec_N', 'vapec_O', 'vapec_Ne', 'vapec_Mg', 'vapec_Fe', 'vapec_norm',
-            'vacx2_collnpar', 'vacx2_N', 'vacx2_O', 'vacx2_Ne','vacx2_norm'
+            'vacx2_collnpar','vacx2_norm',
+            'vacx2_N', 'vacx2_O', 'vacx2_Ne'
+            # 'vacx2_C',
         ]
         self._indep = 17
         # initalize parameters
@@ -999,7 +1001,7 @@ class XspecSpectrum(BaseObj):
             # zashift <6>
             # vacx2 <7>
             'vacx2_collnpar': (0.01, 1000, 0.01),
-            # 'vacx2_C': (0, 0.00, 1e-5),
+            # 'vacx2_C': (0, 0.005, 1e-5),
             'vacx2_N': (0, 10, 0.01),
             'vacx2_O': (0, 10, 0.01),
             'vacx2_Ne': (0, 10, 0.01),
@@ -1010,29 +1012,6 @@ class XspecSpectrum(BaseObj):
 
     def get_func(self, *args):
         Params = self._Params.get()
-        # Get the parameters
-        # nH
-        # self.model.TBabs.nH = Params['nH']
-        # Powerlaw
-        # self.model.powerlaw.PhoIndex = Params['PhoIndex']
-        # self.model.powerlaw.norm = Params['Plnorm']
-        # lsmooth
-        # self.model.lsmooth.Sig_6keV = Params['Sig_6keV']
-        # Vapec
-        # self.model.vapec.kT = Params['kT']
-        # self.model.vapec.C = Params['C']
-        # self.model.vapec.N = Params['N']
-        # self.model.vapec.O = Params['O']
-        # self.model.vapec.Ne = Params['Ne']
-        # self.model.vapec.Mg = Params['Mg']
-        # self.model.vapec.Fe = Params['Fe']
-        # self.model.vapec.Redshift = Params['Redshift']
-        # self.model.vapec.norm = Params['VapecNorm']
-
-        # read files
-        # self.xspec.Plot()
-        # out_array = self.xspec.Plot.model()
-        # return self.model
 
         return Params
 
