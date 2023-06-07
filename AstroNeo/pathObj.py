@@ -896,12 +896,22 @@ class XspecSpectrum(BaseObj):
 
         """
         self._prefix = ''
+        # self._params_names = [
+        #     'TBabs_2_nH',
+        #     'PhoIndex', 'Pl_norm',
+        #     'vapec_kT','vapec_C', 'vapec_N', 'vapec_O', 'vapec_Ne', 'vapec_Mg', 'vapec_Fe', 'vapec_norm',
+        #     'vacx2_collnpar',
+        #     'vacx2_C','vacx2_N', 'vacx2_O', 'vacx2_Ne','vacx2_Mg','vacx2_Fe','vacx2_norm',
+        #     # 'vacx2_C',
+        # ]
+
         self._params_names = [
             'TBabs_2_nH',
             'PhoIndex', 'Pl_norm',
-            'vapec_kT','vapec_C', 'vapec_N', 'vapec_O', 'vapec_Ne', 'vapec_Mg', 'vapec_Fe', 'vapec_norm',
-            'vacx2_collnpar','vacx2_norm',
-            'vacx2_N', 'vacx2_O', 'vacx2_Ne'
+            'vapec_kT','vapec_C','vapec_N','vapec_O','vapec_norm',
+            # 'vapec_N', 'vapec_O', 'vapec_Ne', 'vapec_Mg', 'vapec_Fe', 'vapec_norm',
+            'vacx2_collnpar','vacx2_norm'
+            # 'vacx2_C','vacx2_N', 'vacx2_O', 'vacx2_Ne','vacx2_Mg','vacx2_Fe','vacx2_norm',
             # 'vacx2_C',
         ]
         self._indep = 17
