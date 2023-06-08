@@ -896,25 +896,16 @@ class XspecSpectrum(BaseObj):
 
         """
         self._prefix = ''
-        # self._params_names = [
-        #     'TBabs_2_nH',
-        #     'PhoIndex', 'Pl_norm',
-        #     'vapec_kT','vapec_C', 'vapec_N', 'vapec_O', 'vapec_Ne', 'vapec_Mg', 'vapec_Fe', 'vapec_norm',
-        #     'vacx2_collnpar',
-        #     'vacx2_C','vacx2_N', 'vacx2_O', 'vacx2_Ne','vacx2_Mg','vacx2_Fe','vacx2_norm',
-        #     # 'vacx2_C',
-        # ]
+
 
         self._params_names = [
             'TBabs_2_nH',
             'PhoIndex', 'Pl_norm',
-            'vapec_kT','vapec_C','vapec_N','vapec_O','vapec_norm',
-            # 'vapec_N', 'vapec_O', 'vapec_Ne', 'vapec_Mg', 'vapec_Fe', 'vapec_norm',
+            'vapec_kT','vapec_C','vapec_N','vapec_O','vapec_Ne','vapec_Mg','vapec_Fe','vapec_norm',
+            'vapec_6_kT','vapec_6_norm',
             'vacx2_collnpar','vacx2_norm'
-            # 'vacx2_C','vacx2_N', 'vacx2_O', 'vacx2_Ne','vacx2_Mg','vacx2_Fe','vacx2_norm',
-            # 'vacx2_C',
         ]
-        self._indep = 17
+        self._indep = 15
         # initalize parameters
         self.xspec = xspec
         # self.xspec.Plot.device = "/null"
@@ -1000,14 +991,16 @@ class XspecSpectrum(BaseObj):
             # 'Sig_6keV': (0.001, 0.1, 0.001),
             # vapec <5>
             'vapec_kT': (0.0808, 0.6, 0.001),
-            'vapec_C': (5.00, 6.00, 0.001),
-            'vapec_N': (0.95, 0.99, 0.001),
-            'vapec_O': (0.4, 0.5, 0.001),
-            'vapec_Ne': (0.8, 0.9, 1e-5),
-            'vapec_Mg': (1.5, 1.6, 0.0001),
-            'vapec_Fe': (0.15, 0.19, 1e-4),
+            'vapec_C': (0.00, 10.00, 0.001),
+            'vapec_N': (0.00, 10.00, 0.001),
+            'vapec_O': (0.0, 2.00, 0.001),
+            'vapec_Ne': (0.8, 2.00, 1e-5),
+            'vapec_Mg': (0.0, 5.00 , 0.0001),
+            'vapec_Fe': (0.0, 1.00, 1e-4),
             # 'Redshift': (0.0001, 0.00081, 1e-5),
             'vapec_norm': (0.0008, 0.0010, 1e-5),
+            'vapec_6_kT': (0.0808, 0.75, 0.001),
+            'vapec_6_norm': (0.0008, 0.0010, 1e-5),
             # zashift <6>
             # vacx2 <7>
             'vacx2_collnpar': (0.01, 1000, 0.01),

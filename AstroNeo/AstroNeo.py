@@ -188,7 +188,7 @@ class AstroNEO:
         self.xspec.Plot.xLog = False
         self.xspec.Plot.yLog = False
         self.xspec.Plot.perHz = False
-        self.xspec.Plot.area = False
+        self.xspec.Plot.area = True
         self.xspec.Plot.background = True
 
         self.xspec.Fit.statMethod = "cstat"  # using the Cash statistic
@@ -302,39 +302,8 @@ class AstroNEO:
         Individual = indObj.get_func()[0]
 
         model_params = Individual.get_func()
-        # VAPEC
-        # model = self.xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + zashift*vacx2))")
-        # model.TBabs.nH.frozen = True
-        # model.lsmooth.Sig_6keV.frozen = True
-        # model.lsmooth.Index = 1
-        # model.vapec.C.frozen = False
-        # model.vapec.N.frozen = False
-        # model.vapec.O.frozen = False
-        # model.vapec.Ne.frozen = False
-        # model.vapec.Mg.frozen = False
-        # model.vapec.Fe.frozen = False
-        # model.vapec.Redshift.frozen = True
 
-        # # nH
-        # model.TBabs.nH = model_params['nH']
-        # # Powerlaw
-        # model.powerlaw.PhoIndex = model_params['PhoIndex']
-        # model.powerlaw.norm = model_params['Plnorm']
-        # # lsmooth
-        # model.lsmooth.Sig_6keV = model_params['Sig_6keV']
-        # # Vapec
-        # model.vapec.kT = model_params['kT']
-        # model.vapec.C = model_params['C']
-        # model.vapec.N = model_params['N']
-        # model.vapec.O = model_params['O']
-        # model.vapec.Ne = model_params['Ne']
-        # model.vapec.Mg = model_params['Mg']
-        # model.vapec.Fe = model_params['Fe']
-        # model.vapec.Redshift = model_params['Redshift']
-        # model.vapec.norm = model_params['VapecNorm']
-
-
-        model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + zashift*vacx2))")
+        model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))")
 
         # Model
 
@@ -353,51 +322,51 @@ class AstroNEO:
         model.lsmooth.Index = 1
 
         # vapec <5>
-        model.vapec.C.frozen = True
-        model.vapec.C = 3.66510e-11
+        model.vapec.C.frozen = False
         model.vapec.N.frozen = False
         model.vapec.O.frozen = False
-        # model.vapec.Ne.frozen = False
-        # model.vapec.Mg.frozen = False
-        # model.vapec.Fe.frozen = False
+        model.vapec.Ne.frozen = False
+        model.vapec.Mg.frozen = False
+        model.vapec.Fe.frozen = False
         # self.model.vapec.Redshift.frozen = True
         model.vapec.Redshift = 0.00081
 
         # model.vapec.N = 0.990385
         # model.vapec.O = 6.48552e-18
-        model.vapec.Ne = 0.839257
-        model.vapec.Mg = 1.53165
-        model.vapec.Fe = 0.179656
+        # model.vapec.Ne = 0.839257
+        # model.vapec.Mg = 1.53165
+        # model.vapec.Fe = 0.179656
         # self.model.vapec.Redshift.frozen = True
         model.vapec.Redshift = 0.00081
 
-        # zashift <6>
+        # vapec_2 <6>
+        model.vapec_6.kT.frozen = False
+        model.vapec_6.C.link = model.vapec.C
+        model.vapec_6.N.link = model.vapec.N
+        model.vapec_6.O.link = model.vapec.O
+        model.vapec_6.Ne.link = model.vapec.Ne
+        model.vapec_6.Mg.link = model.vapec.Mg
+        model.vapec_6.Fe.link = model.vapec.Fe
+        model.vapec_6.Redshift.link = model.vapec.Redshift
+
+        # zashift <7>
         model.zashift.Redshift.frozen = True
         model.zashift.Redshift = 0.00081
 
-        # vacx2 <7>
+        # vacx2 <8>
         model.vacx2.temperature.link = model.vapec.kT
         model.vacx2.collnpar = 280
         model.vacx2.collntype = 4
         model.vacx2.acxmodel = 2
         model.vacx2.recombtype = 2
-        model.vacx2.C.frozen = False
-        model.vacx2.N.frozen = False
-        # model.vacx2.O.frozen = False
-        # model.vacx2.Ne.frozen = False
-        # model.vapec.Mg.frozen = False
-        # model.vapec.Fe.frozen = False
-        # model.vacx2.C = 3.6651e-11
-        # model.vacx2.N = 7.84670
-        model.vacx2.O = 1.46724
-        model.vacx2.Ne = 1.59991
-        model.vapec.Mg =  1.53165
-        model.vapec.Fe = 0.179656
 
-        # model.vacx2.C.link = model.vapec.C
+        model.vacx2.C.link = model.vapec.C
+        model.vacx2.N.link = model.vapec.N
+        model.vacx2.O.link = model.vapec.O
+        model.vacx2.Ne.link = model.vapec.Ne
+        model.vacx2.Mg.link = model.vapec.Mg
+        model.vacx2.Fe.link = model.vapec.Fe
 
-        # model.vacx2.Mg.link = model.vapec.Mg
-        # model.vacx2.Fe.link = model.vapec.Fe
 
         # Set up params afterward
         model.TBabs_2.nH = model_params['TBabs_2_nH']
@@ -408,11 +377,14 @@ class AstroNEO:
         model.vapec.kT = model_params['vapec_kT']
         model.vapec.C = model_params['vapec_C']
         model.vapec.N = model_params['vapec_N']
-        # model.vapec.O = model_params['vapec_O']
-        # model.vapec.Ne = model_params['vapec_Ne']
-        # model.vapec.Mg = model_params['vapec_Mg']
-        # model.vapec.Fe = model_params['vapec_Fe']
+        model.vapec.O = model_params['vapec_O']
+        model.vapec.Ne = model_params['vapec_Ne']
+        model.vapec.Mg = model_params['vapec_Mg']
+        model.vapec.Fe = model_params['vapec_Fe']
         model.vapec.norm = model_params['vapec_norm']
+        # --------
+        model.vapec_6.kT = model_params['vapec_6_kT']
+        model.vapec_6.norm = model_params['vapec_6_norm']
         # --------
         model.vacx2.collnpar = model_params['vacx2_collnpar']
         # model.vacx2.C = model_params['vacx2_C']
@@ -539,11 +511,11 @@ class AstroNEO:
             print(f"    Pl_norm: {np.round(params_list['Pl_norm'],5)}")
             print(f"    vapec_kT: {np.round(params_list['vapec_kT'],5)}")
             print(f"    vapec_C: {np.round(params_list['vapec_C'],5)}")
-            # print(f"    vapec_N: {np.round(params_list['vapec_N'],5)}")
-            # print(f"    vapec_O: {np.round(params_list['vapec_O'],5)}")
-            # print(f"    vapec_Ne: {np.round(params_list['vapec_Ne'],5)}")
-            # print(f"    vapec_Mg: {np.round(params_list['vapec_Mg'],5)}")
-            # print(f"    vapec_Fe: {np.round(params_list['vapec_Fe'],5)}")
+            print(f"    vapec_N: {np.round(params_list['vapec_N'],5)}")
+            print(f"    vapec_O: {np.round(params_list['vapec_O'],5)}")
+            print(f"    vapec_Ne: {np.round(params_list['vapec_Ne'],5)}")
+            print(f"    vapec_Mg: {np.round(params_list['vapec_Mg'],5)}")
+            print(f"    vapec_Fe: {np.round(params_list['vapec_Fe'],5)}")
             print(f"    vapec_norm: {np.round(params_list['vapec_norm'],5)}")
             print(f"    vacx2_collnpar: {np.round(params_list['vacx2_collnpar'],5)}")
             # print(f" vacx2_C: {params_list['vacx2_C']}")
@@ -787,7 +759,7 @@ class AstroNEO:
                 model.vapec.Redshift = model_params['Redshift']
                 model.vapec.norm = model_params['VapecNorm']
                 """
-                model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + zashift*vacx2))")
+                model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))")
 
                 # Model
 
@@ -806,46 +778,51 @@ class AstroNEO:
                 model.lsmooth.Index = 1
 
                 # vapec <5>
-                model.vapec.C.frozen = True
-                model.vapec.C = 3.66510e-11
+                model.vapec.C.frozen = False
                 model.vapec.N.frozen = False
                 model.vapec.O.frozen = False
-                # model.vapec.Ne.frozen = False
-                # model.vapec.Mg.frozen = False
-                # model.vapec.Fe.frozen = False
+                model.vapec.Ne.frozen = False
+                model.vapec.Mg.frozen = False
+                model.vapec.Fe.frozen = False
                 # self.model.vapec.Redshift.frozen = True
                 model.vapec.Redshift = 0.00081
 
                 # model.vapec.N = 0.990385
                 # model.vapec.O = 6.48552e-18
-                model.vapec.Ne = 0.839257
-                model.vapec.Mg = 1.53165
-                model.vapec.Fe = 0.179656
+                # model.vapec.Ne = 0.839257
+                # model.vapec.Mg = 1.53165
+                # model.vapec.Fe = 0.179656
                 # self.model.vapec.Redshift.frozen = True
                 model.vapec.Redshift = 0.00081
 
-                # zashift <6>
+                # vapec <6>
+                model.vapec_6.kT.frozen = False
+                model.vapec_6.C.link = model.vapec.C
+                model.vapec_6.N.link = model.vapec.N
+                model.vapec_6.O.link = model.vapec.O
+                model.vapec_6.Ne.link = model.vapec.Ne
+                model.vapec_6.Mg.link = model.vapec.Mg
+                model.vapec_6.Fe.link = model.vapec.Fe
+                model.vapec_6.Redshift.link = model.vapec.Redshift
+
+                # zashift <7>
                 model.zashift.Redshift.frozen = True
                 model.zashift.Redshift = 0.00081
 
-                # vacx2 <7>
+                # vacx2 <8>
                 model.vacx2.temperature.link = model.vapec.kT
                 model.vacx2.collnpar = 280
                 model.vacx2.collntype = 4
                 model.vacx2.acxmodel = 2
                 model.vacx2.recombtype = 2
-                # model.vacx2.C.frozen = False
-                # model.vacx2.N.frozen = False
-                # model.vacx2.O.frozen = False
-                # model.vacx2.Ne.frozen = False
-                # model.vapec.Mg.frozen = False
-                # model.vapec.Fe.frozen = False
-                model.vacx2.C = 3.6651e-11
-                model.vacx2.N = 7.84670
-                model.vacx2.O = 1.46724
-                model.vacx2.Ne = 1.59991
-                model.vapec.Mg =  1.53165
-                model.vapec.Fe = 0.179656
+
+                model.vacx2.C.link = model.vapec.C
+                model.vacx2.N.link = model.vapec.N
+                model.vacx2.O.link = model.vapec.O
+                model.vacx2.Ne.link = model.vapec.Ne
+                model.vacx2.Mg.link = model.vapec.Mg
+                model.vacx2.Fe.link = model.vapec.Fe
+
 
                 # Set up params afterward
                 model.TBabs_2.nH = model_params['TBabs_2_nH']
@@ -857,10 +834,13 @@ class AstroNEO:
                 model.vapec.C = model_params['vapec_C']
                 model.vapec.N = model_params['vapec_N']
                 model.vapec.O = model_params['vapec_O']
-                # model.vapec.Ne = model_params['vapec_Ne']
-                # model.vapec.Mg = model_params['vapec_Mg']
-                # model.vapec.Fe = model_params['vapec_Fe']
+                model.vapec.Ne = model_params['vapec_Ne']
+                model.vapec.Mg = model_params['vapec_Mg']
+                model.vapec.Fe = model_params['vapec_Fe']
                 model.vapec.norm = model_params['vapec_norm']
+                # --------
+                model.vapec_6.kT = model_params['vapec_6_kT']
+                model.vapec_6.norm = model_params['vapec_6_norm']
                 # --------
                 model.vacx2.collnpar = model_params['vacx2_collnpar']
                 # model.vacx2.C = model_params['vacx2_C']
