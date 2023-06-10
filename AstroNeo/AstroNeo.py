@@ -105,6 +105,28 @@ class AstroNEO:
     #     self.bestBest = 999999999
     #     self.diffCounter = 0
 
+
+    def initialize_logger(self):
+        """Initialize logger
+        """
+        # Initialize logger
+        self.logger = logging.getLogger('')
+
+        # Delete handler
+        self.logger.handlers = []
+        file_handler = logging.FileHandler(
+            self.log_path, mode='a+', encoding='utf-8')
+        stdout_handler = logging.StreamHandler(sys.stdout)
+
+        formatter = logging.Formatter('%(message)s')
+        file_handler.setFormatter(formatter)
+        stdout_handler.setFormatter(formatter)
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(stdout_handler)
+
+        self.logger.setLevel(logging.INFO)
+        self.logger.info(banner())
+
     def initialize_file_path(self, i=0):
         """
         Initalize file paths for each of the file first
@@ -163,7 +185,7 @@ class AstroNEO:
     def initialize_fits(self):
 
         old_dir = os.getcwd()
-        print(old_dir)
+        # print(old_dir)
         data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
         bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_mbg.fits"
         rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_rmf.fits"
@@ -205,10 +227,6 @@ class AstroNEO:
         self.l_yErrs = xspec.Plot.yErr()
         self.l_bkg = xspec.Plot.backgroundVals()
 
-
-        # os.chdir(old_dir)
-
-        # set_stat("chi2xspecvar")
 
     def initialize_range(self, i=0, BestIndi=None):
         """
@@ -490,6 +508,7 @@ class AstroNEO:
 
 
     def output_best_parameters(self):
+
         with np.printoptions(precision=5, suppress=True):
             print(
                 f"Best Fit: {bcolors.BOLD}{self.sorted_population[0][1]}{bcolors.ENDC}")
@@ -517,12 +536,10 @@ class AstroNEO:
             print(f"    vapec_Mg: {np.round(params_list['vapec_Mg'],5)}")
             print(f"    vapec_Fe: {np.round(params_list['vapec_Fe'],5)}")
             print(f"    vapec_norm: {np.round(params_list['vapec_norm'],5)}")
+            print(f"    vapec_6_kT: {np.round(params_list['vapec_6_kT'],5)}")
+            print(f"    vapec_6_norm: {np.round(params_list['vapec_6_norm'],5)}")
             print(f"    vacx2_collnpar: {np.round(params_list['vacx2_collnpar'],5)}")
-            # print(f" vacx2_C: {params_list['vacx2_C']}")
-            # print(f"    vacx2_N: {np.round(params_list['vacx2_N'],5)}")
-            # print(f"    vacx2_O: {np.round(params_list['vacx2_O'],5)}")
-            # print(f"    vacx2_Ne: {np.round(params_list['vacx2_Ne'],5)}")
-            print(f"    vacx2_norm: {np.round(params_list['vacx2_norm'],5)}")
+            print(f"    vacx2_norm: {np.round(params_list['vacx2_norm'],7)}")
 
             # print("Best fit combination:\n",
             #       np.asarray(self.currBestFit[0].get()))
@@ -536,69 +553,61 @@ class AstroNEO:
 
     def mutatePopulation(self):
         """
-        # Mutation operators
+        ## Mutation operators
         # 0 = original: generated a new versions:
         # 1 = mutated every genes in the total populations
         # 2 = mutated genes inside population based on secondary probability
-
-        # TODO:
-            options 2 and 3 needs to reimplmented
+        # 4 = metropolis hastings mutation
         """
         self.nmutate = 0
 
-        if self.mut_opt == 0:
-            for i in range(self.npops):
-                if random.random()*100 < self.mut_chance:
-                    self.nmutate += 1
-                    self.Populations[i] = self.mutateIndi()
+        # if self.mut_opt == 0:
+        for i in range(self.npops):
+            if random.random()*100 < self.mut_chance:
+                self.nmutate += 1
+                self.Populations[i] = self.mutateIndi(i)
 
-        # if self.mut_opt == 1:
-
-        # if random.random() * 100 < self.mut_chance_e0:
-        #     e0 = random.choice(self.rangeE0)
-        #     print("Mutate e0 to:", e0)
-        #     for individual in self.Populations:
-        #         individual.set_e0(e0)
         print("Mutate Times:", self.nmutate)
-        """
-        if mutated_options == 1:
-            for i in range(len(population)):
-                for j in range(len(population[i])):
-                    if random.random() * 100 < chance_of_mutation:
-                        mutateTime += 1
-                        if j == 0:
-                            mutate_val = random.choice(rangeA)
-                            population[i][j] == mutate_val
-                        if j == 2:
-                            mutate_val = random.choice(rangeC)
-                            population[i][j] == mutate_val
-                        if j == 3:
-                            mutate_val = random.choice(rangeD)
-                            population[i][j] == mutate_val
 
-        if mutated_options == 2:
-            for i in range(len(population)):
-                if random.random() * 100 < chance_of_mutation:
-                    for j in range(len(population[i])):
-                        if random.random() * 100 < chance_gene_mut:
-                            mutateTime += 1
-                            if j == 0:
-                                mutate_val = random.choice(rangeA)
-                                population[i][j] == mutate_val
-                            if j == 2:
-                                mutate_val = random.choice(rangeC)
-                                population[i][j] == mutate_val
-                            if j == 3:
-                                mutate_val = random.choice(rangeD)
-                                population[i][j] == mutate_val
+
+    def mutateIndi(self,indi):
+        """Mutate each individual
+
+        Args:
+            indi (ind_type): individual to be mutated
+
+        Returns:
+            ind_type: mutated individual
         """
 
-    def mutateIndi(self):
-        """
-        Generate new individual during mutation operator
-        """
-        mutatIndi = self.generateIndividual()
-        return mutatIndi
+        # Metroplis Hastings Mutation
+        if self.mut_opt == 2:
+            nmutate_success = 0
+            og_individual = self.generateIndividual()
+            # Create a new individual with the same parameters
+            og_pars = copy.copy(self.Populations[indi].get_func()[0].get())
+            og_individual.set_path(0,og_pars)
+            og_score = self.fitness(og_individual)
+
+            new_individual = self.generateIndividual()
+            mut_score = self.fitness(new_individual)
+
+            T = - self.bestDiff/np.log(1-(self.genNum/self.ngen))
+            if mut_score < og_score:
+                nmutate_success = nmutate_success + 1
+                newIndi = new_individual
+            elif np.exp(-(mut_score-og_score)/T) > np.random.uniform():
+                nmutate_success = nmutate_success + 1
+                newIndi = new_individual
+            else:
+                newIndi = og_individual
+
+            print(nmutate_success)
+        else:
+            newIndi = self.generateIndividual()
+        return newIndi
+
+
 
     def selectFromPopulation(self):
         self.parents = []
@@ -958,6 +967,8 @@ class AstroNEO:
         self.initialize_variable()
         # initialze file paths
         self.initialize_file_path()
+        # initialize logger
+        self.initialize_logger()
         # initialize range
         self.initialize_fits()
         # Generate first generation

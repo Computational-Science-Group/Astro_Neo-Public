@@ -1,4 +1,5 @@
 import time
+from .__init__ import __version__
 
 class bcolors:
     HEADER = '\033[95m'
@@ -27,3 +28,15 @@ def str_to_list(s):
 
 def norm(val):
     return np.linalg.norm(val)
+
+def banner():
+    banner_str = (f'''
+            Astro-Neo ver {__version__}
+     _        _               _   _
+    / \   ___| |_ _ __ ___   | \ | | ___  ___
+   / _ \ / __| __| '__/ _ \  |  \| |/ _ \/ _ \
+  / ___ \\__ \ |_| | | (_) | | |\  |  __/ (_) |
+ /_/   \_\___/\__|_|  \___/  |_| \_|\___|\___/
+''')
+
+    return banner_str

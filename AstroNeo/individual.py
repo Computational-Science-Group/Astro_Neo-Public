@@ -75,27 +75,6 @@ class Individual():
                 sys.exit()
             self.Population[i] = obj
 
-    def correlate_update(self):
-        """
-        Not using, need to rewrite this correlated paths using lmfit
-        """
-        corr_list = int(self.corr_paths[0])
-        amp = self.Population[corr_list].get_amp()
-        gamma = self.Population[corr_list].get_gamma()
-        sigma = self.Population[corr_list].get_sigma()
-        split_ratio = self.Population[corr_list].get_spin_ratio()
-
-        orbit_split = self.Population[corr_list].get_orbit_splitting()
-
-        for j in range(self.npaths):
-            if j not in self.corr_paths:
-
-                self.Population[j].set_spin_ratio(split_ratio)
-                self.Population[j].set_orbit_splitting(orbit_split)
-
-                self.Population[j].set_sigma(sigma)
-                self.Population[j].set_gamma(gamma)
-
     def get(self):
         Population = []
         for i in range(self.npaths):
@@ -111,12 +90,12 @@ class Individual():
     def get_path(self, i):
         return self.Population[i].get()
 
-    def verbose(self):
-        """
-        Print out the Populations
-        """
-        for i in range(self.npaths):
-            self.Population[i].verbose()
+    # def verbose(self):
+    #     """
+    #     Print out the Populations
+    #     """
+    #     for i in range(self.npaths):
+    #         self.Population[i].verbose()
 
     def set_path(self, i, params):
         params_names = self.Population[i].get_params_names()
@@ -125,3 +104,9 @@ class Individual():
             dicts[key] = params[j]
 
         self.Population[i].set(dicts)
+
+    def mutate(self):
+        for i in range(self.npaths):
+            # self.Population[i].mutate()
+            params_names = self.Population[i].mutate()
+

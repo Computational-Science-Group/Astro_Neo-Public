@@ -1,9 +1,5 @@
 import numpy as np
 import os
-# import lmfit
-# from lmfit import Model
-# from lmfit.models import GaussianModel,VoigtModel,DoniachModel,ExponentialModel
-# from .background_function import shirley
 from scipy import integrate
 from scipy.special import gammaln, wofz
 import xspec
@@ -91,15 +87,42 @@ class ParamsDict:
     def initialize_range(self, range_dicts):
         self.range_dicts = range_dicts
         for i in range(self.nparams):
-            # range = np.arange()
             limits = self.range_dicts[self.params[i]]
             if type(limits) == int or type(limits) == float:
                 self.dicts[self.params[i]] = limits
             else:
+                try:
+                    limits[3]
+                except:
+                    limits = limits + ('',)
 
-                limits_range = np.arange(limits[0], limits[1], limits[2])
+                if limits[3] == 'number':
+                    limits_range = np.linspace(limits[0], limits[1], int(limits[2]))
+                else:
+                    limits_range = np.arange(limits[0], limits[1], limits[2])
+
                 self.dicts[self.params[i]] = np.random.choice(limits_range)
 
+    def random_pars(self, pars):
+        """Randomized specific paras
+
+        Args:
+            pars (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        limits = self.range_dicts[pars]
+        try:
+            limits[3]
+        except:
+            limits = limits + ('',)
+        if limits[3] == 'number':
+            limits_range = np.linspace(limits[0], limits[1], int(limits[2]))
+        else:
+            limits_range = np.arange(limits[0], limits[1], limits[2])
+
+        self.dicts[pars] = np.random.choice(limits_range)
 
 class BaseObj:
     """
@@ -113,7 +136,14 @@ class BaseObj:
     def __init__(self, center=None, _prefix=''):
         self._prefix = _prefix
         self._indep = 1
-        self._params_names = []
+        self._params_names = ['None']
+        self._indep = 1
+        self.range_dicts = {
+            'None': (0, 1, 10, 'number')
+        }
+
+        self._Params = ParamsDict(self._params_names)
+        self._Params.initialize_range(self.range_dicts)
 
     def set(self, param_dicts):
 
@@ -143,11 +173,17 @@ class BaseObj:
         """
         return None
 
-    def calculate_area(self, x):
-        return integrate.simps(self.get_func(x), x)
 
     def get_params_names(self):
+        """Get the parametes name
+
+        Returns:
+            _type_: _description_
+        """
         return combine_params(self._prefix, self._params_names)
+
+    def mutate(self):
+        self._Params.initialize_range(self.range_dicts)
 
     # def verbose(self):
     #     return self._params.pretty_print()
@@ -991,11 +1027,11 @@ class XspecSpectrum(BaseObj):
             # 'Sig_6keV': (0.001, 0.1, 0.001),
             # vapec <5>
             'vapec_kT': (0.0808, 0.6, 0.001),
-            'vapec_C': (0.00, 10.00, 0.001),
-            'vapec_N': (0.00, 10.00, 0.001),
-            'vapec_O': (0.0, 2.00, 0.001),
-            'vapec_Ne': (0.8, 2.00, 1e-5),
-            'vapec_Mg': (0.0, 5.00 , 0.0001),
+            'vapec_C': (0.00, 1.00, 0.001),
+            'vapec_N': (0.00, 1.50, 0.001),
+            'vapec_O': (0.0, 1.00, 0.001),
+            'vapec_Ne': (0.8, 1.00, 1e-5),
+            'vapec_Mg': (0.0, 2.00 , 0.0001),
             'vapec_Fe': (0.0, 1.00, 1e-4),
             # 'Redshift': (0.0001, 0.00081, 1e-5),
             'vapec_norm': (0.0008, 0.0010, 1e-5),
@@ -1005,10 +1041,10 @@ class XspecSpectrum(BaseObj):
             # vacx2 <7>
             'vacx2_collnpar': (0.01, 1000, 0.01),
             # 'vacx2_C': (0, 0.005, 1e-5),
-            'vacx2_N': (0, 10, 0.01),
-            'vacx2_O': (0, 10, 0.01),
-            'vacx2_Ne': (0, 10, 0.01),
-            'vacx2_norm': (0,1e-4,1e-5),
+            # 'vacx2_N': (0, 10, 0.01),
+            # 'vacx2_O': (0, 10, 0.01),
+            # 'vacx2_Ne': (0, 10, 0.01),
+            'vacx2_norm': (0,1e-4,10000,'number'),
         }
         self._Params = ParamsDict(self._params_names)
         self._Params.initialize_range(self.range_dicts)
@@ -1017,4 +1053,17 @@ class XspecSpectrum(BaseObj):
         Params = self._Params.get()
 
         return Params
+
+    def mutate(self):
+        self._Params.initialize_range(self.range_dicts)
+
+    def mutate_par(self,par):
+        """Mutate specfic parameters
+
+        Args:
+            pars (str): parameters strength
+        """
+
+        self._Params.random_pars(par)
+
 
