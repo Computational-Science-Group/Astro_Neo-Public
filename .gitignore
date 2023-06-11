@@ -45,7 +45,6 @@ build/
 *.csv
 *.txt
 
-
 # Python Related #
 #####################
 __pycache__/
@@ -54,4 +53,8 @@ __pycache__/
 AstroNeo.egg-info/
 
 
-#
+# Input File #
+#####################
+input_files/*
+result/*
+library/*

@@ -1,13 +1,54 @@
-from .helper import *
-from .import_lib import *
-from .ini_parser import *
-from .fitness import *
-from .individual import Individual
+# from .helper import *
+from . import helper
+from . import fitness
+from . import individual
+# from .import_lib import *
+# from .ini_parser import *
+# from .fitness import *
+# from .individual import Individual
 # from .background_function import shirley, nobg, shirley_temp
-# import cProfile
+import cProfile
 # import pstats
 
 # from .run_verbose import *
+
+# ----------------------------
+# Import Library
+import os, copy, random, logging
+from psutil import cpu_count
+import time, datetime, subprocess
+import csv
+import sys
+from concurrent.futures import ProcessPoolExecutor
+# import sherpa
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import pathlib
+import numpy as np
+import operator
+import random
+import copy
+# from .import_lib import *
+from . import input_arg
+# from .helper import *
+
+# Need further testing to see if this is needed...
+os.environ['HEADAS'] = '/Users/andy/projects/xspec/heasoft-6.31.1/aarch64-apple-darwin22.4.0'
+os.system(f"source $HEADAS/headas-init.sh")
+
+import xspec
+
+sys.path.append("/Users/andy/projects/Astro_Neo/input_files/ACX2")
+import acx2_xspec
+
+xspec.xset.Xset.chatter = 0
+
+
+# Set the number of threads
+os.environ['NUMEXPR_MAX_THREADS'] = str(cpu_count())
+
+
+# ----------------------------
 
 
 class AstroNEO:
@@ -19,7 +60,14 @@ class AstroNEO:
 
         # print("Initialize Parameters")
         self.intervalK = 0.05
+        file_dict, timeing_mode = input_arg.input()
+        if timeing_mode:
+            t1 = helper.timecall()
 
+        self.file_dict =  input_arg.ini_parser(file_dict)
+
+        # if timeing_mode:
+            # print(f'Inital import function took {} second' % initial_elapsed)
     def initialize_variable(self):
         """
         Initalize variables
@@ -52,43 +100,43 @@ class AstroNEO:
         # self.npaths = len(self.path_lists)
 
         # Inputs
-        self.data_file = data_file
+        self.data_file = self.file_dict["data_file"]
         # self.fits_file = fits_file
         # print(self.fits_file)
         # Paths
-        self.npaths = npaths
-        self.fits = fits.split(",")
+        self.npaths = self.file_dict['npaths']
+        self.fits = self.file_dict['fits'].split(",")
 
-        self.center = center
+        self.center = self.file_dict['center']
         # self.corr = corr
         # self.corr_list = corr_list
 
         # Populations
-        self.npops = size_population
-        self.ngen = number_of_generation
-        self.steady_state = steady_state
+        self.npops = self.file_dict['size_population']
+        self.ngen = self.file_dict['number_of_generation']
+        self.steady_state = self.file_dict['steady_state']
 
         # Mutation Parameters
-        self.mut_opt = mutated_options
-        self.mut_chance = chance_of_mutation
+        self.mut_opt = self.file_dict['mutated_options']
+        self.mut_chance = self.file_dict['chance_of_mutation']
         # self.mut_chance_e0 = chance_of_mutation_e0
 
         # Crosover Parameters
-        self.n_bestsam = int(best_sample*self.npops*(0.01))
-        self.n_lucksam = int(lucky_few*self.npops*(0.01))
+        self.n_bestsam = int(self.file_dict['best_sample']*self.npops*(0.01))
+        self.n_lucksam = int(self.file_dict['lucky_few']*self.npops*(0.01))
 
         # Time related
         self.time = False
         self.tt = 0
 
         # Figure related:
-        self.printgraph = printgraph
+        self.printgraph = self.file_dict['printgraph']
         if self.printgraph:
             self.fig = plt.figure()
             # Add one figs
             self.ax = self.fig.add_subplot(111)
         # Profile related:
-        self.profile_toggle = profile
+        self.profile_toggle = self.file_dict['profile']
         if self.profile_toggle:
             self.profiler = cProfile.Profile()
             self.profiler.enable()
@@ -114,14 +162,14 @@ class AstroNEO:
         self.logger.addHandler(stdout_handler)
 
         self.logger.setLevel(logging.INFO)
-        self.logger.info(banner())
+        self.logger.info(helper.banner())
 
     def initialize_file_path(self, i=0):
         """
         Initalize file paths for each of the file first
         """
         self.base = os.getcwd()
-        self.output_path = os.path.join(self.base, output_file)
+        self.output_path = os.path.join(self.base, self.file_dict['output_file'])
         self.log_path = os.path.splitext(copy.deepcopy(self.output_path))[0] + ".log"
 
         self.check_output_file(self.output_path)
@@ -210,7 +258,7 @@ class AstroNEO:
     def generateIndividual(self):
         # self.fits = 'Test'
         # self.center = ''
-        ind = Individual(self.npaths, self.fits, self.center)
+        ind = individual.Individual(self.npaths, self.fits, self.center)
         # sys.exit()
         return ind
 
@@ -244,7 +292,7 @@ class AstroNEO:
 
         for i, individual in enumerate(self.Populations):
 
-            temp_score = fitness(individual)
+            temp_score = fitness.fitness(individual)
             scores.append(temp_score)
 
             populationPerf[individual] = temp_score
@@ -264,7 +312,7 @@ class AstroNEO:
         self.logger.info("---------------------------------------------------------")
         self.logger.info(datetime.datetime.fromtimestamp(
             self.st).strftime('%Y-%m-%d %H:%M:%S'))
-        self.logger.info(f"{bcolors.BOLD}Gen: {bcolors.ENDC}{self.genNum+1}")
+        self.logger.info(f"{helper.bcolors.BOLD}Gen: {helper.bcolors.ENDC}{self.genNum+1}")
 
         self.genNum += 1
 
@@ -301,7 +349,7 @@ class AstroNEO:
         self.logger.info(f"Mutation Chance: {self.mut_chance}")
         self.mutatePopulation()
 
-        self.et = timecall()
+        self.et = helper.timecall()
         self.tdiff = self.et - self.st
         self.tt = self.tt + self.tdiff
         self.logger.info(f"Time: {str(round(self.tdiff, 3))} s")
@@ -311,7 +359,7 @@ class AstroNEO:
 
         with np.printoptions(precision=5, suppress=True):
             self.logger.info(
-                f"Best Fit: {bcolors.BOLD}{self.sorted_population[0][1]}{bcolors.ENDC}")
+                f"Best Fit: {helper.bcolors.BOLD}{self.sorted_population[0][1]}{helper.bcolors.ENDC}")
             self.logger.info(f"2nd Fit: {self.sorted_population[1][1]}")
             self.logger.info(f"3rd Fit: {self.sorted_population[2][1]}")
             self.logger.info(f"4th Fit: {self.sorted_population[3][1]}")
@@ -345,7 +393,7 @@ class AstroNEO:
             #       np.asarray(self.currBestFit[0].get()))
             # self.logger.info(bcolors.BOLD + "History Best:", bcolors.OKBLUE +
             #       str(self.globBestFit[1]) + bcolors.ENDC)
-            self.logger.info(f"{bcolors.BOLD}History Best :{bcolors.OKBLUE}{self.globBestFit[1]}{bcolors.ENDC}")
+            self.logger.info(f"{helper.bcolors.BOLD}History Best :{helper.bcolors.OKBLUE}{self.globBestFit[1]}{helper.bcolors.ENDC}")
             # GlobchiR = self.globBestFit[1]/(len(self.x_raw)-4*self.npaths)
             # print(bcolors.BOLD + "History Best ChiR:",
             #       bcolors.OKBLUE + str(GlobchiR) + bcolors.ENDC)
@@ -360,7 +408,7 @@ class AstroNEO:
         # 2 = mutated genes inside population based on secondary probability
         # 4 = metropolis hastings mutation
         """
-        st = timecall()
+        st = helper.timecall()
         self.nmutate = 0
         self.nmutate_success = []
         # if self.mut_opt == 0:
@@ -374,7 +422,7 @@ class AstroNEO:
 
         self.logger.info(f"Mutate Times: {self.nmutate}")
 
-        tdiff = timecall() - st
+        tdiff = helper.timecall() - st
         self.logger.info(f"Mutate Time: {str(round(tdiff, 3))} s")
     def mutateIndi(self,indi):
         """Mutate each individual
@@ -393,10 +441,10 @@ class AstroNEO:
             # Create a new individual with the same parameters
             og_pars = copy.copy(self.Populations[indi].get_func()[0].get())
             og_individual.set_path(0,og_pars)
-            og_score = fitness(og_individual)
+            og_score = fitness.fitness(og_individual)
 
             new_individual = self.generateIndividual()
-            mut_score = fitness(new_individual)
+            mut_score = fitness.fitness(new_individual)
 
             T = - self.bestDiff/np.log(1-(self.genNum/self.ngen))
             if mut_score < og_score:
@@ -473,31 +521,31 @@ class AstroNEO:
         """Generate Verbose output at the start
         """
         self.logger.info("-----------Inputs File Stats---------------")
-        self.logger.info(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.data_file}")
-        self.logger.info(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.output_path}")
-        # print(f"{bcolors.BOLD}CSV series{bcolors.ENDC}: {self.csv_series}")
-        self.logger.info(f"{bcolors.BOLD}Population{bcolors.ENDC}: {self.npops}")
-        self.logger.info(f"{bcolors.BOLD}Num Gen{bcolors.ENDC}: {self.ngen}")
-        self.logger.info(f"{bcolors.BOLD}Num Path{bcolors.ENDC}: {self.npaths}")
-        self.logger.info(f"{bcolors.BOLD}Fits{bcolors.ENDC}: {self.fits}")
-        # print(f"{bcolors.BOLD}Path{bcolors.ENDC}: {self.path_lists}")
-        # print(f"{bcolors.BOLD}Path Optimize{bcolors.ENDC}: {self.}")
-        self.logger.info(f"{bcolors.BOLD}Printout{bcolors.ENDC}: {self.printgraph}")
-        self.logger.info(f"{bcolors.BOLD}profiler{bcolors.ENDC}: {self.profile_toggle}")
-        # print(f"{bcolors.BOLD}Steady State{bcolors.ENDC}: {steady_state}")
-        # print(f"{bcolors.BOLD}Output Paths{bcolors.ENDC}: {num_output_paths}")
+        self.logger.info(f"{helper.bcolors.BOLD}File{helper.bcolors.ENDC}: {self.data_file}")
+        self.logger.info(f"{helper.bcolors.BOLD}File{helper.bcolors.ENDC}: {self.output_path}")
+        # print(f"{helper.bcolors.BOLD}CSV series{helper.bcolors.ENDC}: {self.csv_series}")
+        self.logger.info(f"{helper.bcolors.BOLD}Population{helper.bcolors.ENDC}: {self.npops}")
+        self.logger.info(f"{helper.bcolors.BOLD}Num Gen{helper.bcolors.ENDC}: {self.ngen}")
+        self.logger.info(f"{helper.bcolors.BOLD}Num Path{helper.bcolors.ENDC}: {self.npaths}")
+        self.logger.info(f"{helper.bcolors.BOLD}Fits{helper.bcolors.ENDC}: {self.fits}")
+        # print(f"{helper.bcolors.BOLD}Path{helper.bcolors.ENDC}: {self.path_lists}")
+        # print(f"{helper.bcolors.BOLD}Path Optimize{helper.bcolors.ENDC}: {self.}")
+        self.logger.info(f"{helper.bcolors.BOLD}Printout{helper.bcolors.ENDC}: {self.printgraph}")
+        self.logger.info(f"{helper.bcolors.BOLD}profiler{helper.bcolors.ENDC}: {self.profile_toggle}")
+        # print(f"{helper.bcolors.BOLD}Steady State{helper.bcolors.ENDC}: {steady_state}")
+        # print(f"{helper.bcolors.BOLD}Output Paths{helper.bcolors.ENDC}: {num_output_paths}")
         self.logger.info("-------------------------------------------")
 
     def run_verbose_end(self):
         """Generate verbose output at the end
         """
         self.logger.info("-----------Output Stats---------------")
-        self.logger.info(f"{bcolors.BOLD}Total Time(s){bcolors.ENDC}: {round(self.tt,4)}")
-        # print(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.data_path}")
-        # print(f"{bcolors.BOLD}{bcolors.ENDC}: {self.npops}")
-        # print(f"{bcolors.BOLD}Num Gen{bcolors.ENDC}: {self.ngen}")
-        # print(f"{bcolors.BOLD}Num Path{bcolors.ENDC}: {self.npaths}")
-        # print(f"{bcolors.BOLD}Path{bcolors.ENDC}: {self.path_lists}")
+        self.logger.info(f"{helper.bcolors.BOLD}Total Time(s){helper.bcolors.ENDC}: {round(self.tt,4)}")
+        # print(f"{helper.bcolors.BOLD}File{helper.bcolors.ENDC}: {self.data_path}")
+        # print(f"{helper.bcolors.BOLD}{helper.bcolors.ENDC}: {self.npops}")
+        # print(f"{helper.bcolors.BOLD}Num Gen{helper.bcolors.ENDC}: {self.ngen}")
+        # print(f"{helper.bcolors.BOLD}Num Path{helper.bcolors.ENDC}: {self.npaths}")
+        # print(f"{helper.bcolors.BOLD}Path{helper.bcolors.ENDC}: {self.path_lists}")
         self.logger.info("-------------------------------------------")
 
 
@@ -510,7 +558,7 @@ class AstroNEO:
             # self.active_background(self.globBestFit[0])
             temp_gen = self.next_generation()
             self.output_generations()
-            if printgraph:
+            if self.printgraph:
                 # test_y = self.export_paths(self.globBestFit[0])
                 # real_y = np.array(self.y_scaler.inverse_transform(
                 #     test_y.reshape(-1, 1))).flatten() + self.bg
@@ -740,6 +788,7 @@ class AstroNEO:
 def main():
 
     # profiler = cProfile.Profile()
+    # import helper
 
     # profiler.enable()
     AstroNEO()
@@ -749,3 +798,7 @@ def main():
     # stats.dump_stats('Export_Data.txt')
 
     # GAMO()
+
+
+if __name__ == '__main__':
+    main()
