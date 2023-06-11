@@ -20,7 +20,7 @@ class AstroNEO:
         Initialize Parameters
         """
 
-        print("Initialize Parameters")
+        # print("Initialize Parameters")
         self.intervalK = 0.05
 
     def initialize_variable(self):
@@ -95,15 +95,6 @@ class AstroNEO:
             self.profiler = cProfile.Profile()
             self.profiler.enable()
 
-        # CSV-Series check
-        # self.csv_percent = 0.2
-    # def reinitialize_varshirleiable():
-    #     self.genNum = 0
-    #     self.globBestFit = [0,99999]
-    #     self.currBestFit = [0,99999]
-    #     self.bestDiff = 9999
-    #     self.bestBest = 999999999
-    #     self.diffCounter = 0
 
 
     def initialize_logger(self):
@@ -131,22 +122,12 @@ class AstroNEO:
         """
         Initalize file paths for each of the file first
         """
-        # self.csv_series = csv_series
         self.base = os.getcwd()
-        # self.front = os.path.join(self.base,feff_file)
-        # self.front = self.base
-        # print(output_file)
-        # if self.csv_series == True:
-        # self.data_path = os.path.join(self.base,csv_file[i])
-        # self.output_path = os.path.splitext(os.path.join(self.base,output_file))[0] + "_" + str(i) + ".csv"
-        # os.path.splitext(file)[0] + '_data.csv'
-        # else:
-        # self.data_path = os.path.join(self.base,csv_file)
-        # self.output_path = os.path.join(self.base,output_file)
-        # self.end ='.dat'
         self.output_path = os.path.join(self.base, output_file)
-        self.check_output_file(self.output_path)
+        self.log_path = os.path.splitext(copy.deepcopy(self.output_path))[0] + ".log"
 
+        self.check_output_file(self.output_path)
+        self.check_output_file(self.log_path)
     def check_if_exists(self, path_file):
         """
         Check if the directory exists
@@ -228,74 +209,6 @@ class AstroNEO:
         self.l_bkg = xspec.Plot.backgroundVals()
 
 
-    def initialize_range(self, i=0, BestIndi=None):
-        """
-        Initalize range
-
-        To Do list:
-            Initalize range will be difference for each paths depend if the run are
-            in series, therefore the ranges will self-adjust
-        """
-
-        # print(self.path_lists)
-        # print("Initialize Range")
-        """
-        if i == 0:
-            self.pathrange_Dict = []
-            for i in self.path_lists:
-                self.pathrange_Dict.append(Pathrange_limits(i))
-
-            # print(self.pathrange_Dict)
-            # sys.exit()
-            # test = self.pathrange_Dict[-1]
-            # print(test)
-            # print(test.get_paths())
-            # print(test.get_rangeS02())
-            #
-            self.dt_S02 = [0.01,2]
-            self.dt_Sigma2 = [0.001,2]
-            self.dt_DeltaR = [0.01,2]
-            # sys.exit()
-            # self.rangeS02 = (np.linspace(5, 95, 91) * 0.01)  # <- should be separate
-            self.rangeE0 = (np.linspace(-100, 100, 201) * \
-                            0.01) # <- e0, for everything
-            # <- Larger range B
-            self.rangeE0_large = (np.linspace(-600, 600, 1201) * 0.01)
-        """
-
-        # data = np.loadtxt(self.data_file, delimiter=',', skiprows=1)
-        # print(data[:,0])
-        # self.x_raw = data[:, 0]
-        # self.y_raw = data[:, 1]
-
-        # print(data[:,1])
-        # print(self.x_raw)
-        # print(self.y_raw)
-        # plt.plot(self.x_raw,self.y_raw)
-        # plt.show()
-        # Background subtraction
-        # self.intitalize_fits()
-
-        # self.bg = nobg(self.x_raw, self.y_raw)
-        # # self.Bg_obj = Background_Obj(1,'ShirleyExp')
-        # # self.bg = shirley(self.x_raw,self.y_raw)
-        # # self.
-        # self.y_background = self.y_raw - self.bg
-        # self.center_range = [np.min(self.x_raw), np.max(self.x_raw)]
-
-        # self.y_scaler = MinMaxScaler()
-        # self.y_normal = self.y_scaler.fit_transform(
-        #     self.y_background.reshape(-1, 1))
-
-        # self.x_scaler = MinMaxScaler()
-        # self.x_normal = self.x_scaler.fit_transform(self.x_raw.reshape(-1, 1))
-
-    def create_range(self, value, percentage, dt, prec):
-        minus = round(value - percentage*value, prec)
-        plus = round(value + percentage*value, prec)
-        range = np.arange(minus, plus+dt, dt)
-        return range
-
     def generateIndividual(self):
         # self.fits = 'Test'
         # self.center = ''
@@ -319,35 +232,39 @@ class AstroNEO:
 
         Individual = indObj.get_func()[0]
 
-        model_params = Individual.get_func()
+        Params_list = [2,3,4,7,9,10,11,12,13,19,22,23,38,41,60]
 
-        model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))")
+        model_params = Individual.get_pars_dicts(Params_list)
+
+        model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))",
+                        setPars={1:0.0279, 5:0.02,21:0.00081,39:0.00081,42:4,43:2,44:2,})
+
 
         # Model
 
         # Tbabs <1>
-        model.TBabs.nH.frozen = True
-        model.TBabs.nH = 0.0279
+        # model.TBabs.nH.frozen = True
+        # model.TBabs.nH = 0.0279
 
         # Tbabs <2>
 
         # Powerlaw <3>
 
         # lsmooth <4>
-        model.lsmooth.Sig_6keV.frozen = True
-        model.lsmooth.Sig_6keV = 0.02
-        model.lsmooth.Index.frozen = True
-        model.lsmooth.Index = 1
+        # model.lsmooth.Sig_6keV.frozen = True
+        # model.lsmooth.Sig_6keV = 0.02
+        # model.lsmooth.Index.frozen = True
+        # model.lsmooth.Index = 1
 
         # vapec <5>
-        model.vapec.C.frozen = False
-        model.vapec.N.frozen = False
-        model.vapec.O.frozen = False
-        model.vapec.Ne.frozen = False
-        model.vapec.Mg.frozen = False
-        model.vapec.Fe.frozen = False
+        # model.vapec.C.frozen = False
+        # model.vapec.N.frozen = False
+        # model.vapec.O.frozen = False
+        # model.vapec.Ne.frozen = False
+        # model.vapec.Mg.frozen = False
+        # model.vapec.Fe.frozen = False
         # self.model.vapec.Redshift.frozen = True
-        model.vapec.Redshift = 0.00081
+        # model.vapec.Redshift = 0.00081
 
         # model.vapec.N = 0.990385
         # model.vapec.O = 6.48552e-18
@@ -355,7 +272,7 @@ class AstroNEO:
         # model.vapec.Mg = 1.53165
         # model.vapec.Fe = 0.179656
         # self.model.vapec.Redshift.frozen = True
-        model.vapec.Redshift = 0.00081
+        # model.vapec.Redshift = 0.00081
 
         # vapec_2 <6>
         model.vapec_6.kT.frozen = False
@@ -368,16 +285,11 @@ class AstroNEO:
         model.vapec_6.Redshift.link = model.vapec.Redshift
 
         # zashift <7>
-        model.zashift.Redshift.frozen = True
-        model.zashift.Redshift = 0.00081
+        # model.zashift.Redshift.frozen = True
+        # model.zashift.Redshift = 0.00081
 
         # vacx2 <8>
         model.vacx2.temperature.link = model.vapec.kT
-        model.vacx2.collnpar = 280
-        model.vacx2.collntype = 4
-        model.vacx2.acxmodel = 2
-        model.vacx2.recombtype = 2
-
         model.vacx2.C.link = model.vapec.C
         model.vacx2.N.link = model.vapec.N
         model.vacx2.O.link = model.vapec.O
@@ -387,49 +299,34 @@ class AstroNEO:
 
 
         # Set up params afterward
-        model.TBabs_2.nH = model_params['TBabs_2_nH']
+        # model.TBabs_2.nH = model_params['TBabs_2_nH']
         # --------
-        model.powerlaw.PhoIndex = model_params['PhoIndex']
-        model.powerlaw.norm = model_params['Pl_norm']
+        # model.powerlaw.PhoIndex = model_params['PhoIndex']
+        # model.powerlaw.norm = model_params['Pl_norm']
         # --------
-        model.vapec.kT = model_params['vapec_kT']
-        model.vapec.C = model_params['vapec_C']
-        model.vapec.N = model_params['vapec_N']
-        model.vapec.O = model_params['vapec_O']
-        model.vapec.Ne = model_params['vapec_Ne']
-        model.vapec.Mg = model_params['vapec_Mg']
-        model.vapec.Fe = model_params['vapec_Fe']
-        model.vapec.norm = model_params['vapec_norm']
+        # model.vapec.kT = model_params['vapec_kT']
+        # model.vapec.C = model_params['vapec_C']
+        # model.vapec.N = model_params['vapec_N']
+        # model.vapec.O = model_params['vapec_O']
+        # model.vapec.Ne = model_params['vapec_Ne']
+        # model.vapec.Mg = model_params['vapec_Mg']
+        # model.vapec.Fe = model_params['vapec_Fe']
+        # model.vapec.norm = model_params['vapec_norm']
         # --------
-        model.vapec_6.kT = model_params['vapec_6_kT']
-        model.vapec_6.norm = model_params['vapec_6_norm']
+        # model.vapec_6.kT = model_params['vapec_6_kT']
+        # model.vapec_6.norm = model_params['vapec_6_norm']
         # --------
-        model.vacx2.collnpar = model_params['vacx2_collnpar']
+        # model.vacx2.collnpar = model_params['vacx2_collnpar']
         # model.vacx2.C = model_params['vacx2_C']
         # model.vacx2.N = model_params['vacx2_N']
         # model.vacx2.O = model_params['vacx2_O']
         # model.vacx2.Ne = model_params['vacx2_Ne']
-        model.vacx2.norm = model_params['vacx2_norm']
+        # model.vacx2.norm = model_params['vacx2_norm']
 
+        model.setPars(model_params)
 
         # print(self.xspec.Fit.statMethod)
         loss = self.xspec.Fit.statistic
-        # yTotal = np.zeros(len(self.x_raw))
-
-        # for i, paths in enumerate(Individual):
-        #     y = paths.get_func(self.x_raw, self.y_normal)
-        #     # print(y.shape)
-        #     yTotal += y
-        # # Least Square
-        # for j in range(len(self.x_normal)):
-        #     loss = loss + (yTotal[j]*self.x_raw[j] **
-        #                    2 - self.y_normal[j] * self.x_raw[j]**2)**2
-        # print(Individual)
-        # set_source(1, model)
-
-        # loss = (get_staterror(1, filter=True))
-        # loss = get_stat_info()[0].statval
-        # print(loss)
         return loss
 
     def eval_Population(self):
@@ -461,10 +358,10 @@ class AstroNEO:
         """
         self.st = time.time()
         # ray.init()
-        print("---------------------------------------------------------")
-        print(datetime.datetime.fromtimestamp(
+        self.logger.info("---------------------------------------------------------")
+        self.logger.info(datetime.datetime.fromtimestamp(
             self.st).strftime('%Y-%m-%d %H:%M:%S'))
-        print(f"{bcolors.BOLD}Gen: {bcolors.ENDC}{self.genNum+1}")
+        self.logger.info(f"{bcolors.BOLD}Gen: {bcolors.ENDC}{self.genNum+1}")
 
         self.genNum += 1
 
@@ -493,58 +390,59 @@ class AstroNEO:
 
         self.output_best_parameters()
 
-        nextBreeders = self.selectFromPopulation()
+        self.selectFromPopulation()
         self.createChildren()
-        print(f"Number of Breeders: {str(len(self.parents))}")
-        print(f"DiffCounter: {self.diffCounter}")
-        print(f"Diff %: {self.diffCounter / self.genNum}")
-        print(f"Mutation Chance: {self.mut_chance}")
+        self.logger.info(f"Number of Breeders: {str(len(self.parents))}")
+        self.logger.info(f"DiffCounter: {self.diffCounter}")
+        self.logger.info(f"Diff %: {self.diffCounter / self.genNum}")
+        self.logger.info(f"Mutation Chance: {self.mut_chance}")
         self.mutatePopulation()
 
         self.et = timecall()
         self.tdiff = self.et - self.st
         self.tt = self.tt + self.tdiff
-        print(f"Time: {str(round(self.tdiff, 5))} s")
+        self.logger.info(f"Time: {str(round(self.tdiff, 5))} s")
 
 
     def output_best_parameters(self):
 
         with np.printoptions(precision=5, suppress=True):
-            print(
+            self.logger.info(
                 f"Best Fit: {bcolors.BOLD}{self.sorted_population[0][1]}{bcolors.ENDC}")
-            print(f"2nd Fit: {self.sorted_population[1][1]}")
-            print(f"3rd Fit: {self.sorted_population[2][1]}")
-            print(f"4th Fit: {self.sorted_population[3][1]}")
-            print(f"Last Fit: {self.sorted_population[-1][1]}")
-            print(f"Different from last best fit: {self.bestDiff}")
+            self.logger.info(f"2nd Fit: {self.sorted_population[1][1]}")
+            self.logger.info(f"3rd Fit: {self.sorted_population[2][1]}")
+            self.logger.info(f"4th Fit: {self.sorted_population[3][1]}")
+            self.logger.info(f"Last Fit: {self.sorted_population[-1][1]}")
+            self.logger.info(f"Different from last best fit: {self.bestDiff}")
             # print(bcolors.BOLD + "Best fit :", bcolors.OKBLUE +
             #       str(self.currBestFit[1]) + bcolors.ENDC)
             # CurrchiR = self.currBestFit[1]/(len(self.x_raw)-4*self.npaths)
             # print(bcolors.BOLD + "Best fit ChiR:",
             #       bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
 
-            print(f"Best Fit Combination:")
+            self.logger.info(f"Best Fit Combination:")
             params_list = self.currBestFit[0].get_func()[0].get_func()
-            print(f"    TBabs_2_nH: {np.round(params_list['TBabs_2_nH'],5)}")
-            print(f"    PhoIndex: {np.round(params_list['PhoIndex'],5)}")
-            print(f"    Pl_norm: {np.round(params_list['Pl_norm'],5)}")
-            print(f"    vapec_kT: {np.round(params_list['vapec_kT'],5)}")
-            print(f"    vapec_C: {np.round(params_list['vapec_C'],5)}")
-            print(f"    vapec_N: {np.round(params_list['vapec_N'],5)}")
-            print(f"    vapec_O: {np.round(params_list['vapec_O'],5)}")
-            print(f"    vapec_Ne: {np.round(params_list['vapec_Ne'],5)}")
-            print(f"    vapec_Mg: {np.round(params_list['vapec_Mg'],5)}")
-            print(f"    vapec_Fe: {np.round(params_list['vapec_Fe'],5)}")
-            print(f"    vapec_norm: {np.round(params_list['vapec_norm'],5)}")
-            print(f"    vapec_6_kT: {np.round(params_list['vapec_6_kT'],5)}")
-            print(f"    vapec_6_norm: {np.round(params_list['vapec_6_norm'],5)}")
-            print(f"    vacx2_collnpar: {np.round(params_list['vacx2_collnpar'],5)}")
-            print(f"    vacx2_norm: {np.round(params_list['vacx2_norm'],7)}")
+            self.logger.info(f"    TBabs_2_nH: {np.round(params_list['TBabs_2_nH'],5)}")
+            self.logger.info(f"    PhoIndex: {np.round(params_list['PhoIndex'],5)}")
+            self.logger.info(f"    Pl_norm: {np.round(params_list['Pl_norm'],5)}")
+            self.logger.info(f"    vapec_kT: {np.round(params_list['vapec_kT'],5)}")
+            self.logger.info(f"    vapec_C: {np.round(params_list['vapec_C'],5)}")
+            self.logger.info(f"    vapec_N: {np.round(params_list['vapec_N'],5)}")
+            self.logger.info(f"    vapec_O: {np.round(params_list['vapec_O'],5)}")
+            self.logger.info(f"    vapec_Ne: {np.round(params_list['vapec_Ne'],5)}")
+            self.logger.info(f"    vapec_Mg: {np.round(params_list['vapec_Mg'],5)}")
+            self.logger.info(f"    vapec_Fe: {np.round(params_list['vapec_Fe'],5)}")
+            self.logger.info(f"    vapec_norm: {np.round(params_list['vapec_norm'],5)}")
+            self.logger.info(f"    vapec_6_kT: {np.round(params_list['vapec_6_kT'],5)}")
+            self.logger.info(f"    vapec_6_norm: {np.round(params_list['vapec_6_norm'],5)}")
+            self.logger.info(f"    vacx2_collnpar: {np.round(params_list['vacx2_collnpar'],5)}")
+            self.logger.info(f"    vacx2_norm: {np.round(params_list['vacx2_norm'],7)}")
 
             # print("Best fit combination:\n",
             #       np.asarray(self.currBestFit[0].get()))
-            print(bcolors.BOLD + "History Best:", bcolors.OKBLUE +
-                  str(self.globBestFit[1]) + bcolors.ENDC)
+            # self.logger.info(bcolors.BOLD + "History Best:", bcolors.OKBLUE +
+            #       str(self.globBestFit[1]) + bcolors.ENDC)
+            self.logger.info(f"{bcolors.BOLD}History Best :{bcolors.OKBLUE}{self.globBestFit[1]}{bcolors.ENDC}")
             # GlobchiR = self.globBestFit[1]/(len(self.x_raw)-4*self.npaths)
             # print(bcolors.BOLD + "History Best ChiR:",
             #       bcolors.OKBLUE + str(GlobchiR) + bcolors.ENDC)
@@ -560,14 +458,17 @@ class AstroNEO:
         # 4 = metropolis hastings mutation
         """
         self.nmutate = 0
-
+        self.nmutate_success = []
         # if self.mut_opt == 0:
         for i in range(self.npops):
             if random.random()*100 < self.mut_chance:
                 self.nmutate += 1
                 self.Populations[i] = self.mutateIndi(i)
 
-        print("Mutate Times:", self.nmutate)
+        if self.mut_opt == 2:
+            self.logger.info(f"Total Metroplis Hasting Success: {sum(self.nmutate_success)}")
+
+        self.logger.info(f"Mutate Times: {self.nmutate}")
 
 
     def mutateIndi(self,indi):
@@ -582,7 +483,7 @@ class AstroNEO:
 
         # Metroplis Hastings Mutation
         if self.mut_opt == 2:
-            nmutate_success = 0
+            n_success = 0
             og_individual = self.generateIndividual()
             # Create a new individual with the same parameters
             og_pars = copy.copy(self.Populations[indi].get_func()[0].get())
@@ -594,15 +495,17 @@ class AstroNEO:
 
             T = - self.bestDiff/np.log(1-(self.genNum/self.ngen))
             if mut_score < og_score:
-                nmutate_success = nmutate_success + 1
+                n_success = n_success + 1
+
                 newIndi = new_individual
             elif np.exp(-(mut_score-og_score)/T) > np.random.uniform():
-                nmutate_success = nmutate_success + 1
+                n_success = n_success + 1
                 newIndi = new_individual
             else:
                 newIndi = og_individual
 
-            print(nmutate_success)
+            self.nmutate_success.append(n_success)
+            # self.logger.info(f"Metroplis Hasting Success: {nmutate_success}")
         else:
             newIndi = self.generateIndividual()
         return newIndi
@@ -664,54 +567,33 @@ class AstroNEO:
     def run_verbose_start(self):
         """Generate Verbose output at the start
         """
-        print("-----------Inputs File Stats---------------")
-        print(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.data_file}")
-        print(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.output_path}")
+        self.logger.info("-----------Inputs File Stats---------------")
+        self.logger.info(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.data_file}")
+        self.logger.info(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.output_path}")
         # print(f"{bcolors.BOLD}CSV series{bcolors.ENDC}: {self.csv_series}")
-        print(f"{bcolors.BOLD}Population{bcolors.ENDC}: {self.npops}")
-        print(f"{bcolors.BOLD}Num Gen{bcolors.ENDC}: {self.ngen}")
-        print(f"{bcolors.BOLD}Num Path{bcolors.ENDC}: {self.npaths}")
-        print(f"{bcolors.BOLD}Fits{bcolors.ENDC}: {self.fits}")
+        self.logger.info(f"{bcolors.BOLD}Population{bcolors.ENDC}: {self.npops}")
+        self.logger.info(f"{bcolors.BOLD}Num Gen{bcolors.ENDC}: {self.ngen}")
+        self.logger.info(f"{bcolors.BOLD}Num Path{bcolors.ENDC}: {self.npaths}")
+        self.logger.info(f"{bcolors.BOLD}Fits{bcolors.ENDC}: {self.fits}")
         # print(f"{bcolors.BOLD}Path{bcolors.ENDC}: {self.path_lists}")
         # print(f"{bcolors.BOLD}Path Optimize{bcolors.ENDC}: {self.}")
-        print(f"{bcolors.BOLD}Printout{bcolors.ENDC}: {self.printgraph}")
-        print(f"{bcolors.BOLD}profiler{bcolors.ENDC}: {self.profile_toggle}")
+        self.logger.info(f"{bcolors.BOLD}Printout{bcolors.ENDC}: {self.printgraph}")
+        self.logger.info(f"{bcolors.BOLD}profiler{bcolors.ENDC}: {self.profile_toggle}")
         # print(f"{bcolors.BOLD}Steady State{bcolors.ENDC}: {steady_state}")
         # print(f"{bcolors.BOLD}Output Paths{bcolors.ENDC}: {num_output_paths}")
-        print("-------------------------------------------")
+        self.logger.info("-------------------------------------------")
 
     def run_verbose_end(self):
         """Generate verbose output at the end
         """
-        print("-----------Output Stats---------------")
-        print(f"{bcolors.BOLD}Total Time(s){bcolors.ENDC}: {round(self.tt,4)}")
+        self.logger.info("-----------Output Stats---------------")
+        self.logger.info(f"{bcolors.BOLD}Total Time(s){bcolors.ENDC}: {round(self.tt,4)}")
         # print(f"{bcolors.BOLD}File{bcolors.ENDC}: {self.data_path}")
         # print(f"{bcolors.BOLD}{bcolors.ENDC}: {self.npops}")
         # print(f"{bcolors.BOLD}Num Gen{bcolors.ENDC}: {self.ngen}")
         # print(f"{bcolors.BOLD}Num Path{bcolors.ENDC}: {self.npaths}")
         # print(f"{bcolors.BOLD}Path{bcolors.ENDC}: {self.path_lists}")
-        print("-------------------------------------------")
-
-    def active_background(self, indObj):
-        if self.genNum % 5 == 0 and self.genNum > 1:
-            # 1. Inverse transfer
-            # construct new background using the bestfit
-            Individual = indObj.get_func()
-            yTotal = np.zeros(len(self.x_raw))
-            for i, paths in enumerate(Individual):
-                y = paths.get_func(self.x_raw)
-                yTotal += y
-            self.bg = shirley_temp(self.x_raw, yTotal)
-            self.y_background = self.y_raw - self.bg
-            # self.y_scaler = MinMaxScaler()
-            self.y_normal = self.y_scaler.fit_transform(
-                self.y_background.reshape(-1, 1))
-
-            file_name = 'array' + str(self.genNum/10) + ".txt"
-            out_array = np.concatenate(
-                (self.x_raw.reshape(-1, 1), self.bg.reshape(-1, 1)), axis=1)
-
-            np.savetxt(file_name, out_array, delimiter=',')
+        self.logger.info("-------------------------------------------")
 
 
 
@@ -903,33 +785,6 @@ class AstroNEO:
             ('Visualze result using Snakeviz')
             stats.dump_stats('Export_Data.txt')
 
-
-    def fwhm(self, indObj):
-        fg = 2*indObj.get_sigma() * np.sqrt(2*np.log(2))
-        fl = 2*indObj.get_gamma()
-        fv = 0.5346 * fl + np.sqrt(0.2166*fl**2 + fg**2)
-        return (fg, fl, fv)
-
-    def export_paths(self, indObj):
-        area_list = []
-        Individual = indObj.get_func()
-        # print(type(indObj))
-        yTotal = np.zeros(len(self.x_raw))
-        for i, paths in enumerate(Individual):
-            y = paths.get_func(self.x_raw, self.y_normal)
-
-            yTotal += y
-            area = np.trapz(y.flatten(), x=self.x_normal.flatten())
-            y_peak = self.y_scaler.inverse_transform(
-                y.reshape(-1, 1)).flatten() + self.bg
-            self.ax.plot(self.x_scaler.inverse_transform(
-                self.x_normal.reshape(-1, 1)), y_peak, label='peak' + str(i))
-
-            area_list.append(area)
-
-        Total_area = np.sum(area_list)
-        print(area_list/Total_area)
-        return yTotal
 
     def output_generations(self):
         """

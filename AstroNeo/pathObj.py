@@ -941,6 +941,7 @@ class XspecSpectrum(BaseObj):
             'vapec_6_kT','vapec_6_norm',
             'vacx2_collnpar','vacx2_norm'
         ]
+        # self._pars_
         self._indep = 15
         # initalize parameters
         self.xspec = xspec
@@ -1049,10 +1050,23 @@ class XspecSpectrum(BaseObj):
         self._Params = ParamsDict(self._params_names)
         self._Params.initialize_range(self.range_dicts)
 
-    def get_func(self, *args):
+    def get_func(self,*args):
         Params = self._Params.get()
 
         return Params
+
+    def get_pars_dicts(self,pars_list):
+        """Get parameters list in xspec dictionary form
+        """
+
+        Params = self._Params.get()
+
+        assert len(pars_list) == len(Params), "Length of pars_list must be equal to length of Params"
+        xspec_dicts = {}
+        for i,(k,v) in enumerate(Params.items()):
+            xspec_dicts[pars_list[i]] = v
+
+        return xspec_dicts
 
     def mutate(self):
         self._Params.initialize_range(self.range_dicts)
