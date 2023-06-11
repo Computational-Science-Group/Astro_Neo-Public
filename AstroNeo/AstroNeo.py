@@ -1,6 +1,7 @@
 from .helper import *
 from .import_lib import *
 from .ini_parser import *
+from .fitness import *
 # from larch import Interpreter
 from .pathObj import VoigtObj
 from .individual import Individual, BackgroundObj
@@ -27,6 +28,7 @@ class AstroNEO:
         """
         Initalize variables
         """
+        self.ProcessPool = ProcessPoolExecutor(4)
         self.genNum = 0
         self.nChild = 4
         self.globBestFit = [0, np.inf]
@@ -222,127 +224,32 @@ class AstroNEO:
         for i in range(self.npops):
             self.Populations.append(self.generateIndividual())
 
-    def fitness(self, indObj):
-        """
-        Evaluate fitness of a individual
-
-        To do
-        """
-        loss = 0
-
-        Individual = indObj.get_func()[0]
-
-        Params_list = [2,3,4,7,9,10,11,12,13,19,22,23,38,41,60]
-
-        model_params = Individual.get_pars_dicts(Params_list)
-
-        model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))",
-                        setPars={1:0.0279, 5:0.02,21:0.00081,39:0.00081,42:4,43:2,44:2,})
-
-
-        # Model
-
-        # Tbabs <1>
-        # model.TBabs.nH.frozen = True
-        # model.TBabs.nH = 0.0279
-
-        # Tbabs <2>
-
-        # Powerlaw <3>
-
-        # lsmooth <4>
-        # model.lsmooth.Sig_6keV.frozen = True
-        # model.lsmooth.Sig_6keV = 0.02
-        # model.lsmooth.Index.frozen = True
-        # model.lsmooth.Index = 1
-
-        # vapec <5>
-        # model.vapec.C.frozen = False
-        # model.vapec.N.frozen = False
-        # model.vapec.O.frozen = False
-        # model.vapec.Ne.frozen = False
-        # model.vapec.Mg.frozen = False
-        # model.vapec.Fe.frozen = False
-        # self.model.vapec.Redshift.frozen = True
-        # model.vapec.Redshift = 0.00081
-
-        # model.vapec.N = 0.990385
-        # model.vapec.O = 6.48552e-18
-        # model.vapec.Ne = 0.839257
-        # model.vapec.Mg = 1.53165
-        # model.vapec.Fe = 0.179656
-        # self.model.vapec.Redshift.frozen = True
-        # model.vapec.Redshift = 0.00081
-
-        # vapec_2 <6>
-        model.vapec_6.kT.frozen = False
-        model.vapec_6.C.link = model.vapec.C
-        model.vapec_6.N.link = model.vapec.N
-        model.vapec_6.O.link = model.vapec.O
-        model.vapec_6.Ne.link = model.vapec.Ne
-        model.vapec_6.Mg.link = model.vapec.Mg
-        model.vapec_6.Fe.link = model.vapec.Fe
-        model.vapec_6.Redshift.link = model.vapec.Redshift
-
-        # zashift <7>
-        # model.zashift.Redshift.frozen = True
-        # model.zashift.Redshift = 0.00081
-
-        # vacx2 <8>
-        model.vacx2.temperature.link = model.vapec.kT
-        model.vacx2.C.link = model.vapec.C
-        model.vacx2.N.link = model.vapec.N
-        model.vacx2.O.link = model.vapec.O
-        model.vacx2.Ne.link = model.vapec.Ne
-        model.vacx2.Mg.link = model.vapec.Mg
-        model.vacx2.Fe.link = model.vapec.Fe
-
-
-        # Set up params afterward
-        # model.TBabs_2.nH = model_params['TBabs_2_nH']
-        # --------
-        # model.powerlaw.PhoIndex = model_params['PhoIndex']
-        # model.powerlaw.norm = model_params['Pl_norm']
-        # --------
-        # model.vapec.kT = model_params['vapec_kT']
-        # model.vapec.C = model_params['vapec_C']
-        # model.vapec.N = model_params['vapec_N']
-        # model.vapec.O = model_params['vapec_O']
-        # model.vapec.Ne = model_params['vapec_Ne']
-        # model.vapec.Mg = model_params['vapec_Mg']
-        # model.vapec.Fe = model_params['vapec_Fe']
-        # model.vapec.norm = model_params['vapec_norm']
-        # --------
-        # model.vapec_6.kT = model_params['vapec_6_kT']
-        # model.vapec_6.norm = model_params['vapec_6_norm']
-        # --------
-        # model.vacx2.collnpar = model_params['vacx2_collnpar']
-        # model.vacx2.C = model_params['vacx2_C']
-        # model.vacx2.N = model_params['vacx2_N']
-        # model.vacx2.O = model_params['vacx2_O']
-        # model.vacx2.Ne = model_params['vacx2_Ne']
-        # model.vacx2.norm = model_params['vacx2_norm']
-
-        model.setPars(model_params)
-
-        # print(self.xspec.Fit.statMethod)
-        loss = self.xspec.Fit.statistic
-        return loss
 
     def eval_Population(self):
         """Evaluate the population for GA
 
         Returns:
-            _type_: _description_
+            list: list of score
         """
 
-        score = []
+        scores = []
         populationPerf = {}
+        # for i, individual in enumerate(self.Populations):
+
+        #     temp_score = self.ProcessPool.submit(fitness, individual)
+        #     scores.append(temp_score)
+
+        # Gather the data
+        # reuslts = [i.result() for i in scores]
+
+        # for i, individual in enumerate(self.Populations):
+        #     populationPerf[individual] = reuslts[i]
+
 
         for i, individual in enumerate(self.Populations):
 
-            temp_score = self.fitness(individual)
-            score.append(temp_score)
+            temp_score = fitness(individual)
+            scores.append(temp_score)
 
             populationPerf[individual] = temp_score
 
@@ -351,7 +258,7 @@ class AstroNEO:
 
         self.currBestFit = self.sorted_population[0]
 
-        return score
+        # return score
 
     def next_generation(self):
         """Next Generation for GA
@@ -366,7 +273,7 @@ class AstroNEO:
         self.genNum += 1
 
         # Evaluate Fittness
-        score = self.eval_Population()
+        self.eval_Population()
         # self.sorted_population()
         # print(score)
         self.bestDiff = abs(self.globBestFit[1]-self.currBestFit[1])
@@ -401,7 +308,7 @@ class AstroNEO:
         self.et = timecall()
         self.tdiff = self.et - self.st
         self.tt = self.tt + self.tdiff
-        self.logger.info(f"Time: {str(round(self.tdiff, 5))} s")
+        self.logger.info(f"Time: {str(round(self.tdiff, 3))} s")
 
 
     def output_best_parameters(self):
@@ -457,6 +364,7 @@ class AstroNEO:
         # 2 = mutated genes inside population based on secondary probability
         # 4 = metropolis hastings mutation
         """
+        st = timecall()
         self.nmutate = 0
         self.nmutate_success = []
         # if self.mut_opt == 0:
@@ -470,7 +378,8 @@ class AstroNEO:
 
         self.logger.info(f"Mutate Times: {self.nmutate}")
 
-
+        tdiff = timecall() - st
+        self.logger.info(f"Mutate Time: {str(round(tdiff, 3))} s")
     def mutateIndi(self,indi):
         """Mutate each individual
 
@@ -488,17 +397,17 @@ class AstroNEO:
             # Create a new individual with the same parameters
             og_pars = copy.copy(self.Populations[indi].get_func()[0].get())
             og_individual.set_path(0,og_pars)
-            og_score = self.fitness(og_individual)
+            og_score = fitness(og_individual)
 
             new_individual = self.generateIndividual()
-            mut_score = self.fitness(new_individual)
+            mut_score = fitness(new_individual)
 
             T = - self.bestDiff/np.log(1-(self.genNum/self.ngen))
             if mut_score < og_score:
                 n_success = n_success + 1
 
                 newIndi = new_individual
-            elif np.exp(-(mut_score-og_score)/T) > np.random.uniform():
+            elif np.exp(-(mut_score-og_score)/(T+np.nan)) > np.random.uniform():
                 n_success = n_success + 1
                 newIndi = new_individual
             else:

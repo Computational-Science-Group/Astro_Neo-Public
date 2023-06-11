@@ -15,19 +15,6 @@ from AstroNeo import pathObj
 
 class Test_pathObj(unittest.TestCase):
 
-
-    # def test_generate_label_single(self):
-    #     """
-    #     Test Labels with one label
-    #     """
-    #     data = [1]
-    #     result_label = ['s02_1', 'e0', 'sigma_1', 'deltaR_1']
-    #     result_s02_label = []
-    #     result = larch_score.generate_labels(data)
-    #     self.assertEqual(result[0], result_label)
-    #     self.assertEqual(result[1], ['s02_1'])
-    #     self.assertEqual(result[2], ['sigma_1'])
-    #     self.assertEqual(result[3], ['deltaR_1'])
     def test_mutate(self):
         """Test the mutation obj value is change after the mutation
         """
@@ -59,9 +46,12 @@ class Test_pathObj(unittest.TestCase):
             if i != first_key:
                 self.assertEqual(result[i],result_new[i])
 
+
+class Test_ParamsDict(unittest.TestCase):
+
     def test_ParamsDict(self):
         """
-        Test the PathDict class
+        Test the ParamsDict class during initialization
         """
         params = ['a','b','c']
         ParamsDict = pathObj.ParamsDict(params)
@@ -79,8 +69,6 @@ class Test_pathObj(unittest.TestCase):
         self.assertIn(ParamsDict.get()['c'],vals)
         vals = np.linspace(0,0.03,10000)
         self.assertIn(ParamsDict.get()['b'],vals)
-    # def test_Params
-
 
 
 
