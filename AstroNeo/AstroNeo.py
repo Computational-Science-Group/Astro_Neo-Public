@@ -2,14 +2,10 @@ from .helper import *
 from .import_lib import *
 from .ini_parser import *
 from .fitness import *
-# from larch import Interpreter
-from .pathObj import VoigtObj
-from .individual import Individual, BackgroundObj
-from .pathrange import Pathrange_limits
-from .background_function import shirley, nobg, shirley_temp
-from .voigt_shape import voigt_fuc
-import cProfile
-import pstats
+from .individual import Individual
+# from .background_function import shirley, nobg, shirley_temp
+# import cProfile
+# import pstats
 
 # from .run_verbose import *
 
