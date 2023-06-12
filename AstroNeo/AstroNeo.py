@@ -19,7 +19,7 @@ from psutil import cpu_count
 import time, datetime, subprocess
 import csv
 import sys
-from concurrent.futures import ProcessPoolExecutor
+from loky import ProcessPoolExecutor
 # import sherpa
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -278,24 +278,24 @@ class AstroNEO:
 
         scores = []
         populationPerf = {}
-        # for i, individual in enumerate(self.Populations):
-
-        #     temp_score = self.ProcessPool.submit(fitness, individual)
-        #     scores.append(temp_score)
-
-        # Gather the data
-        # reuslts = [i.result() for i in scores]
-
-        # for i, individual in enumerate(self.Populations):
-        #     populationPerf[individual] = reuslts[i]
-
-
         for i, individual in enumerate(self.Populations):
 
-            temp_score = fitness.fitness(individual)
+            temp_score = self.ProcessPool.submit(fitness.fitness, (individual,self.xspec))
             scores.append(temp_score)
 
-            populationPerf[individual] = temp_score
+        # Gather the data
+        reuslts = [i.result() for i in scores]
+
+        for i, individual in enumerate(self.Populations):
+            populationPerf[individual] = reuslts[i]
+
+
+        # for i, individual in enumerate(self.Populations):
+
+        #     temp_score = fitness.fitness(individual)
+        #     scores.append(temp_score)
+
+        #     populationPerf[individual] = temp_score
 
         self.sorted_population = sorted(
             populationPerf.items(), key=operator.itemgetter(1), reverse=False)
@@ -441,10 +441,10 @@ class AstroNEO:
             # Create a new individual with the same parameters
             og_pars = copy.copy(self.Populations[indi].get_func()[0].get())
             og_individual.set_path(0,og_pars)
-            og_score = fitness.fitness(og_individual)
+            og_score = fitness.fitness((og_individual,self.xspec))
 
             new_individual = self.generateIndividual()
-            mut_score = fitness.fitness(new_individual)
+            mut_score = fitness.fitness((new_individual,self.xspec))
 
             T = - self.bestDiff/np.log(1-(self.genNum/self.ngen))
             if mut_score < og_score:

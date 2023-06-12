@@ -1,7 +1,11 @@
 import xspec
+import sys
+xspec.xset.Xset.chatter = 0
+sys.path.append("/Users/andy/projects/Astro_Neo/input_files/ACX2")
+import acx2_xspec
 
 
-def fitness(indObj):
+def fitness(input):
     """
     Evaluate fitness of a individual
 
@@ -9,13 +13,15 @@ def fitness(indObj):
     """
     loss = 0
 
+    indObj = input[0]
+    xspec_data = input[1]
     Individual = indObj.get_func()[0]
 
     Params_list = [2,3,4,7,9,10,11,12,13,19,22,23,38,41,60]
 
     model_params = Individual.get_pars_dicts(Params_list)
 
-    model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))",
+    model = xspec_data.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))",
                     setPars={1:0.0279, 5:0.02,21:0.00081,39:0.00081,42:4,43:2,44:2,})
 
 
@@ -105,5 +111,5 @@ def fitness(indObj):
     model.setPars(model_params)
 
     # print(self.xspec.Fit.statMethod)
-    loss = xspec.Fit.statistic
+    loss = xspec_data.Fit.statistic
     return loss
