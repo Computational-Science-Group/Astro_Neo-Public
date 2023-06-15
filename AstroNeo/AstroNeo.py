@@ -72,7 +72,8 @@ class AstroNEO:
         """
         Initalize variables
         """
-        self.ProcessPool = ProcessPoolExecutor(4)
+        self.ProcessPool = ProcessPoolExecutor(4,initializer=fitness.init_process)
+        # self.nProcess = 4
         self.genNum = 0
         self.nChild = 4
         self.globBestFit = [0, np.inf]
