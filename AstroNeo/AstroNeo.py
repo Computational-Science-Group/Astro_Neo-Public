@@ -72,7 +72,7 @@ class AstroNEO:
         """
         Initalize variables
         """
-        self.ProcessPool = ProcessPoolExecutor(4,initializer=fitness.init_process)
+        self.ProcessPool = ProcessPoolExecutor(8,initializer=fitness.init_process)
         # self.nProcess = 4
         self.genNum = 0
         self.nChild = 4
@@ -374,21 +374,21 @@ class AstroNEO:
 
             self.logger.info(f"Best Fit Combination:")
             params_list = self.currBestFit[0].get_func()[0].get_func()
-            self.logger.info(f"    TBabs_2_nH: {np.round(params_list['TBabs_2_nH'],5)}")
-            self.logger.info(f"    PhoIndex: {np.round(params_list['PhoIndex'],5)}")
-            self.logger.info(f"    Pl_norm: {np.round(params_list['Pl_norm'],5)}")
-            self.logger.info(f"    vapec_kT: {np.round(params_list['vapec_kT'],5)}")
-            self.logger.info(f"    vapec_C: {np.round(params_list['vapec_C'],5)}")
-            self.logger.info(f"    vapec_N: {np.round(params_list['vapec_N'],5)}")
-            self.logger.info(f"    vapec_O: {np.round(params_list['vapec_O'],5)}")
-            self.logger.info(f"    vapec_Ne: {np.round(params_list['vapec_Ne'],5)}")
-            self.logger.info(f"    vapec_Mg: {np.round(params_list['vapec_Mg'],5)}")
-            self.logger.info(f"    vapec_Fe: {np.round(params_list['vapec_Fe'],5)}")
-            self.logger.info(f"    vapec_norm: {np.round(params_list['vapec_norm'],5)}")
-            self.logger.info(f"    vapec_6_kT: {np.round(params_list['vapec_6_kT'],5)}")
-            self.logger.info(f"    vapec_6_norm: {np.round(params_list['vapec_6_norm'],5)}")
-            self.logger.info(f"    vacx2_collnpar: {np.round(params_list['vacx2_collnpar'],5)}")
-            self.logger.info(f"    vacx2_norm: {np.round(params_list['vacx2_norm'],7)}")
+            self.logger.info(f"    TBabs_2_nH: {np.round(params_list['TBabs_2_nH'],5)} vs 1.877e-05")
+            self.logger.info(f"    PhoIndex: {np.round(params_list['PhoIndex'],5)}, vs 1.00455")
+            self.logger.info(f"    Pl_norm: {np.round(params_list['Pl_norm'],5)} vs 5.94711e-04")
+            self.logger.info(f"    vapec_kT: {np.round(params_list['vapec_kT'],5)} vs 0.788251")
+            self.logger.info(f"    vapec_C: {np.round(params_list['vapec_C'],5)} vs 0.644919")
+            self.logger.info(f"    vapec_N: {np.round(params_list['vapec_N'],5)} vs 1.07904")
+            self.logger.info(f"    vapec_O: {np.round(params_list['vapec_O'],5)} vs 0.205961")
+            self.logger.info(f"    vapec_Ne: {np.round(params_list['vapec_Ne'],5)} vs 0.487054")
+            self.logger.info(f"    vapec_Mg: {np.round(params_list['vapec_Mg'],5)} vs 1.35956")
+            self.logger.info(f"    vapec_Fe: {np.round(params_list['vapec_Fe'],5)} vs 0.188908")
+            self.logger.info(f"    vapec_norm: {np.round(params_list['vapec_norm'],5)} vs 3.41553e-04")
+            self.logger.info(f"    vapec_6_kT: {np.round(params_list['vapec_6_kT'],5)} vs 0.434492")
+            self.logger.info(f"    vapec_6_norm: {np.round(params_list['vapec_6_norm'],5)} vs 7.27081e-04")
+            self.logger.info(f"    vacx2_collnpar: {np.round(params_list['vacx2_collnpar'],5)} vs 272.624")
+            self.logger.info(f"    vacx2_norm: {np.round(params_list['vacx2_norm'],7)} vs 2.43828e-04")
 
             # print("Best fit combination:\n",
             #       np.asarray(self.currBestFit[0].get()))
@@ -447,7 +447,7 @@ class AstroNEO:
             new_individual = self.generateIndividual()
             mut_score = fitness.fitness((new_individual,self.xspec))
 
-            T = - self.bestDiff/np.log(1-(self.genNum/self.ngen))
+            T = - self.bestDiff/(np.log(1-(self.genNum/self.ngen))+ np.nan)
             if mut_score < og_score:
                 n_success = n_success + 1
 
@@ -559,6 +559,8 @@ class AstroNEO:
             # self.active_background(self.globBestFit[0])
             temp_gen = self.next_generation()
             self.output_generations()
+
+
             if self.printgraph:
                 # test_y = self.export_paths(self.globBestFit[0])
                 # real_y = np.array(self.y_scaler.inverse_transform(
@@ -721,6 +723,8 @@ class AstroNEO:
                     time.sleep(10)
                     plt.close('all')
 
+
+        self.ProcessPool.shutdown()
         self.run_verbose_end()
         # print(self.globBestFit)
         # Final
@@ -744,6 +748,13 @@ class AstroNEO:
         """
         Output generations result into two files
         """
+        file_name = '/Users/andy/projects/Astro_Neo/result/test_Population/Population.csv'
+        with open (file_name, 'a') as f:
+            for i in range(self.npops):
+                f.write(str(self.sorted_population[i][1]))
+                if i != self.npops-1:
+                    f.write(',')
+            f.write('\n')
         try:
             f1 = open(self.file, "a")
             f1.write(str(self.genNum) + "," + str(self.tdiff) + "," +
