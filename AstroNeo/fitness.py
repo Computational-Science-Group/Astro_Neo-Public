@@ -109,7 +109,7 @@ def fitness(input):
 
 
   model = xspec_data.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))",
-                            setPars=set_Pars)
+                            setPars=set_Pars) # <- set up model and input a dictionry for iniital parametres
 
   # Model
 
@@ -168,7 +168,6 @@ def fitness(input):
   model.vacx2.Mg.link = model.vapec.Mg
   model.vacx2.Fe.link = model.vapec.Fe
 
-
   # Set up params afterward
   # model.TBabs_2.nH = model_params['TBabs_2_nH']
   # --------
@@ -194,8 +193,8 @@ def fitness(input):
   # model.vacx2.Ne = model_params['vacx2_Ne']
   # model.vacx2.norm = model_params['vacx2_norm']
 
-  model.setPars(model_params)
+  model.setPars(model_params) # set the model with GA parameters
 
-  # print(self.xspec.Fit.statMethod)
-  loss = xspec_data.Fit.statistic
-  return loss
+  loss = xspec_data.Fit.statistic # <- calculate loss
+
+  return loss # <-- return loss

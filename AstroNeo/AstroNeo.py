@@ -266,9 +266,32 @@ class AstroNEO:
     def generateFirstGen(self):
         self.Populations = []
 
-        for i in range(self.npops):
-            self.Populations.append(self.generateIndividual())
+        # for i in range(self.npops):
+        #     self.Populations.append(self.generateIndividual())
+        for i in range(20):
+            temp_ind = self.generateIndividual()
+            temp_ind.Population[0]._Params.dicts['TBabs_2_nH'] = 1.877e-05
+            temp_ind.Population[0]._Params.dicts['PhoIndex'] = 1.00455
+            temp_ind.Population[0]._Params.dicts['Pl_norm'] = 5.94711e-04
+            temp_ind.Population[0]._Params.dicts['vapec_kT'] = 0.788251
+            temp_ind.Population[0]._Params.dicts['vapec_C'] = 0.644919
+            temp_ind.Population[0]._Params.dicts['vapec_N'] = 1.07904
+            temp_ind.Population[0]._Params.dicts['vapec_O'] = 0.205961
+            temp_ind.Population[0]._Params.dicts['vapec_Ne'] = 0.487054
+            temp_ind.Population[0]._Params.dicts['vapec_Mg'] = 1.35956
+            temp_ind.Population[0]._Params.dicts['vapec_Fe'] = 0.188908
+            temp_ind.Population[0]._Params.dicts['vapec_norm'] = 3.41553e-04
+            temp_ind.Population[0]._Params.dicts['vapec_6_kT'] = 0.434492
+            temp_ind.Population[0]._Params.dicts['vapec_6_norm'] = 7.27081e-04
+            temp_ind.Population[0]._Params.dicts['vacx2_collnpar'] = 272.624
+            temp_ind.Population[0]._Params.dicts['vacx2_norm'] = 2.43828e-04
 
+
+
+            self.Populations.append(temp_ind)
+
+        for i in range(self.npops - 20):
+            self.Populations.append(self.generateIndividual())
 
     def eval_Population(self):
         """Evaluate the population for GA
@@ -374,7 +397,7 @@ class AstroNEO:
 
             self.logger.info(f"Best Fit Combination:")
             params_list = self.currBestFit[0].get_func()[0].get_func()
-            self.logger.info(f"    TBabs_2_nH: {np.round(params_list['TBabs_2_nH'],5)} vs 1.877e-05")
+            self.logger.info(f"    TBabs_2_nH: {np.round(params_list['TBabs_2_nH'],7)} vs 1.877e-05")
             self.logger.info(f"    PhoIndex: {np.round(params_list['PhoIndex'],5)}, vs 1.00455")
             self.logger.info(f"    Pl_norm: {np.round(params_list['Pl_norm'],5)} vs 5.94711e-04")
             self.logger.info(f"    vapec_kT: {np.round(params_list['vapec_kT'],5)} vs 0.788251")
@@ -657,7 +680,7 @@ class AstroNEO:
                 model.zashift.Redshift = 0.00081
 
                 # vacx2 <8>
-                model.vacx2.temperature.link = model.vapec.kT
+                model.vacx2.temperature.link = model.vapec_6.kT
                 model.vacx2.collnpar = 280
                 model.vacx2.collntype = 4
                 model.vacx2.acxmodel = 2
