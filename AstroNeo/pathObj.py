@@ -196,6 +196,9 @@ class BaseObj:
     def mutate(self):
         self._Params.initialize_range(self.range_dicts)
 
+    def __len__(self):
+        return self._indep
+
     # def verbose(self):
     #     return self._params.pretty_print()
 

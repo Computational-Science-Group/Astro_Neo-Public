@@ -50,11 +50,16 @@ def read_input_file(input_file, verbose=False):
     CheckKey(Inputs_dict, input_min)
 
     population_min = ['population', 'num_gen', 'best_sample', 'lucky_few']
+    population_optional = ['CR']
     CheckKey(Populations_dict, population_min)
+    population_missing = CheckOptionalKey(Populations_dict, population_optional)
+
 
     mutation_min = ['chance_of_mutation',
                     'original_chance_of_mutation', 'mutated_options']
+    mutation_optional = ['F']
     CheckKey(Mutations_dict, mutation_min)
+    mutation_missing = CheckOptionalKey(Mutations_dict, mutation_optional)
 
     path_min = ['npaths', 'center']
     path_optional = ['path_optimize', 'steady_state', 'corr_paths']
@@ -77,7 +82,6 @@ def read_input_file(input_file, verbose=False):
     file_dict['Populations'] = Populations_dict
     file_dict['Mutations'] = Mutations_dict
     file_dict['Paths'] = Paths_dict
-    # file_dict['Larch_Paths'] = Larch_dict
     file_dict['Outputs'] = Outputs_dict
 
     if verbose == True:

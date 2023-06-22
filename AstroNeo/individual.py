@@ -75,6 +75,7 @@ class Individual():
                 sys.exit()
             self.Population[i] = obj
 
+
     def get(self):
         Population = []
         for i in range(self.npaths):
@@ -110,3 +111,6 @@ class Individual():
             # self.Population[i].mutate()
             params_names = self.Population[i].mutate()
 
+
+    def __len__(self):
+        return len(self.Population[0])

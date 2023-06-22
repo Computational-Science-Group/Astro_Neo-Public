@@ -54,12 +54,13 @@ def ini_parser(file_dict):
     number_of_generation = int(Populations_dict['num_gen'])
     best_sample = int(Populations_dict['best_sample'])
     lucky_few = int(Populations_dict['lucky_few'])
-
+    cR = float(Populations_dict['CR'])
 
     # Mutations
     chance_of_mutation = int(Mutations_dict['chance_of_mutation'])
     original_chance_of_mutation = int(
         Mutations_dict['original_chance_of_mutation'])
+    F_par = float(Mutations_dict['f'])
     # chance_of_mutation_e0 = int(Mutations_dict['chance_of_mutation_e0'])
     mutated_options = int(Mutations_dict['mutated_options'])
 
@@ -93,6 +94,8 @@ def ini_parser(file_dict):
         'chance_of_mutation':chance_of_mutation,
         'original_chance_of_mutation':original_chance_of_mutation,
         'mutated_options':mutated_options,
+        'F': F_par,
+        'CR': cR,
         'npaths':npaths,
         'fits':fits,
         'center':center,
