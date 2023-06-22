@@ -84,6 +84,10 @@ class ParamsDict:
     def get(self):
         return self.dicts
 
+    @staticmethod
+    def random_generate(lower,higher):
+        return lower + np.random.rand() * (higher - lower)
+
     def initialize_range(self, range_dicts):
         self.range_dicts = range_dicts
         for i in range(self.nparams):
@@ -96,12 +100,16 @@ class ParamsDict:
                 except:
                     limits = limits + ('',)
 
-                if limits[3] == 'number':
+                if limits[3] == 'DE':
+                    self.dicts[self.params[i]] = self.random_generate(limits[0], limits[1])
+
+                elif limits[3] == 'number':
                     limits_range = np.linspace(limits[0], limits[1], int(limits[2]))
+                    self.dicts[self.params[i]] = np.random.choice(limits_range)
+
                 else:
                     limits_range = np.arange(limits[0], limits[1], limits[2])
-
-                self.dicts[self.params[i]] = np.random.choice(limits_range)
+                    self.dicts[self.params[i]] = np.random.choice(limits_range)
 
     def random_pars(self, pars):
         """Randomized specific paras
@@ -117,12 +125,15 @@ class ParamsDict:
             limits[3]
         except:
             limits = limits + ('',)
-        if limits[3] == 'number':
+        if limits[3] == 'DE':
+            self.dicts[pars] = self.random_generate(limits[0], limits[1])
+        elif limits[3] == 'number':
             limits_range = np.linspace(limits[0], limits[1], int(limits[2]))
+            self.dicts[pars] = np.random.choice(limits_range)
         else:
             limits_range = np.arange(limits[0], limits[1], limits[2])
 
-        self.dicts[pars] = np.random.choice(limits_range)
+            self.dicts[pars] = np.random.choice(limits_range)
 
 class BaseObj:
     """
