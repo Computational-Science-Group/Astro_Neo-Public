@@ -65,14 +65,15 @@ class AstroNEO:
             t1 = helper.timecall()
 
         self.file_dict =  input_arg.ini_parser(file_dict)
-
+        self.disturbuted = False
         # if timeing_mode:
             # print(f'Inital import function took {} second' % initial_elapsed)
     def initialize_variable(self):
         """
         Initalize variables
         """
-        self.ProcessPool = ProcessPoolExecutor(8,initializer=fitness.init_process)
+        if self.disturbuted:
+            self.ProcessPool = ProcessPoolExecutor(8,initializer=fitness.init_process)
         # self.nProcess = 4
         self.genNum = 0
         self.nChild = 4
@@ -268,30 +269,30 @@ class AstroNEO:
 
         # for i in range(self.npops):
         #     self.Populations.append(self.generateIndividual())
-        for i in range(20):
-            temp_ind = self.generateIndividual()
-            temp_ind.Population[0]._Params.dicts['TBabs_2_nH'] = 1.877e-05
-            temp_ind.Population[0]._Params.dicts['PhoIndex'] = 1.00455
-            temp_ind.Population[0]._Params.dicts['Pl_norm'] = 5.94711e-04
-            temp_ind.Population[0]._Params.dicts['vapec_kT'] = 0.788251
-            temp_ind.Population[0]._Params.dicts['vapec_C'] = 0.644919
-            temp_ind.Population[0]._Params.dicts['vapec_N'] = 1.07904
-            temp_ind.Population[0]._Params.dicts['vapec_O'] = 0.205961
-            temp_ind.Population[0]._Params.dicts['vapec_Ne'] = 0.487054
-            temp_ind.Population[0]._Params.dicts['vapec_Mg'] = 1.35956
-            temp_ind.Population[0]._Params.dicts['vapec_Fe'] = 0.188908
-            temp_ind.Population[0]._Params.dicts['vapec_norm'] = 3.41553e-04
-            temp_ind.Population[0]._Params.dicts['vapec_6_kT'] = 0.434492
-            temp_ind.Population[0]._Params.dicts['vapec_6_norm'] = 7.27081e-04
-            temp_ind.Population[0]._Params.dicts['vacx2_collnpar'] = 272.624
-            temp_ind.Population[0]._Params.dicts['vacx2_norm'] = 2.43828e-04
+        # for i in range(20):
+        #     temp_ind = self.generateIndividual()
+        #     temp_ind.Population[0]._Params.dicts['TBabs_2_nH'] = 1.877e-05
+        #     temp_ind.Population[0]._Params.dicts['PhoIndex'] = 1.00455
+        #     temp_ind.Population[0]._Params.dicts['Pl_norm'] = 5.94711e-04
+        #     temp_ind.Population[0]._Params.dicts['vapec_kT'] = 0.788251
+        #     temp_ind.Population[0]._Params.dicts['vapec_C'] = 0.644919
+        #     temp_ind.Population[0]._Params.dicts['vapec_N'] = 1.07904
+        #     temp_ind.Population[0]._Params.dicts['vapec_O'] = 0.205961
+        #     temp_ind.Population[0]._Params.dicts['vapec_Ne'] = 0.487054
+        #     temp_ind.Population[0]._Params.dicts['vapec_Mg'] = 1.35956
+        #     temp_ind.Population[0]._Params.dicts['vapec_Fe'] = 0.188908
+        #     temp_ind.Population[0]._Params.dicts['vapec_norm'] = 3.41553e-04
+        #     temp_ind.Population[0]._Params.dicts['vapec_6_kT'] = 0.434492
+        #     temp_ind.Population[0]._Params.dicts['vapec_6_norm'] = 7.27081e-04
+        #     temp_ind.Population[0]._Params.dicts['vacx2_collnpar'] = 272.624
+        #     temp_ind.Population[0]._Params.dicts['vacx2_norm'] = 2.43828e-04
 
 
+        #     self.Populations.append(temp_ind)
 
-            self.Populations.append(temp_ind)
-
-        for i in range(self.npops - 20):
+        for i in range(self.npops):
             self.Populations.append(self.generateIndividual())
+
 
     def eval_Population(self):
         """Evaluate the population for GA
@@ -302,24 +303,24 @@ class AstroNEO:
 
         scores = []
         populationPerf = {}
-        for i, individual in enumerate(self.Populations):
+        if self.disturbuted:
+            for i, individual in enumerate(self.Populations):
 
-            temp_score = self.ProcessPool.submit(fitness.fitness, (individual,self.xspec))
-            scores.append(temp_score)
+                temp_score = self.ProcessPool.submit(fitness.fitness, (individual,self.xspec))
+                scores.append(temp_score)
 
-        # Gather the data
-        reuslts = [i.result() for i in scores]
+            # Gather the data
+            reuslts = [i.result() for i in scores]
+            for i, individual in enumerate(self.Populations):
+                populationPerf[individual] = reuslts[i]
 
-        for i, individual in enumerate(self.Populations):
-            populationPerf[individual] = reuslts[i]
+        else:
+            for i, individual in enumerate(self.Populations):
 
+                temp_score = fitness.fitness(individual)
+                scores.append(temp_score)
 
-        # for i, individual in enumerate(self.Populations):
-
-        #     temp_score = fitness.fitness(individual)
-        #     scores.append(temp_score)
-
-        #     populationPerf[individual] = temp_score
+                populationPerf[individual] = temp_score
 
         self.sorted_population = sorted(
             populationPerf.items(), key=operator.itemgetter(1), reverse=False)
@@ -364,7 +365,7 @@ class AstroNEO:
 
 
         self.output_best_parameters()
-
+        # Start the mutator process
         self.selectFromPopulation()
         self.createChildren()
         self.logger.info(f"Number of Breeders: {str(len(self.parents))}")
@@ -746,8 +747,9 @@ class AstroNEO:
                     time.sleep(10)
                     plt.close('all')
 
-
-        self.ProcessPool.shutdown()
+        # shutdown pool
+        if self.disturbuted:
+            self.ProcessPool.shutdown()
         self.run_verbose_end()
         # print(self.globBestFit)
         # Final
