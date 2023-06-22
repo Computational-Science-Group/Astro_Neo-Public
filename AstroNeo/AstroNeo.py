@@ -84,22 +84,6 @@ class AstroNEO:
         self.diffCounter = 0
 
         self.pathDictionary = {}
-        # self.MetaDictionary = {}
-        # Not used
-        # self.sortedFourier = 0
-        # self.bestFitIndi = (())
-        # self.bestChir_magTotal = [0]*(326)
-        # self.bestYTotal = [0]*(401)
-
-        # Typical INI parameters
-        # self.ind_options = individual_path
-        # if self.ind_options == True:
-        # self.path_lists = path_list
-        # else:
-        # self.path_lists = list(range(1,pathrange+1))
-        # for i in range(len(self.path_lists)):
-        # self.path_lists[i] = str(self.path_lists[i])
-        # self.npaths = len(self.path_lists)
 
         # Inputs
         self.data_file = self.file_dict["data_file"]
@@ -117,16 +101,16 @@ class AstroNEO:
         self.npops = self.file_dict['size_population']
         self.ngen = self.file_dict['number_of_generation']
         self.steady_state = self.file_dict['steady_state']
-
+        self.cR = self.file_dict['cR']
         # Mutation Parameters
         self.mut_opt = self.file_dict['mutated_options']
         self.mut_chance = self.file_dict['chance_of_mutation']
-        # self.mut_chance_e0 = chance_of_mutation_e0
+        self.F = self.file_dict['F']
 
         # Crosover Parameters
         self.n_bestsam = int(self.file_dict['best_sample']*self.npops*(0.01))
         self.n_lucksam = int(self.file_dict['lucky_few']*self.npops*(0.01))
-
+        self.CR = self.file_dict['CR']
         # Time related
         self.time = False
         self.tt = 0
@@ -317,7 +301,7 @@ class AstroNEO:
         else:
             for i, individual in enumerate(self.Populations):
 
-                temp_score = fitness.fitness(individual)
+                temp_score = fitness.fitness((individual,self.xspec))
                 scores.append(temp_score)
 
                 populationPerf[individual] = temp_score
@@ -434,21 +418,36 @@ class AstroNEO:
         # 4 = metropolis hastings mutation
         """
         st = helper.timecall()
-        self.nmutate = 0
-        self.nmutate_success = []
-        # if self.mut_opt == 0:
-        for i in range(self.npops):
-            if random.random()*100 < self.mut_chance:
-                self.nmutate += 1
-                self.Populations[i] = self.mutateIndi(i)
+        if self.mut_opt != 3:
+            self.nmutate = 0
+            self.nmutate_success = []
+            # if self.mut_opt == 0:
+            for i in range(self.npops):
+                if random.random()*100 < self.mut_chance:
+                    self.nmutate += 1
+                    self.Populations[i] = self.mutateIndi(i)
 
-        if self.mut_opt == 2:
-            self.logger.info(f"Total Metroplis Hasting Success: {sum(self.nmutate_success)}")
+            if self.mut_opt == 2:
+                self.logger.info(f"Total Metroplis Hasting Success: {sum(self.nmutate_success)}")
 
-        self.logger.info(f"Mutate Times: {self.nmutate}")
-
+            self.logger.info(f"Mutate Times: {self.nmutate}")
+        elif self.mut_opt == 3:
+            candidates = [candidate for candidate in range(self.npops) if candidate != 0]
+            a,b,c = self.Populations[np.random.choice(candidates,3,replace=False)]
+            self.
         tdiff = helper.timecall() - st
         self.logger.info(f"Mutate Time: {str(round(tdiff, 3))} s")
+
+    def mutate_DE(self,mutated_individuals: list,F: float):
+        """
+        Mutate the individuals using DE mutation
+
+        Args:
+            mutated_individuals (list): _description_
+            F (float): _description_
+        """
+
+
     def mutateIndi(self,indi):
         """Mutate each individual
 
