@@ -66,8 +66,9 @@ def separate_dicts(source_dict, prefixs):
 
 
 class ParamsDict:
-    def __init__(self, params):
+    def __init__(self, params, params_type='GA'):
         self.params = params
+        self.params_type = params_type
         self.nparams = len(params)
         self.dicts = {}
         # Initalize the whole dictionary first
@@ -100,7 +101,7 @@ class ParamsDict:
                 except:
                     limits = limits + ('',)
 
-                if limits[3] == 'DE':
+                if self.params_type == 'DE':
                     self.dicts[self.params[i]] = self.random_generate(limits[0], limits[1])
 
                 elif limits[3] == 'number':
@@ -125,7 +126,7 @@ class ParamsDict:
             limits[3]
         except:
             limits = limits + ('',)
-        if limits[3] == 'DE':
+        if self.params_type == 'DE':
             self.dicts[pars] = self.random_generate(limits[0], limits[1])
         elif limits[3] == 'number':
             limits_range = np.linspace(limits[0], limits[1], int(limits[2]))
@@ -195,6 +196,9 @@ class BaseObj:
 
     def mutate(self):
         self._Params.initialize_range(self.range_dicts)
+
+    def get_bounds(self):
+        return self.range_dicts
 
     def __len__(self):
         return self._indep
@@ -1061,7 +1065,7 @@ class XspecSpectrum(BaseObj):
             # 'vacx2_Ne': (0, 10, 0.01),
             'vacx2_norm': (2e-4,5e-4,1e6, 'number'),
         }
-        self._Params = ParamsDict(self._params_names)
+        self._Params = ParamsDict(self._params_names,params_type='DE')
         self._Params.initialize_range(self.range_dicts)
 
     def get_func(self,*args):
@@ -1093,5 +1097,6 @@ class XspecSpectrum(BaseObj):
         """
 
         self._Params.random_pars(par)
+
 
 

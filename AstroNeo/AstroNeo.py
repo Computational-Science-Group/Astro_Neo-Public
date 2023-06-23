@@ -101,7 +101,7 @@ class AstroNEO:
         self.npops = self.file_dict['size_population']
         self.ngen = self.file_dict['number_of_generation']
         self.steady_state = self.file_dict['steady_state']
-        self.cR = self.file_dict['cR']
+        self.cR = self.file_dict['CR']
         # Mutation Parameters
         self.mut_opt = self.file_dict['mutated_options']
         self.mut_chance = self.file_dict['chance_of_mutation']
@@ -350,13 +350,14 @@ class AstroNEO:
 
         self.output_best_parameters()
         # Start the mutator process
+        self.mutatePopulation()
+        # selection
         self.selectFromPopulation()
         self.createChildren()
         self.logger.info(f"Number of Breeders: {str(len(self.parents))}")
         self.logger.info(f"DiffCounter: {self.diffCounter}")
         self.logger.info(f"Diff %: {self.diffCounter / self.genNum}")
         self.logger.info(f"Mutation Chance: {self.mut_chance}")
-        self.mutatePopulation()
 
         self.et = helper.timecall()
         self.tdiff = self.et - self.st
@@ -432,11 +433,32 @@ class AstroNEO:
 
             self.logger.info(f"Mutate Times: {self.nmutate}")
         elif self.mut_opt == 3:
-            candidates = [candidate for candidate in range(self.npops) if candidate != 0]
-            a,b,c = self.Populations[np.random.choice(candidates,3,replace=False)]
-            self.
+            self.temp_Populations = []
+            for i in range(self.npops):
+                candidates = [candidate for candidate in range(self.npops) if candidate != i]
+                a,b,c = np.random.choice(candidates,3,replace=False)
+                mutation_vectors = [self.Populations[a],self.Populations[b],self.Populations[c]]
+                temp_individual = self.mutate_DE(mutation_vectors,self.F)
+                temp_individual = self.check_for_bound(temp_individual)
+                self.temp_Populations.append(temp_individual)
+
         tdiff = helper.timecall() - st
         self.logger.info(f"Mutate Time: {str(round(tdiff, 3))} s")
+
+    @staticmethod
+    def check_for_bound(individual):
+        pars = individual.get_func()[0].get_func()
+
+        bounds = individual.get_bounds(0)
+        temp_pars = []
+        for i,(par,value) in enumerate(pars.items()):
+            # print(i,par,value, bounds[par][0],bounds[par][1])
+            temp_pars.append(np.clip(value,bounds[par][0],bounds[par][1]))
+
+        print(temp_pars)
+        individual.set_path(0,temp_pars)
+
+        return individual
 
     def mutate_DE(self,mutated_individuals: list,F: float):
         """
@@ -446,7 +468,20 @@ class AstroNEO:
             mutated_individuals (list): _description_
             F (float): _description_
         """
+        length = len(mutated_individuals[0])
+        assert all(len(lst) == length for lst in mutated_individuals)
 
+        x_list = np.array(mutated_individuals[0].get())[0]
+        y_list = np.array(mutated_individuals[1].get())[0]
+        z_list = np.array(mutated_individuals[2].get())[0]
+
+        new_Pars = x_list + F *(y_list - z_list)
+
+        temp_individual = self.generateIndividual()
+        temp_individual.set_path(0,new_Pars)
+        # return mutated_individuals[0] + self.F*(mutated_individuals[1]-mutated_individuals[2])
+
+        return temp_individual
 
     def mutateIndi(self,indi):
         """Mutate each individual

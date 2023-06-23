@@ -98,7 +98,7 @@ class Individual():
     #     for i in range(self.npaths):
     #         self.Population[i].verbose()
 
-    def set_path(self, i, params):
+    def set_path(self, i: int , params: list):
         params_names = self.Population[i].get_params_names()
         dicts = {}
         for j, key in enumerate(params_names):
@@ -111,6 +111,18 @@ class Individual():
             # self.Population[i].mutate()
             params_names = self.Population[i].mutate()
 
+
+    def get_bounds(self,i:int ) -> tuple:
+        """Get the bounds of the individual
+
+        Args:
+            i (int): integer of the path to get bounds
+
+        Returns:
+            tuple: bounds of the individual
+        """
+
+        return self.Population[i].get_bounds()
 
     def __len__(self):
         return len(self.Population[0])

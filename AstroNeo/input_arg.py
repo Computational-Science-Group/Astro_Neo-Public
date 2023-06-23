@@ -54,7 +54,7 @@ def ini_parser(file_dict):
     number_of_generation = int(Populations_dict['num_gen'])
     best_sample = int(Populations_dict['best_sample'])
     lucky_few = int(Populations_dict['lucky_few'])
-    cR = float(Populations_dict['CR'])
+    cR = float(Populations_dict['cr'])
 
     # Mutations
     chance_of_mutation = int(Mutations_dict['chance_of_mutation'])
