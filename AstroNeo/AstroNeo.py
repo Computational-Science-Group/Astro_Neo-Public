@@ -98,7 +98,7 @@ class AstroNEO:
         # self.corr_list = corr_list
 
         # Populations
-        self.npops = self.file_dict['size_population']
+        self.npops = self.file_dict['size_population'] # Number of populations
         self.ngen = self.file_dict['number_of_generation']
         self.steady_state = self.file_dict['steady_state']
         self.cR = self.file_dict['CR']
@@ -352,9 +352,19 @@ class AstroNEO:
         # Start the mutator process
         self.mutatePopulation()
         # selection
-        self.selectFromPopulation()
-        self.createChildren()
-        self.logger.info(f"Number of Breeders: {str(len(self.parents))}")
+        if self.mut_opt != 3:
+            self.selectFromPopulation()
+            self.createChildren()
+            self.logger.info(f"Number of Breeders: {str(len(self.parents))}")
+        else:
+            self.crossoverPopulation()
+            for i in range(self.npops):
+                trial_fitness = fitness.fitness((self.trialPopulations[i],self.xspec))
+                og_fitness = fitness.fitness((self.Populations[i],self.xspec))
+                if trial_fitness < og_fitness:
+                    self.Populations[i] = self.trialPopulations[i]
+
+
         self.logger.info(f"DiffCounter: {self.diffCounter}")
         self.logger.info(f"Diff %: {self.diffCounter / self.genNum}")
         self.logger.info(f"Mutation Chance: {self.mut_chance}")
@@ -433,31 +443,36 @@ class AstroNEO:
 
             self.logger.info(f"Mutate Times: {self.nmutate}")
         elif self.mut_opt == 3:
-            self.temp_Populations = []
+            self.mutated_Populations = []
             for i in range(self.npops):
                 candidates = [candidate for candidate in range(self.npops) if candidate != i]
                 a,b,c = np.random.choice(candidates,3,replace=False)
                 mutation_vectors = [self.Populations[a],self.Populations[b],self.Populations[c]]
                 temp_individual = self.mutate_DE(mutation_vectors,self.F)
                 temp_individual = self.check_for_bound(temp_individual)
-                self.temp_Populations.append(temp_individual)
+                self.mutated_Populations.append(temp_individual)
 
         tdiff = helper.timecall() - st
         self.logger.info(f"Mutate Time: {str(round(tdiff, 3))} s")
 
     @staticmethod
     def check_for_bound(individual):
+        """_summary_
+
+        Args:
+            individual (Individual): _description_
+
+        Returns:
+            _type_: _description_
+        """
         pars = individual.get_func()[0].get_func()
 
         bounds = individual.get_bounds(0)
         temp_pars = []
         for i,(par,value) in enumerate(pars.items()):
-            # print(i,par,value, bounds[par][0],bounds[par][1])
             temp_pars.append(np.clip(value,bounds[par][0],bounds[par][1]))
 
-        print(temp_pars)
         individual.set_path(0,temp_pars)
-
         return individual
 
     def mutate_DE(self,mutated_individuals: list,F: float):
@@ -530,6 +545,41 @@ class AstroNEO:
         for i in range(self.n_bestsam):
             self.parents.append(self.sorted_population[i][0])
 
+    def crossoverPopulation(self):
+        self.trialPopulations = []
+        for i in range(self.npops):
+            self.trialPopulations.append(self.crossover_DE(self.mutated_Populations[i],self.Populations[i],self.cR))
+
+
+    def crossover_DE(self,mutate_ind,pop_ind,cR: int):
+        """_summary_
+
+        Args:
+            mutate_ind (individal): _description_
+            pop_ind (individual): _description_
+            cR (int): _description_
+
+        Returns:
+            _type_: _description_
+        """
+
+        p = np.random.rand(len(mutate_ind))
+        # temp_pars = self.generative
+        temp_ind = self.generateIndividual()
+        mutate_Pars = mutate_ind.get()[0]
+        pop_Pars = pop_ind.get()[0]
+        temp_Pars = []
+        for i in range(len(mutate_ind)):
+            if p[i] < cR:
+                temp_Pars.append(mutate_Pars[i])
+            else:
+                temp_Pars.append(pop_Pars[i])
+
+        temp_ind.set_path(0,temp_Pars)
+        return temp_ind
+
+
+
     def crossover(self, individual1, individual2):
         """
         Uniform Cross-Over, 50% percentage chance
@@ -582,17 +632,12 @@ class AstroNEO:
         self.logger.info("-----------Inputs File Stats---------------")
         self.logger.info(f"{helper.bcolors.BOLD}File{helper.bcolors.ENDC}: {self.data_file}")
         self.logger.info(f"{helper.bcolors.BOLD}File{helper.bcolors.ENDC}: {self.output_path}")
-        # print(f"{helper.bcolors.BOLD}CSV series{helper.bcolors.ENDC}: {self.csv_series}")
         self.logger.info(f"{helper.bcolors.BOLD}Population{helper.bcolors.ENDC}: {self.npops}")
         self.logger.info(f"{helper.bcolors.BOLD}Num Gen{helper.bcolors.ENDC}: {self.ngen}")
         self.logger.info(f"{helper.bcolors.BOLD}Num Path{helper.bcolors.ENDC}: {self.npaths}")
         self.logger.info(f"{helper.bcolors.BOLD}Fits{helper.bcolors.ENDC}: {self.fits}")
-        # print(f"{helper.bcolors.BOLD}Path{helper.bcolors.ENDC}: {self.path_lists}")
-        # print(f"{helper.bcolors.BOLD}Path Optimize{helper.bcolors.ENDC}: {self.}")
         self.logger.info(f"{helper.bcolors.BOLD}Printout{helper.bcolors.ENDC}: {self.printgraph}")
         self.logger.info(f"{helper.bcolors.BOLD}profiler{helper.bcolors.ENDC}: {self.profile_toggle}")
-        # print(f"{helper.bcolors.BOLD}Steady State{helper.bcolors.ENDC}: {steady_state}")
-        # print(f"{helper.bcolors.BOLD}Output Paths{helper.bcolors.ENDC}: {num_output_paths}")
         self.logger.info("-------------------------------------------")
 
     def run_verbose_end(self):
@@ -600,11 +645,6 @@ class AstroNEO:
         """
         self.logger.info("-----------Output Stats---------------")
         self.logger.info(f"{helper.bcolors.BOLD}Total Time(s){helper.bcolors.ENDC}: {round(self.tt,4)}")
-        # print(f"{helper.bcolors.BOLD}File{helper.bcolors.ENDC}: {self.data_path}")
-        # print(f"{helper.bcolors.BOLD}{helper.bcolors.ENDC}: {self.npops}")
-        # print(f"{helper.bcolors.BOLD}Num Gen{helper.bcolors.ENDC}: {self.ngen}")
-        # print(f"{helper.bcolors.BOLD}Num Path{helper.bcolors.ENDC}: {self.npaths}")
-        # print(f"{helper.bcolors.BOLD}Path{helper.bcolors.ENDC}: {self.path_lists}")
         self.logger.info("-------------------------------------------")
 
 
@@ -785,7 +825,6 @@ class AstroNEO:
         if self.disturbuted:
             self.ProcessPool.shutdown()
         self.run_verbose_end()
-        # print(self.globBestFit)
         # Final
         # model = self.globBestFit[0].get_func()[0].get_func()
         # set_source(1, model)
