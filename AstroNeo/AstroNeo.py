@@ -65,7 +65,7 @@ class AstroNEO:
             t1 = helper.timecall()
 
         self.file_dict =  input_arg.ini_parser(file_dict)
-        self.disturbuted = False
+        self.disturbuted = True
         # if timeing_mode:
             # print(f'Inital import function took {} second' % initial_elapsed)
     def initialize_variable(self):
@@ -277,6 +277,25 @@ class AstroNEO:
         for i in range(self.npops):
             self.Populations.append(self.generateIndividual())
 
+    def eval_Pop(self,populations):
+        scores = []
+        populationPerf = {}
+        if self.disturbuted:
+            for i, individual in enumerate(populations):
+                temp_score = self.ProcessPool.submit(fitness.fitness, (individual,self.xspec))
+                scores.append(temp_score)
+
+            # Gather the data
+            results = [i.result() for i in scores]
+            return results
+
+        else:
+            for i, individual in enumerate(populations):
+
+                temp_score = fitness.fitness((individual,self.xspec))
+                scores.append(temp_score)
+
+            return scores
 
     def eval_Population(self):
         """Evaluate the population for GA
@@ -287,6 +306,7 @@ class AstroNEO:
 
         scores = []
         populationPerf = {}
+        self.og_fitness = [] # original fitness
         if self.disturbuted:
             for i, individual in enumerate(self.Populations):
 
@@ -294,10 +314,10 @@ class AstroNEO:
                 scores.append(temp_score)
 
             # Gather the data
-            reuslts = [i.result() for i in scores]
+            results = [i.result() for i in scores]
             for i, individual in enumerate(self.Populations):
-                populationPerf[individual] = reuslts[i]
-
+                populationPerf[individual] = results[i]
+                self.og_fitness = results
         else:
             for i, individual in enumerate(self.Populations):
 
@@ -305,7 +325,7 @@ class AstroNEO:
                 scores.append(temp_score)
 
                 populationPerf[individual] = temp_score
-
+                self.og_fitness = scores
         self.sorted_population = sorted(
             populationPerf.items(), key=operator.itemgetter(1), reverse=False)
 
@@ -358,13 +378,14 @@ class AstroNEO:
             self.logger.info(f"Number of Breeders: {str(len(self.parents))}")
         else:
             self.crossoverPopulation()
+            trial_fitness = self.eval_Pop(self.trialPopulations)
+            # og_fitness = self.eval_Pop(self.Populations)
             for i in range(self.npops):
-                trial_fitness = fitness.fitness((self.trialPopulations[i],self.xspec))
-                og_fitness = fitness.fitness((self.Populations[i],self.xspec))
-                if trial_fitness < og_fitness:
+                if trial_fitness[i] < self.og_fitness[i]:
                     self.Populations[i] = self.trialPopulations[i]
 
-
+            self.logger.info(f"Average Trial Population Fitness: {np.average(trial_fitness)}")
+            self.logger.info(f"Average Population Fitness: {np.average(self.og_fitness)}")
         self.logger.info(f"DiffCounter: {self.diffCounter}")
         self.logger.info(f"Diff %: {self.diffCounter / self.genNum}")
         self.logger.info(f"Mutation Chance: {self.mut_chance}")
@@ -855,6 +876,7 @@ class AstroNEO:
             f.write('\n')
         try:
             f1 = open(self.file, "a")
+            file_str = f'{self.genNum}, {self.tdiff}, {self.currBestFit[1]}, {self.currBestFit[0].get()}, {self.globBestFit[1]}, {self.globBestFit[0].get()}'
             f1.write(str(self.genNum) + "," + str(self.tdiff) + "," +
                      str(self.currBestFit[1]) + "," + str(self.currBestFit[0].get()) + "," +
                      str(self.globBestFit[1]) + "," + str(self.globBestFit[0].get()) + "\n")
