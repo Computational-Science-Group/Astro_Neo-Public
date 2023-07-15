@@ -867,35 +867,31 @@ class AstroNEO:
         """
         Output generations result into two files
         """
-        file_name = '/Users/andy/projects/Astro_Neo/result/test_Population/Population.csv'
-        with open (file_name, 'a') as f:
-            for i in range(self.npops):
-                f.write(str(self.sorted_population[i][1]))
-                if i != self.npops-1:
-                    f.write(',')
-            f.write('\n')
-        try:
-            f1 = open(self.file, "a")
+
+        # file_name = '/Users/andy/projects/Astro_Neo/result/test_Population/Population.csv'
+        # with open (file_name, 'a') as f:
+        #     for i in range(self.npops):
+        #         f.write(str(self.sorted_population[i][1]))
+        #         if i != self.npops-1:
+        #             f.write(',')
+        #     f.write('\n')
+
+        with open(self.output_path,'a') as f1:
             file_str = f'{self.genNum}, {self.tdiff}, {self.currBestFit[1]}, {self.currBestFit[0].get()}, {self.globBestFit[1]}, {self.globBestFit[0].get()}'
             f1.write(str(self.genNum) + "," + str(self.tdiff) + "," +
                      str(self.currBestFit[1]) + "," + str(self.currBestFit[0].get()) + "," +
                      str(self.globBestFit[1]) + "," + str(self.globBestFit[0].get()) + "\n")
-        finally:
-            f1.close()
-        try:
-            f2 = open(self.file_data, "a")
+
+        with open(self.file_data,"a") as f2:
             write = csv.writer(f2)
             bestFit = self.globBestFit[0].get()
-            # print(bestFit)
             for i in range(self.npaths):
                 write_row_data = []
                 for j in range(len(bestFit[i])):
                     write_row_data.append(bestFit[i][j])
                 write.writerow(write_row_data)
-                # write.writerow((bestFit[i][0], bestFit[i][1], bestFit[i][2], bestFit[i][3]))
             f2.write("#################################\n")
-        finally:
-            f2.close()
+
 
     def __init__(self):
         """
