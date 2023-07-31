@@ -15,6 +15,7 @@ def init_process():
   file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
   xspec.AllData.clear()
 
+  # l_src = xspec.Spectrum('right_pha_grp.fits')
   l_src = xspec.Spectrum('left_pha_grp.fits')
   xspec.Plot.xAxis = "angstrom"
   l_src.ignore("**-7.0 30.0-**")

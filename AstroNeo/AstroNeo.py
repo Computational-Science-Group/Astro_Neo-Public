@@ -202,6 +202,10 @@ class AstroNEO:
         data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
         bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_mbg.fits"
         rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_rmf.fits"
+        # data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/right_pha_grp.fits"
+        # bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/right_mbg.fits"
+        # rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/right_rmf.fits"
+
 
         file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
         self.xspec = xspec
@@ -378,6 +382,7 @@ class AstroNEO:
             self.logger.info(f"Number of Breeders: {str(len(self.parents))}")
         else:
             self.crossoverPopulation()
+            self.adjust_DE_parameters()
             trial_fitness = self.eval_Pop(self.trialPopulations)
             # og_fitness = self.eval_Pop(self.Populations)
             for i in range(self.npops):
@@ -394,6 +399,21 @@ class AstroNEO:
         self.tdiff = self.et - self.st
         self.tt = self.tt + self.tdiff
         self.logger.info(f"Time: {str(round(self.tdiff, 3))} s")
+
+    def adjust_DE_parameters(self,on=True):
+        """Adjust the DE parameters
+        """
+        # self.F =
+        rand_val = np.random.rand(4)
+        tau_1 = 0.1
+        tau_2 = 0.1
+        if rand_val[1] < tau_1:
+            self.F = 0.1 + rand_val[0] * 0.9
+            self.logger.info(f"F has been adjusted to {np.round(self.F,4)}")
+
+        if rand_val[3] < tau_2:
+            self.cR = rand_val[2]
+            self.logger.info(f"Cr has been adjusted to {np.round(self.cR,4)}")
 
 
     def output_best_parameters(self):

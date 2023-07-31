@@ -1,8 +1,8 @@
 # Astro Neo
 
-#### Versions: 0.0.1
+#### Versions: 0.0.3
 
-#### Last update: Feb 22, 2023
+#### Last update: Jul 15, 2023
 
 Astro Neo
 
