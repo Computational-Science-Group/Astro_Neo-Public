@@ -1,4 +1,5 @@
 import time
+import numpy as np
 from .__init__ import __version__
 
 class bcolors:

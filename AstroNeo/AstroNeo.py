@@ -285,7 +285,7 @@ class AstroNEO:
         scores = []
         populationPerf = {}
         if self.disturbuted:
-            for i, individual in enumerate(populations):
+            for _, individual in enumerate(populations):
                 temp_score = self.ProcessPool.submit(fitness.fitness, (individual,self.xspec))
                 scores.append(temp_score)
 
