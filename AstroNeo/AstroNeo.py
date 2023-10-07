@@ -31,8 +31,8 @@ import copy
 from . import input_arg
 
 # Need further testing to see if this is needed...
-os.environ['HEADAS'] = '/Users/andy/projects/xspec/heasoft-6.31.1/aarch64-apple-darwin22.4.0'
-os.system(f"source $HEADAS/headas-init.sh")
+# os.environ['HEADAS'] = '/Users/andy/projects/xspec/heasoft-6.31.1/aarch64-apple-darwin22.4.0'
+# os.system(f"source $HEADAS/headas-init.sh")
 
 import xspec
 # Import Xspec
@@ -41,7 +41,6 @@ sys.path.append(HOME + "/contrib/acx2")
 import acx2_xspec
 
 xspec.xset.Xset.chatter = 0
-
 
 # Set the number of threads
 os.environ['NUMEXPR_MAX_THREADS'] = str(cpu_count())
@@ -64,15 +63,15 @@ class AstroNEO:
             t1 = helper.timecall()
 
         self.file_dict =  input_arg.ini_parser(file_dict)
-        self.disturbuted = self.file_dict['distributed']
+        self.distributed = self.file_dict['distributed']
         # if timeing_mode:
             # print(f'Inital import function took {} second' % initial_elapsed)
     def initialize_variable(self):
         """
         Initalize variables
         """
-        if self.disturbuted:
-            self.ProcessPool = ProcessPoolExecutor(8,initializer=fitness.init_process)
+        if self.distributed != 1:
+            self.ProcessPool = ProcessPoolExecutor(self.distributed,initializer=fitness.init_process)
         # self.nProcess = 4
         self.genNum = 0
         self.nChild = 4
@@ -85,16 +84,15 @@ class AstroNEO:
         self.pathDictionary = {}
 
         # Inputs
+        self.data_dir = self.file_dict["data_dir"]
         self.data_file = self.file_dict["data_file"]
-        # self.fits_file = fits_file
-        # print(self.fits_file)
+        self.bg_file = self.file_dict["bg_file"]
+        self.rsp_file = self.file_dict["rsp_file"]
         # Paths
         self.npaths = self.file_dict['npaths']
         self.fits = self.file_dict['fits'].split(",")
 
         self.center = self.file_dict['center']
-        # self.corr = corr
-        # self.corr_list = corr_list
 
         # Populations
         self.npops = self.file_dict['size_population'] # Number of populations
@@ -182,39 +180,32 @@ class AstroNEO:
             "Gen,TPS,FITTNESS,CURRFIT,CURRIND,BESTFIT,BESTIND\n")  # writing header
         self.file_initial.close()
 
-        # Not using right now
-        # file_score = os.path.splitext(file)[0] + '_score.csv'
-        # self.check_if_exists(file_score)
-        # self.file_score = file_score
-
         file_data = os.path.splitext(file)[0] + '_data.csv'
         self.check_if_exists(file_data)
         self.file_data = file_data
-        # Not using right now
-        # file_gen = os.path.splitext(file)[0] + '_generations.csv'
-        # self.check_if_exists(file_gen)
 
     def initialize_fits(self):
 
         old_dir = os.getcwd()
         # print(old_dir)
-        data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
-        bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_mbg.fits"
-        rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_rmf.fits"
+        # data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
+        # bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_mbg.fits"
+        # rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_rmf.fits"
+
         # data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/right_pha_grp.fits"
         # bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/right_mbg.fits"
         # rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/right_rmf.fits"
 
 
-        file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
+        # file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
+        file_dir = os.chdir(self.data_dir)
         self.xspec = xspec
 
 
         self.xspec.AllData.clear()
-        # l_src = xspec.Spectrum(data_file,
-        #                       backFile=bg_file,
-        #                       respFile=rsp_file)
-        self.l_src = self.xspec.Spectrum('left_pha_grp.fits')
+        self.l_src = self.xspec.Spectrum(self.data_file,
+                                         backFile = self.bg_file,
+                                         respFile = self.rsp_file)
 
         self.xspec.Plot.xAxis = "angstrom"
         self.l_src.ignore("**-7.0 30.0-**")
@@ -283,7 +274,7 @@ class AstroNEO:
     def eval_Pop(self,populations):
         scores = []
         populationPerf = {}
-        if self.disturbuted:
+        if self.distributed != 1:
             for _, individual in enumerate(populations):
                 temp_score = self.ProcessPool.submit(fitness.fitness, (individual,self.xspec))
                 scores.append(temp_score)
@@ -310,7 +301,7 @@ class AstroNEO:
         scores = []
         populationPerf = {}
         self.og_fitness = [] # original fitness
-        if self.disturbuted:
+        if self.distributed != 1:
             for i, individual in enumerate(self.Populations):
 
                 temp_score = self.ProcessPool.submit(fitness.fitness, (individual,self.xspec))
@@ -425,11 +416,6 @@ class AstroNEO:
             self.logger.info(f"4th Fit: {self.sorted_population[3][1]}")
             self.logger.info(f"Last Fit: {self.sorted_population[-1][1]}")
             self.logger.info(f"Different from last best fit: {self.bestDiff}")
-            # print(bcolors.BOLD + "Best fit :", bcolors.OKBLUE +
-            #       str(self.currBestFit[1]) + bcolors.ENDC)
-            # CurrchiR = self.currBestFit[1]/(len(self.x_raw)-4*self.npaths)
-            # print(bcolors.BOLD + "Best fit ChiR:",
-            #       bcolors.OKBLUE + str(CurrchiR) + bcolors.ENDC)
 
             self.logger.info(f"Best Fit Combination:")
             params_list = self.currBestFit[0].get_func()[0].get_func()
@@ -677,8 +663,8 @@ class AstroNEO:
         self.logger.info(f"{helper.bcolors.BOLD}Num Path{helper.bcolors.ENDC}: {self.npaths}")
         self.logger.info(f"{helper.bcolors.BOLD}Fits{helper.bcolors.ENDC}: {self.fits}")
         self.logger.info(f"{helper.bcolors.BOLD}Printout{helper.bcolors.ENDC}: {self.printgraph}")
-        self.logger.info(f"{helper.bcolors.BOLD}profiler{helper.bcolors.ENDC}: {self.profile_toggle}")
-        self.logger.info(f"{helper.bcolors.BOLD}Distributed{helper.bcolors.ENDC}: {self.disturbuted}")
+        self.logger.info(f"{helper.bcolors.BOLD}Profiler{helper.bcolors.ENDC}: {self.profile_toggle}")
+        self.logger.info(f"{helper.bcolors.BOLD}Distributed{helper.bcolors.ENDC}: {self.distributed}")
         self.logger.info("-------------------------------------------")
 
     def run_verbose_end(self):
@@ -863,7 +849,7 @@ class AstroNEO:
                     plt.close('all')
 
         # shutdown pool
-        if self.disturbuted:
+        if self.distributed != 1:
             self.ProcessPool.shutdown()
         self.run_verbose_end()
         # Final

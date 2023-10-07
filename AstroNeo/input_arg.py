@@ -46,7 +46,10 @@ def ini_parser(file_dict):
 
 
     # Input
+    data_dir = Inputs_dict['data_dir']
     data_file = Inputs_dict['data_file']
+    bg_file = Inputs_dict['bg_file']
+    rsp_file = Inputs_dict['rsp_file']
     output_file = Inputs_dict['output_file']
 
     # population
@@ -61,7 +64,6 @@ def ini_parser(file_dict):
     original_chance_of_mutation = int(
         Mutations_dict['original_chance_of_mutation'])
     F_par = float(Mutations_dict['f'])
-    # chance_of_mutation_e0 = int(Mutations_dict['chance_of_mutation_e0'])
     mutated_options = int(Mutations_dict['mutated_options'])
 
     # Paths
@@ -79,10 +81,9 @@ def ini_parser(file_dict):
         steady_state = False
 
     try:
-        profile = helper.str_to_bool(Outputs_dict['distributed'])
-
+        distributed = int(Outputs_dict['distributed'])
     except KeyError:
-        profile = False
+        distributed = 1
 
     try:
         profile = helper.str_to_bool(Outputs_dict['profile'])
@@ -90,7 +91,10 @@ def ini_parser(file_dict):
         profile = False
 
     clean_dict = {
+        'data_dir': data_dir,
         'data_file':data_file,
+        'bg_file':bg_file,
+        'rsp_file':rsp_file,
         'output_file':output_file,
         'size_population':size_population,
         'number_of_generation':number_of_generation,
@@ -107,7 +111,7 @@ def ini_parser(file_dict):
         'printgraph':printgraph,
         'num_output_paths':num_output_paths,
         'steady_state':steady_state,
-        'distributed':profile,
+        'distributed':distributed,
         'profile':profile
     }
 
