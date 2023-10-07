@@ -1,0 +1,3 @@
+[submodule "contrib/acx2"]
+	path = contrib/acx2
+	url = git@github.com:laumiulun/ACX2.git

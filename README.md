@@ -45,7 +45,7 @@ Afterward install the Astro Neo packages by:
 
 Linux:
 
-        conda create -n ciao -c <https://cxc.cfa.harvard.edu/conda/ciao> -c conda-forge ciao sherpa ds9 ciao-contrib caldb_main marx
+        conda create -n ciao -c https://cxc.cfa.harvard.edu/conda/ciao -c conda-forge ciao sherpa ds9 ciao-contrib caldb_main marx
 
 Mac (x86 Intel):
 
@@ -62,6 +62,7 @@ This should install all require dep packages and create a conda environment name
 2. Clone and Install software:
 
         git clone https://github.com/laumiulun/Astro_Neo.git
+        git submodule update --init --recursive
 
         pip install .
 
@@ -71,9 +72,6 @@ To perform a simple test, make sure the right environment is set, and select a i
 
         Astro_Neo -i test/test.ini
 
-<!-- To run a sample test, make sure the enviornment is set correctly, and select a input file:
-
-        exafs -i test/test.ini -->
 
 ## Update
 <!-- EXAFS Neo is under active development, to update the code after pulling from the repository:
