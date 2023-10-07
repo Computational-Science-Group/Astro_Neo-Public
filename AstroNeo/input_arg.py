@@ -79,8 +79,13 @@ def ini_parser(file_dict):
         steady_state = False
 
     try:
-        profile = helper.str_to_bool(Outputs_dict['profile'])
+        profile = helper.str_to_bool(Outputs_dict['distributed'])
 
+    except KeyError:
+        profile = False
+
+    try:
+        profile = helper.str_to_bool(Outputs_dict['profile'])
     except KeyError:
         profile = False
 
@@ -102,6 +107,7 @@ def ini_parser(file_dict):
         'printgraph':printgraph,
         'num_output_paths':num_output_paths,
         'steady_state':steady_state,
+        'distributed':profile,
         'profile':profile
     }
 

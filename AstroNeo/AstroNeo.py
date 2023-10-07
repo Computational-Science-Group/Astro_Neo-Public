@@ -28,17 +28,16 @@ import numpy as np
 import operator
 import random
 import copy
-# from .import_lib import *
 from . import input_arg
-# from .helper import *
 
 # Need further testing to see if this is needed...
 os.environ['HEADAS'] = '/Users/andy/projects/xspec/heasoft-6.31.1/aarch64-apple-darwin22.4.0'
 os.system(f"source $HEADAS/headas-init.sh")
 
 import xspec
-
-sys.path.append("/Users/andy/projects/Astro_Neo/input_files/ACX2")
+# Import Xspec
+HOME = os.getcwd()
+sys.path.append(HOME + "/contrib/acx2")
 import acx2_xspec
 
 xspec.xset.Xset.chatter = 0
@@ -65,7 +64,7 @@ class AstroNEO:
             t1 = helper.timecall()
 
         self.file_dict =  input_arg.ini_parser(file_dict)
-        self.disturbuted = True
+        self.disturbuted = self.file_dict['distributed']
         # if timeing_mode:
             # print(f'Inital import function took {} second' % initial_elapsed)
     def initialize_variable(self):
@@ -679,6 +678,7 @@ class AstroNEO:
         self.logger.info(f"{helper.bcolors.BOLD}Fits{helper.bcolors.ENDC}: {self.fits}")
         self.logger.info(f"{helper.bcolors.BOLD}Printout{helper.bcolors.ENDC}: {self.printgraph}")
         self.logger.info(f"{helper.bcolors.BOLD}profiler{helper.bcolors.ENDC}: {self.profile_toggle}")
+        self.logger.info(f"{helper.bcolors.BOLD}Distributed{helper.bcolors.ENDC}: {self.disturbuted}")
         self.logger.info("-------------------------------------------")
 
     def run_verbose_end(self):
