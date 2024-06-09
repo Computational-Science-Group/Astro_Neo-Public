@@ -63,7 +63,6 @@ This should install all require dep packages and create a conda environment name
 
         git clone https://github.com/laumiulun/Astro_Neo.git
         git submodule update --init --recursive
-
         pip install .
 
 ## Usage
