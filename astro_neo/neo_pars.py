@@ -29,8 +29,9 @@ class NeoBestFit:
 
 @define(kw_only=True, slots=True)
 class NeoFixedPars:
-    # Neo Fixed Parameters
+    npath: int = 1
 
+    # Neo Fixed Parameters
     nPops: float = 100
     nGen: float = 100
     steadyState: bool = False
@@ -51,6 +52,8 @@ class NeoFixedPars:
     debug_mode: bool = False
 
     def read_inputs(self, input_dicts):
+        self.npath = checkKey('npath', input_dicts, 1)
+
         self.nPops = checkKey('nPops', input_dicts, 100)
         self.nGen = checkKey('nGen', input_dicts, 100)
         self.steadyState = checkKey('steadyState', input_dicts, False)
@@ -174,17 +177,17 @@ class NeoPars:
         self.mutPars = NeoMutPars()
         self.crossPars = NeoCrossPars()
         self.selPars = NeoSelPars()
-        self.exafsPars = NeoStaticPars()
+        # self.exafsPars = NeoStaticPars()
         self.bestFitPars = NeoBestFit()
         self.neoFilePars = NeoFilePars()
         # self.exafsRangePars = EXAFSPathRange()
-        self.exafsPathPars = EXAFSPath()
+        self.neo_paths = NeoPath()
         self.solPars = NeoSol()
 
     def read_inputs(self, input_dicts):
         self.fixedPars.read_inputs(input_dicts)
         self.runPars.read_inputs(input_dicts)
-        self.exafsPars.read_inputs(input_dicts)
+        self.neo_paths.read_inputs(input_dicts)
         self.neoFilePars.read_inputs(input_dicts)
         self.mutPars.read_inputs(input_dicts)
         self.selPars.read_inputs(input_dicts)
@@ -192,9 +195,9 @@ class NeoPars:
         self.crossPars.read_inputs(input_dicts)
         self.neoFilePars.initialize_filepath(cycles=0)
 
-        self.exafsPathPars.read_inputs(self.neoFilePars, self.exafsPars)
+        # self.exafsPathPars.read_inputs(self.neoFilePars, self.exafsPars)
 
-        self.exafsPathPars.initialize()
+        # self.exafsPathPars.initialize()
 
     def output(self):
         self.neoFilePars.write_outputs(self.runPars, self.bestFitPars)
@@ -207,86 +210,34 @@ class NeoPars:
 
 @define(slots=True)
 class NeoStaticPars:
-    kmin: float = 0.95
-    kmax: float = 9.775
-    dk: float = 0.05
-    kweight: float = 2.0
+    """
 
-    rbkg: float = 0.0
-    bkgkw: float = 1.0
-    bkgkmax: float = 15.0
-
-    small: float = 0.0
-    big: float = 0.0
-    mid: float = 0.0
-    intervalK: list = field(factory=list)
-
-    individual_paths: bool = False
-
-    pathrange: list = field(factory=list)
-    npath: int = 0
-
-    def calculate_pars(self):
-        self.small = int(self.kmin / self.dk)
-        self.big = int(self.kmax / self.dk)
-        self.mid = int(self.big - self.small + 1)
-        self.intervalK = np.linspace(self.small, self.big, self.mid)
+    """
 
     def read_inputs(self, input_dicts):
-        self.kmin = checkKey('kmin', input_dicts, 0.95)
-        self.kmax = checkKey('kmax', input_dicts, 9.775)
-        self.dk = checkKey('deltak', input_dicts, 0.05)
-        self.kweight = checkKey('kweight', input_dicts, 2.0)
-
-        self.rbkg = checkKey('rbkg', input_dicts, 0.0)
-        self.bkgkw = checkKey('bkgkw', input_dicts, 1.0)
-        self.bkgkmax = checkKey('bkgkmax', input_dicts, 15.0)
-
-        self.pathrange = checkKey('pathrange', input_dicts, None)
-        self.individual_paths = checkKey('individualOptions', input_dicts, False)
-        self.npath = len(self.pathrange)
-        self.calculate_pars()
+        pass
+        # self.kmin = checkKey('kmin', input_dicts, 0.95)
+        # self.kmax = checkKey('kmax', input_dicts, 9.775)
+        # self.dk = checkKey('deltak', input_dicts, 0.05)
+        # self.kweight = checkKey('kweight', input_dicts, 2.0)
+        #
+        # self.rbkg = checkKey('rbkg', input_dicts, 0.0)
+        # self.bkgkw = checkKey('bkgkw', input_dicts, 1.0)
+        # self.bkgkmax = checkKey('bkgkmax', input_dicts, 15.0)
+        #
+        # self.pathrange = checkKey('pathrange', input_dicts, None)
+        # self.individual_paths = checkKey('individualOptions', input_dicts, False)
+        # self.npath = checkKey('npath', input_dicts, 1)
+        # self.calculate_pars()
 
 
 @define
-class EXAFSPath:
-    # mylarch: str = Interpreter()
-    # g: larch.symboltable.Group = None
-    # best: larch.symboltable.Group = None
-    # sumgroup: larch.symboltable.Group = None
-    exp: list = field(factory=list)
-    pathname: list = field(factory=list)
-    ncomp: int = 0
-    individual_paths: bool = False
-    path_lists: list = field(factory=list)
-    pathDictionary: dict = field(factory=dict)
+class NeoPath:
+    npath: int = 1
+    fits: list = field(factory=list)
+    center: list = field(factory=list)
 
-    # def initialize(self):
-    # self.read_inputs(exafs_neo)
-
-    end: str = None
-    front: list = field(factory=list)
-    npaths: int = None
-    exafs_static_pars: NeoStaticPars = None
-    exafs_file_pars: NeoFilePars = None
-
-    def read_inputs(self, exafs_filepars: NeoFilePars, exafs_static_pars: NeoStaticPars):
-        self.exafs_file_pars = exafs_filepars
-        self.exafs_static_pars = exafs_static_pars
-        # self.g = read_ascii(str(exafs_filepars.data_path))
-        # self.best = read_ascii(str(exafs_filepars.data_path))
-        # self.sumgroup = read_ascii(str(exafs_filepars.data_path))
-        self.ncomp = exafs_filepars.nComp
-        self.individual_paths = exafs_static_pars.individual_paths
-        self.npaths = exafs_static_pars.npath
-        self.front = exafs_filepars.front
-        self.end = exafs_filepars.end
-        self.path_lists = exafs_static_pars.pathrange
-
-    def initialize(self):
-        # self.__initialize_group()
-        # self.__initialize_paths()
-        # self.__initialize_ftf()
+    def read_inputs(self, input_dicts):
         pass
 
 

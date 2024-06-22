@@ -4,40 +4,41 @@ import operator
 import numpy as np
 from attrs import define, field
 
+from astro_neo.fitness import fitness
 from astro_neo.individual import Individual
 from astro_neo.neo_pars import NeoPars
 
 
-def fitness(exafs_neo_pars, ind_obj, return_tot=False):
-    """
-    Evaluate fitness of a individual
-    """
-    loss = 0
-    y_total = np.zeros(401)
-    intervalK = exafs_neo_pars.exafsPars.intervalK
-    larch = exafs_neo_pars.exafsPathPars.mylarch
-    kweight = exafs_neo_pars.exafsPars.kweight
-    for i in range(exafs_neo_pars.exafsPars.npath):
-        pathname = exafs_neo_pars.exafsPathPars.pathname[i]
-        pathdictionary = exafs_neo_pars.exafsPathPars.pathDictionary
-        path = pathdictionary.get(pathname)
-        path.e0 = ind_obj.get_e0()
-        path.s02 = ind_obj.get_path(i)[0]
-        path.sigma2 = ind_obj.get_path(i)[2]
-        path.deltar = ind_obj.get_path(i)[3]
-        feffdat.path2chi(path, _larch=larch)
-        y = path.chi
-        for k in intervalK:
-            y_total[int(k)] += y[int(k)]
-    # compute loss function
-    for j in intervalK:
-        loss = loss + (y_total[int(j)] * exafs_neo_pars.exafsPathPars.g.k[int(j)] ** kweight -
-                       exafs_neo_pars.exafsPathPars.exp[int(j)] * exafs_neo_pars.exafsPathPars.g.k[
-                           int(j)] ** kweight) ** 2
-    if return_tot:
-        return loss, y_total
-    else:
-        return loss
+#
+# def fitness(astro_pars, astro_obj, return_tot=False):
+#     """
+#     Evaluate fitness of a individual
+#     """
+#     loss = 0
+#     y_total = np.zeros(401)
+#     intervalK = astro_pars.exafsPars.intervalK
+#     larch = astro_pars.exafsPathPars.mylarch
+#     kweight = astro_pars.exafsPars.kweight
+#     for i in range(astro_pars.exafsPars.npath):
+#         pathname = astro_pars.exafsPathPars.pathname[i]
+#         pathdictionary = astro_pars.exafsPathPars.pathDictionary
+#         path = pathdictionary.get(pathname)
+#         path.e0 = astro_obj.get_e0()
+#         path.s02 = astro_obj.get_path(i)[0]
+#         path.sigma2 = astro_obj.get_path(i)[2]
+#         path.deltar = astro_obj.get_path(i)[3]
+#         y = path.chi
+#         for k in intervalK:
+#             y_total[int(k)] += y[int(k)]
+#     # compute loss function
+#     for j in intervalK:
+#         loss = loss + (y_total[int(j)] * astro_pars.exafsPathPars.g.k[int(j)] ** kweight -
+#                        astro_pars.exafsPathPars.exp[int(j)] * astro_pars.exafsPathPars.g.k[
+#                            int(j)] ** kweight) ** 2
+#     if return_tot:
+#         return loss, y_total
+#     else:
+#         return loss
 
 
 @define
@@ -50,8 +51,10 @@ class NeoPopulations:
     next_population: list = field(factory=list)
 
     def generate_individual(self):
-
-        ind = Individual(self.npaths, self.fits, self.center)
+        npaths = self.neo_pars.neo_paths.npath
+        fits = self.neo_pars.neo_paths.fits
+        center = self.neo_pars.neo_paths.center
+        ind = Individual(npaths, fits, center)
         return ind
 
     def eval_population(self, replace=True, sorting=True):
@@ -59,7 +62,7 @@ class NeoPopulations:
         population_perf = {}
 
         for i, individual in enumerate(self.population):
-            temp_score = fitness(self.exafs_NeoPars, individual)
+            temp_score = fitness(self.neo_pars, individual)
             score.append(temp_score)
 
             population_perf[individual] = temp_score
@@ -76,7 +79,7 @@ class NeoPopulations:
         Initialize populations
         :return:
         """
-        for i in range(self.exafs_NeoPars.fixedPars.nPops):
+        for i in range(self.neo_pars.fixedPars.nPops):
             self.population.append(self.generate_individual())
 
         self.eval_population()
@@ -85,49 +88,18 @@ class NeoPopulations:
         return self.population_sorted[item]
 
     def __replace_bestfit(self):
-        self.exafs_NeoPars.bestFitPars.currBestInd = self.population_sorted[0][0]
-        self.exafs_NeoPars.bestFitPars.currBestVal = self.population_sorted[0][1]
+        self.neo_pars.bestFitPars.currBestInd = self.population_sorted[0][0]
+        self.neo_pars.bestFitPars.currBestVal = self.population_sorted[0][1]
 
-        delta = np.abs(self.exafs_NeoPars.bestFitPars.currBestVal - self.exafs_NeoPars.bestFitPars.globBestVal)
+        delta = np.abs(self.neo_pars.bestFitPars.currBestVal - self.neo_pars.bestFitPars.globBestVal)
         if delta > 0.01:
-            self.exafs_NeoPars.bestFitPars.bestDiff = delta
+            self.neo_pars.bestFitPars.bestDiff = delta
         else:
-            self.exafs_NeoPars.bestFitPars.bestDiff = 0
+            self.neo_pars.bestFitPars.bestDiff = 0
 
-        if self.exafs_NeoPars.bestFitPars.currBestVal < self.exafs_NeoPars.bestFitPars.globBestVal:
-            self.exafs_NeoPars.bestFitPars.globBestInd = self.exafs_NeoPars.bestFitPars.currBestInd
-            self.exafs_NeoPars.bestFitPars.globBestVal = self.exafs_NeoPars.bestFitPars.currBestVal
-
-    def optimize_e0(self):
-        # TODO: Revist this
-        #  if mess == None:
-        #      self.logger.info(
-        #          "Finished First Half of Generation, Optimizing E0...")
-        #  else:
-        #      self.logger.info(mess)
-
-        curr_ind = copy.deepcopy(self.exafs_NeoPars.bestFitPars.globBestInd)
-        curr_score = copy.deepcopy(self.exafs_NeoPars.bestFitPars.globBestVal)
-        curr_e0 = curr_ind.get_e0()
-        for i in self.exafs_NeoPars.exafsRangePars.rangeE0_large:
-            curr_ind.set_e0(i)
-            fit_score = fitness(self.exafs_NeoPars, curr_ind)
-            if fit_score < curr_score:
-                curr_e0 = i
-                curr_score = fit_score
-            # listOfX.append(i)
-            # listOfY.append(fit)
-        # self.logger.info("Continue With E0= " + str(round(curr_e0, 3)))
-        new_e0 = curr_e0
-        self.exafs_NeoPars.bestFitPars.bestE0 = new_e0
-        # TODO: revisit this!
-        #  Reset Mutation Chance??
-        #  self.mut_chance_e0 = 0
-        self.exafs_NeoPars.bestFitPars.globBestInd.set_e0(new_e0)
-        self.exafs_NeoPars.bestFitPars.globBestVal = curr_score
-
-        for i in self.population:
-            i.set_e0(new_e0)
+        if self.neo_pars.bestFitPars.currBestVal < self.neo_pars.bestFitPars.globBestVal:
+            self.neo_pars.bestFitPars.globBestInd = self.neo_pars.bestFitPars.currBestInd
+            self.neo_pars.bestFitPars.globBestVal = self.neo_pars.bestFitPars.currBestVal
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-from astro_neo.pathObj import GaussianObj, VoigtObj, DoniachObj, ShirleyBG_Obj, ShirleyExpObj,\
+from astro_neo.pathObj import GaussianObj, VoigtObj, DoniachObj, ShirleyBG_Obj, ShirleyExpObj, \
     ExponentialObj, DoniachObjGauss, DoniachObj_Test, DS_Jeff, Thermal, Gaussian_Abs, \
     XStabsBG, EmissionLorentz, XspecSpectrum
 
@@ -59,7 +59,7 @@ class Individual():
             center (_type_): _description_
         """
         self.npaths = npaths
-        self.Population = [None] * self.npaths
+        self.population = [None] * self.npaths
         self.center = center
         self.fits = fits
 
@@ -69,46 +69,37 @@ class Individual():
             if obj == 'Invalid':
                 print("Invalid Fits selection: " + str(self.fits[i]))
                 sys.exit()
-            self.Population[i] = obj
-
+            self.population[i] = obj
 
     def get(self):
-        Population = []
+        population = []
         for i in range(self.npaths):
-            Population.append(self.Population[i].get())
-        return Population
+            population.append(self.population[i].get())
+        return population
 
     def get_func(self):
-        Population = []
+        population = []
         for i in range(self.npaths):
-            Population.append(self.Population[i])
-        return Population
+            population.append(self.population[i])
+        return population
 
     def get_path(self, i):
-        return self.Population[i].get()
+        return self.population[i].get()
 
-    # def verbose(self):
-    #     """
-    #     Print out the Populations
-    #     """
-    #     for i in range(self.npaths):
-    #         self.Population[i].verbose()
-
-    def set_path(self, i: int , params: list):
-        params_names = self.Population[i].get_params_names()
+    def set_path(self, i: int, params: list):
+        params_names = self.population[i].get_params_names()
         dicts = {}
         for j, key in enumerate(params_names):
             dicts[key] = params[j]
 
-        self.Population[i].set(dicts)
+        self.population[i].set(dicts)
 
     def mutate(self):
         for i in range(self.npaths):
             # self.Population[i].mutate()
-            params_names = self.Population[i].mutate()
+            params_names = self.population[i].mutate()
 
-
-    def get_bounds(self,i:int ) -> tuple:
+    def get_bounds(self, i: int) -> tuple:
         """Get the bounds of the individual
 
         Args:
@@ -118,7 +109,7 @@ class Individual():
             tuple: bounds of the individual
         """
 
-        return self.Population[i].get_bounds()
+        return self.population[i].get_bounds()
 
     def __len__(self):
-        return len(self.Population[0])
+        return len(self.population[0])
