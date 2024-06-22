@@ -3,7 +3,7 @@ from __future__ import print_function, unicode_literals
 import sys
 import codecs
 from setuptools import setup, find_packages
-from AstroNeo import __version__, __author__, __email__
+from astro_neo._version import __version__, __author__, __email__
 
 
 with open('requirements.txt') as f:
@@ -17,7 +17,7 @@ def long_description():
 
 
 setup(
-    name='AstroNeo',
+    name='astro_neo',
     version=__version__,
     packages=find_packages(),
 
@@ -34,7 +34,7 @@ setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            'Astro_Neo=AstroNeo.AstroNeo:main',
+            'astro_neo=astro_neo.astro_neo:main',
         ]
     },
     license='GPLv3',

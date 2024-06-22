@@ -1,9 +1,6 @@
-from .pathObj import GaussianObj, VoigtObj, DoniachObj, ShirleyBG_Obj, ShirleyExpObj,\
+from astro_neo.pathObj import GaussianObj, VoigtObj, DoniachObj, ShirleyBG_Obj, ShirleyExpObj,\
     ExponentialObj, DoniachObjGauss, DoniachObj_Test, DS_Jeff, Thermal, Gaussian_Abs, \
     XStabsBG, EmissionLorentz, XspecSpectrum
-# Sherpa_APEC, Sherpa_APEC_BG
-from .pathObj import Eggholder
-# from pathObj import VoigtObj,DoniachObj,GaussianObj,ExponentialObj,ShirleyExpObj
 
 import sys
 
@@ -22,7 +19,6 @@ def shape_function_parser(Fit, center_range=0, *args):
         "ShirleyExp": ShirleyExpObj(center_range),
         "DS_Jeff": DS_Jeff(center_range),
         "Thermal": Thermal(center_range),
-        "EggHolder": Eggholder(center_range),
         "Gauss_Abs": Gaussian_Abs(center_range),
         "XStabsBG": XStabsBG(),
         "EmissionLorentz": EmissionLorentz(center_range),

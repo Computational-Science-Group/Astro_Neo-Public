@@ -32,7 +32,7 @@ def input():
 
 
 def ini_parser(file_dict):
-    """Developed Ini parser for AstroNeo
+    """Developed Ini parser for astro_neo
 
     Args:
         file_dicts (_type_): _description_

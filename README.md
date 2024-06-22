@@ -1,6 +1,6 @@
 # Astro Neo
 
-#### Versions: 0.0.3
+#### Versions: 0.0.4
 
 #### Last update: Jul 15, 2023
 
@@ -22,7 +22,7 @@ It is highly recommend to create a new environment in `anaconda` to run EXAFS Ne
 
 ## Installations
 
-<!-- Create new environment using the environment files given:
+Create new environment using the environment files given:
 
 Linux:
 
@@ -35,11 +35,11 @@ Mac:
 Afterward install the Astro Neo packages by:
 
         pip install setup.py
-<!-- To install EXAFS Neo, simply clone the repo:
+To install EXAFS Neo, simply clone the repo:
 
         git clone https://github.com/laumiulun/Astro-Neo-Public.git
         cd EXAFS-Neo-Public/
-        python setup.py install -->
+        python setup.py install
 
 1. First create conda environment:
 

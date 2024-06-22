@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 # sys.path.append('gui/')
 # import larch_score
-from AstroNeo import pathObj
+from astro_neo import pathObj
 
 
 class Test_pathObj(unittest.TestCase):

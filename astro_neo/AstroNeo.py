@@ -1,7 +1,7 @@
 # from .helper import *
-from . import helper
-from . import fitness
-from . import individual
+# from astro_neo import helper
+# from astro_neo import fitness
+# from astro_neo import individual
 # from .import_lib import *
 # from .ini_parser import *
 # from .fitness import *
@@ -28,19 +28,19 @@ import numpy as np
 import operator
 import random
 import copy
-from . import input_arg
+# from . import input_arg
 
 # Need further testing to see if this is needed...
 # os.environ['HEADAS'] = '/Users/andy/projects/xspec/heasoft-6.31.1/aarch64-apple-darwin22.4.0'
 # os.system(f"source $HEADAS/headas-init.sh")
 
-import xspec
+# import xspec
 # Import Xspec
 HOME = os.getcwd()
 sys.path.append(HOME + "/contrib/acx2")
-import acx2_xspec
+# import acx2_xspec
 
-xspec.xset.Xset.chatter = 0
+# xspec.xset.Xset.chatter = 0
 
 # Set the number of threads
 os.environ['NUMEXPR_MAX_THREADS'] = str(cpu_count())
