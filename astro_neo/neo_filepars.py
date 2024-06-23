@@ -35,44 +35,21 @@ class NeoFilePars:
         @param int cycles: the cycles of multiple run
         @return:
         """
-
-        if self.nComp > 1:
-            for i in range(self.nComp):
-                self.front.append(self.base / self.feff_file[i])
-        else:
-            self.front = self.base / self.feff_file
-
-        if self.multi_data_toggle:
-            self.data_path = self.base / self.multi_data[cycles]
-            # self.output_path = os.path.splitext(os.path.join(self.base, output_file))[
-            #                        0] + "_" + str(i) + ".csv"
-            self.output_path = Path(str((self.base / self.output_file).with_suffix('')) + f"_{cycles}.csv")
-            # self.log_path = os.path.splitext(
-            #     copy.deepcopy(self.output_path))[0] + ".log"
-            self.log_path = Path(str(self.output_path.with_suffix('')) + ".log")
-        else:
-            # self.data_path = os.path.join(self.base, csv_file)
-            self.data_path = self.base / self.data_file
-            self.output_path = self.base / self.output_file
-            self.log_path = Path(str(self.output_path.with_suffix('')) + ".log")
-            # self.log_path = os.path.splitext(
-            #     copy.deepcopy(self.output_path))[0] + ".log"
-        if self.pathOptimize:
-            self.output_path = Path(str((self.base / self.output_file).with_suffix('')) + f"_optimizes.csv")
-        #     self.output_path = os.path.splitext(os.path.join(self.base, output_file))[
-        #                            0] + "_optimized.csv"
+        self.data_path = self.base / self.data_file
+        self.output_path = self.base / self.output_file
+        self.log_path = Path(str(self.output_path.with_suffix('')) + ".log")
 
         self.initialize_outputs()
 
     def read_inputs(self, input_dicts):
-        self.nComp = checkKey('nComp', input_dicts, 1)
-        if self.nComp > 1:
-            try:
-                self.feff_file = list(input_dicts['feff_file'].split(","))
-            except FileNotFoundError:
-                print("Feff folder is not correct")
-        else:
-            self.feff_file = input_dicts['feff_file']
+        # self.nComp = checkKey('nComp', input_dicts, 1)
+        # if self.nComp > 1:
+        #     try:
+        #         self.feff_file = list(input_dicts['feff_file'].split(","))
+        #     except FileNotFoundError:
+        #         print("Feff folder is not correct")
+        # else:
+        #     self.feff_file = input_dicts['feff_file']
 
         self.data_file = checkKey('data_file', input_dicts, '')
         self.output_file = checkKey('output_file', input_dicts, 'exafs_neo_out.csv')

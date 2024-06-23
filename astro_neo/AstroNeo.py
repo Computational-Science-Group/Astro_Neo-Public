@@ -1,938 +1,125 @@
-# from .helper import *
-# from astro_neo import helper
-# from astro_neo import fitness
-# from astro_neo import individual
-# from .import_lib import *
-# from .ini_parser import *
-# from .fitness import *
-# from .individual import Individual
-# from .background_function import shirley, nobg, shirley_temp
-import cProfile
-# import pstats
+import os
 
-# from .run_verbose import *
-
-# ----------------------------
-# Import Library
-import os, copy, random, logging
-from psutil import cpu_count
-import time, datetime, subprocess
-import csv
-import sys
-from loky import ProcessPoolExecutor
-# import sherpa
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import pathlib
-import numpy as np
-import operator
-import random
-import copy
-# from . import input_arg
-
-# Need further testing to see if this is needed...
-# os.environ['HEADAS'] = '/Users/andy/projects/xspec/heasoft-6.31.1/aarch64-apple-darwin22.4.0'
-# os.system(f"source $HEADAS/headas-init.sh")
-
-# import xspec
-# Import Xspec
-HOME = os.getcwd()
-sys.path.append(HOME + "/contrib/acx2")
-# import acx2_xspec
-
-# xspec.xset.Xset.chatter = 0
-
-# Set the number of threads
-os.environ['NUMEXPR_MAX_THREADS'] = str(cpu_count())
+from astro_neo.mutator import NeoMutator
+from astro_neo.neo_pops import NeoPopulations
+from astro_neo.neo_pars import NeoPars
+from astro_neo.helper import banner
+from astro_neo.utils import NeoLogger, STRColors
+from astro_neo.neo_crossover import NeoCrossover
+from astro_neo.neo_selector import NeoSelector
+from astro_neo.neo_result import NeoResult
+from astro_neo.ini_parser import validate_input_file
+from astro_neo.parser import InputParamsParser
+from astro_neo.neo_solver import NeoSolver
 
 
-# ----------------------------
+class AstroNeo:
 
-
-class AstroNEO:
-
-    def initialize_params(self, verbose=False):
+    def __init__(self, verbose_lvl=5):
         """
-        Initialize Parameters
+        Initialize Params:
+
         """
 
-        # print("Initialize Parameters")
-        self.intervalK = 0.05
-        file_dict, timeing_mode = input_arg.input()
-        if timeing_mode:
-            t1 = helper.timecall()
+        print(banner())
+        self.logger = NeoLogger()
+        self.exafs_neo_pars = NeoPars()
+        self.mutator = NeoMutator(logger=self.logger)
+        self.selector = NeoSelector(logger=self.logger)
+        self.crossOver = NeoCrossover(logger=self.logger)
+        self.solver = NeoSolver(logger=self.logger)
+        self.neo_population = None
+        self.verbose_lvl = verbose_lvl
+        self.result = NeoResult(logger=self.logger)
+        self.input_parameters = None
 
-        self.file_dict =  input_arg.ini_parser(file_dict)
-        self.distributed = self.file_dict['distributed']
-        # if timeing_mode:
-            # print(f'Inital import function took {} second' % initial_elapsed)
-    def initialize_variable(self):
+    def neo_read(self, filepath=None, input_parameters=None):
         """
-        Initalize variables
+        Read the input file into exafs parameters
+        @param str filepath: file path to the ini file
+        @param dict input_parameters: Dictionary of input parameters
         """
-        if self.distributed != 1:
-            self.ProcessPool = ProcessPoolExecutor(self.distributed,initializer=fitness.init_process)
-        # self.nProcess = 4
-        self.genNum = 0
-        self.nChild = 4
-        self.globBestFit = [0, np.inf]
-        self.currBestFit = [0, np.inf]
-        self.bestDiff = np.inf
-        self.bestBest = np.inf
-        self.diffCounter = 0
+        if filepath is not None:
+            file_path = os.path.join(os.getcwd(), filepath)
+            input_params = InputParamsParser()
+            input_params.read_input_file(file_path, verbose=False)
+            input_params.input_dict = validate_input_file(input_params.input_dict)
 
-        self.pathDictionary = {}
+            self.input_parameters = input_params.export_input_dict()
 
-        # Inputs
-        self.data_dir = self.file_dict["data_dir"]
-        self.data_file = self.file_dict["data_file"]
-        self.bg_file = self.file_dict["bg_file"]
-        self.rsp_file = self.file_dict["rsp_file"]
-        # Paths
-        self.npaths = self.file_dict['npaths']
-        self.fits = self.file_dict['fits'].split(",")
+        if input_parameters is not None:
+            self.input_parameters = input_parameters
 
-        self.center = self.file_dict['center']
+        if self.input_parameters is None:
+            raise ValueError("No input parameters are given")
 
-        # Populations
-        self.npops = self.file_dict['size_population'] # Number of populations
-        self.ngen = self.file_dict['number_of_generation']
-        self.steady_state = self.file_dict['steady_state']
-        self.cR = self.file_dict['CR']
-        # Mutation Parameters
-        self.mut_opt = self.file_dict['mutated_options']
-        self.mut_chance = self.file_dict['chance_of_mutation']
-        self.F = self.file_dict['F']
-
-        # Crosover Parameters
-        self.n_bestsam = int(self.file_dict['best_sample']*self.npops*(0.01))
-        self.n_lucksam = int(self.file_dict['lucky_few']*self.npops*(0.01))
-        self.CR = self.file_dict['CR']
-        # Time related
-        self.time = False
-        self.tt = 0
-
-        # Figure related:
-        self.printgraph = self.file_dict['printgraph']
-        if self.printgraph:
-            self.fig = plt.figure()
-            # Add one figs
-            self.ax = self.fig.add_subplot(111)
-        # Profile related:
-        self.profile_toggle = self.file_dict['profile']
-        if self.profile_toggle:
-            self.profiler = cProfile.Profile()
-            self.profiler.enable()
-
-
-
-    def initialize_logger(self):
-        """Initialize logger
+    def neo_setup(self):
         """
-        # Initialize logger
-        self.logger = logging.getLogger('')
-
-        # Delete handler
-        self.logger.handlers = []
-        file_handler = logging.FileHandler(
-            self.log_path, mode='a+', encoding='utf-8')
-        stdout_handler = logging.StreamHandler(sys.stdout)
-
-        formatter = logging.Formatter('%(message)s')
-        file_handler.setFormatter(formatter)
-        stdout_handler.setFormatter(formatter)
-        self.logger.addHandler(file_handler)
-        self.logger.addHandler(stdout_handler)
-
-        self.logger.setLevel(logging.INFO)
-        self.logger.info(helper.banner())
-
-    def initialize_file_path(self, i=0):
+        Setup EXAFS run subroutine
+        :return:
         """
-        Initalize file paths for each of the file first
-        """
-        self.base = os.getcwd()
-        self.output_path = os.path.join(self.base, self.file_dict['output_file'])
-        self.log_path = os.path.splitext(copy.deepcopy(self.output_path))[0] + ".log"
-
-        self.check_output_file(self.output_path)
-        self.check_output_file(self.log_path)
-    def check_if_exists(self, path_file):
-        """
-        Check if the directory exists
-        """
-        if os.path.exists(path_file):
-            os.remove(path_file)
-        # Make Directory when its missing
-        path = pathlib.Path(path_file)
-        path.parent.mkdir(parents=True, exist_ok=True)
-
-    def check_output_file(self, file):
-        """
-        check if the output file for each of the file
-        """
-        file_base = os.path.splitext(file)[0]
-        self.check_if_exists(file)
-        self.file = file
-
-        self.file_initial = open(self.output_path, "a+")
-        self.file_initial.write(
-            "Gen,TPS,FITTNESS,CURRFIT,CURRIND,BESTFIT,BESTIND\n")  # writing header
-        self.file_initial.close()
-
-        file_data = os.path.splitext(file)[0] + '_data.csv'
-        self.check_if_exists(file_data)
-        self.file_data = file_data
-
-    def initialize_fits(self):
-
-        old_dir = os.getcwd()
-        # print(old_dir)
-        # data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
-        # bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_mbg.fits"
-        # rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_rmf.fits"
-
-        # data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/right_pha_grp.fits"
-        # bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/right_mbg.fits"
-        # rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/right_rmf.fits"
-
-
-        # file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
-        file_dir = os.chdir(self.data_dir)
-        self.xspec = xspec
-
-
-        self.xspec.AllData.clear()
-        self.l_src = self.xspec.Spectrum(self.data_file,
-                                         backFile = self.bg_file,
-                                         respFile = self.rsp_file)
-
-        self.xspec.Plot.xAxis = "angstrom"
-        self.l_src.ignore("**-7.0 30.0-**")
-
-        # os.chdir(old_dir)
-        self.xspec.AllData.show()
-
-        self.xspec.Plot.xAxis = "angstrom"
-        self.xspec.Plot.xLog = False
-        self.xspec.Plot.yLog = False
-        self.xspec.Plot.perHz = False
-        self.xspec.Plot.area = True
-        self.xspec.Plot.background = True
-
-        self.xspec.Fit.statMethod = "cstat"  # using the Cash statistic
-
-
-        self.xspec.Plot("data")
-        # xspec.AllModels.setEnergies("xbin.txt")   #using the specified energy bins
-
-        # l_folded = xspec.Plot.model()
-
-        self.l_chans = xspec.Plot.x()
-        self.l_rates = xspec.Plot.y()
-        self.l_xErrs = xspec.Plot.xErr()
-        self.l_yErrs = xspec.Plot.yErr()
-        self.l_bkg = xspec.Plot.backgroundVals()
-
-
-    def generateIndividual(self):
-        # self.fits = 'Test'
-        # self.center = ''
-        ind = individual.Individual(self.npaths, self.fits, self.center)
-        # sys.exit()
-        return ind
-
-    def generateFirstGen(self):
-        self.Populations = []
-
-        # for i in range(self.npops):
-        #     self.Populations.append(self.generateIndividual())
-        # for i in range(20):
-        #     temp_ind = self.generateIndividual()
-        #     temp_ind.Population[0]._Params.dicts['TBabs_2_nH'] = 1.877e-05
-        #     temp_ind.Population[0]._Params.dicts['PhoIndex'] = 1.00455
-        #     temp_ind.Population[0]._Params.dicts['Pl_norm'] = 5.94711e-04
-        #     temp_ind.Population[0]._Params.dicts['vapec_kT'] = 0.788251
-        #     temp_ind.Population[0]._Params.dicts['vapec_C'] = 0.644919
-        #     temp_ind.Population[0]._Params.dicts['vapec_N'] = 1.07904
-        #     temp_ind.Population[0]._Params.dicts['vapec_O'] = 0.205961
-        #     temp_ind.Population[0]._Params.dicts['vapec_Ne'] = 0.487054
-        #     temp_ind.Population[0]._Params.dicts['vapec_Mg'] = 1.35956
-        #     temp_ind.Population[0]._Params.dicts['vapec_Fe'] = 0.188908
-        #     temp_ind.Population[0]._Params.dicts['vapec_norm'] = 3.41553e-04
-        #     temp_ind.Population[0]._Params.dicts['vapec_6_kT'] = 0.434492
-        #     temp_ind.Population[0]._Params.dicts['vapec_6_norm'] = 7.27081e-04
-        #     temp_ind.Population[0]._Params.dicts['vacx2_collnpar'] = 272.624
-        #     temp_ind.Population[0]._Params.dicts['vacx2_norm'] = 2.43828e-04
-
-
-        #     self.Populations.append(temp_ind)
-
-        for i in range(self.npops):
-            self.Populations.append(self.generateIndividual())
-
-    def eval_Pop(self,populations):
-        scores = []
-        populationPerf = {}
-        if self.distributed != 1:
-            for _, individual in enumerate(populations):
-                temp_score = self.ProcessPool.submit(fitness.fitness, (individual,self.xspec))
-                scores.append(temp_score)
-
-            # Gather the data
-            results = [i.result() for i in scores]
-            return results
-
-        else:
-            for i, individual in enumerate(populations):
-
-                temp_score = fitness.fitness((individual,self.xspec))
-                scores.append(temp_score)
-
-            return scores
-
-    def eval_Population(self):
-        """Evaluate the population for GA
-
-        Returns:
-            list: list of score
-        """
-
-        scores = []
-        populationPerf = {}
-        self.og_fitness = [] # original fitness
-        if self.distributed != 1:
-            for i, individual in enumerate(self.Populations):
-
-                temp_score = self.ProcessPool.submit(fitness.fitness, (individual,self.xspec))
-                scores.append(temp_score)
-
-            # Gather the data
-            results = [i.result() for i in scores]
-            for i, individual in enumerate(self.Populations):
-                populationPerf[individual] = results[i]
-                self.og_fitness = results
-        else:
-            for i, individual in enumerate(self.Populations):
-
-                temp_score = fitness.fitness((individual,self.xspec))
-                scores.append(temp_score)
-
-                populationPerf[individual] = temp_score
-                self.og_fitness = scores
-        self.sorted_population = sorted(
-            populationPerf.items(), key=operator.itemgetter(1), reverse=False)
-
-        self.currBestFit = self.sorted_population[0]
-
-        # return score
-
-    def next_generation(self):
-        """Next Generation for GA
-        """
-        self.st = time.time()
-        # ray.init()
-        self.logger.info("---------------------------------------------------------")
-        self.logger.info(datetime.datetime.fromtimestamp(
-            self.st).strftime('%Y-%m-%d %H:%M:%S'))
-        self.logger.info(f"{helper.bcolors.BOLD}Gen: {helper.bcolors.ENDC}{self.genNum+1}")
-
-        self.genNum += 1
-
-        # Evaluate Fittness
-        self.eval_Population()
-        # self.sorted_population()
-        # print(score)
-        self.bestDiff = abs(self.globBestFit[1]-self.currBestFit[1])
-        # print(self.bestDiff)
-        if self.currBestFit[1] < self.globBestFit[1]:
-            self.globBestFit = self.currBestFit
-
-        # Rechenberg mutation
-        if self.genNum > 20:
-            if self.bestDiff < 0.1:
-                self.diffCounter += 1
-            else:
-                self.diffCounter -= 1
-            if (abs(self.diffCounter) / float(self.genNum)) > 0.2:
-                self.mut_chance += 0.5
-                self.mut_chance = abs(self.mut_chance)
-            elif (abs(self.diffCounter) / float(self.genNum)) < 0.2:
-                self.mut_chance -= 0.5
-                self.mut_chance = abs(self.mut_chance)
-
-
-        self.output_best_parameters()
-        # Start the mutator process
-        self.mutatePopulation()
-        # selection
-        if self.mut_opt != 3:
-            self.selectFromPopulation()
-            self.createChildren()
-            self.logger.info(f"Number of Breeders: {str(len(self.parents))}")
-        else:
-            self.crossoverPopulation()
-            self.adjust_DE_parameters()
-            trial_fitness = self.eval_Pop(self.trialPopulations)
-            # og_fitness = self.eval_Pop(self.Populations)
-            for i in range(self.npops):
-                if trial_fitness[i] < self.og_fitness[i]:
-                    self.Populations[i] = self.trialPopulations[i]
-
-            self.logger.info(f"Average Trial Population Fitness: {np.average(trial_fitness)}")
-            self.logger.info(f"Average Population Fitness: {np.average(self.og_fitness)}")
-        self.logger.info(f"DiffCounter: {self.diffCounter}")
-        self.logger.info(f"Diff %: {self.diffCounter / self.genNum}")
-        self.logger.info(f"Mutation Chance: {self.mut_chance}")
-
-        self.et = helper.timecall()
-        self.tdiff = self.et - self.st
-        self.tt = self.tt + self.tdiff
-        self.logger.info(f"Time: {str(round(self.tdiff, 3))} s")
-
-    def adjust_DE_parameters(self,on=True):
-        """Adjust the DE parameters
-        """
-        # self.F =
-        rand_val = np.random.rand(4)
-        tau_1 = 0.1
-        tau_2 = 0.1
-        if rand_val[1] < tau_1:
-            self.F = 0.1 + rand_val[0] * 0.9
-            self.logger.info(f"F has been adjusted to {np.round(self.F,4)}")
-
-        if rand_val[3] < tau_2:
-            self.cR = rand_val[2]
-            self.logger.info(f"Cr has been adjusted to {np.round(self.cR,4)}")
-
-
-    def output_best_parameters(self):
-
-        with np.printoptions(precision=5, suppress=True):
-            self.logger.info(
-                f"Best Fit: {helper.bcolors.BOLD}{self.sorted_population[0][1]}{helper.bcolors.ENDC}")
-            self.logger.info(f"2nd Fit: {self.sorted_population[1][1]}")
-            self.logger.info(f"3rd Fit: {self.sorted_population[2][1]}")
-            self.logger.info(f"4th Fit: {self.sorted_population[3][1]}")
-            self.logger.info(f"Last Fit: {self.sorted_population[-1][1]}")
-            self.logger.info(f"Different from last best fit: {self.bestDiff}")
-
-            self.logger.info(f"Best Fit Combination:")
-            params_list = self.currBestFit[0].get_func()[0].get_func()
-            self.logger.info(f"    TBabs_2_nH: {np.round(params_list['TBabs_2_nH'],7)} vs 1.877e-05")
-            self.logger.info(f"    PhoIndex: {np.round(params_list['PhoIndex'],5)}, vs 1.00455")
-            self.logger.info(f"    Pl_norm: {np.round(params_list['Pl_norm'],5)} vs 5.94711e-04")
-            self.logger.info(f"    vapec_kT: {np.round(params_list['vapec_kT'],5)} vs 0.788251")
-            self.logger.info(f"    vapec_C: {np.round(params_list['vapec_C'],5)} vs 0.644919")
-            self.logger.info(f"    vapec_N: {np.round(params_list['vapec_N'],5)} vs 1.07904")
-            self.logger.info(f"    vapec_O: {np.round(params_list['vapec_O'],5)} vs 0.205961")
-            self.logger.info(f"    vapec_Ne: {np.round(params_list['vapec_Ne'],5)} vs 0.487054")
-            self.logger.info(f"    vapec_Mg: {np.round(params_list['vapec_Mg'],5)} vs 1.35956")
-            self.logger.info(f"    vapec_Fe: {np.round(params_list['vapec_Fe'],5)} vs 0.188908")
-            self.logger.info(f"    vapec_norm: {np.round(params_list['vapec_norm'],5)} vs 3.41553e-04")
-            self.logger.info(f"    vapec_6_kT: {np.round(params_list['vapec_6_kT'],5)} vs 0.434492")
-            self.logger.info(f"    vapec_6_norm: {np.round(params_list['vapec_6_norm'],5)} vs 7.27081e-04")
-            self.logger.info(f"    vacx2_collnpar: {np.round(params_list['vacx2_collnpar'],5)} vs 272.624")
-            self.logger.info(f"    vacx2_norm: {np.round(params_list['vacx2_norm'],7)} vs 2.43828e-04")
-
-            # print("Best fit combination:\n",
-            #       np.asarray(self.currBestFit[0].get()))
-            # self.logger.info(bcolors.BOLD + "History Best:", bcolors.OKBLUE +
-            #       str(self.globBestFit[1]) + bcolors.ENDC)
-            self.logger.info(f"{helper.bcolors.BOLD}History Best :{helper.bcolors.OKBLUE}{self.globBestFit[1]}{helper.bcolors.ENDC}")
-            # GlobchiR = self.globBestFit[1]/(len(self.x_raw)-4*self.npaths)
-            # print(bcolors.BOLD + "History Best ChiR:",
-            #       bcolors.OKBLUE + str(GlobchiR) + bcolors.ENDC)
-            # print("History Best Indi:\n", np.asarray(
-            #     self.globBestFit[0].get()))
-
-    def mutatePopulation(self):
-        """
-        ## Mutation operators
-        # 0 = original: generated a new versions:
-        # 1 = mutated every genes in the total populations
-        # 2 = mutated genes inside population based on secondary probability
-        # 4 = metropolis hastings mutation
-        """
-        st = helper.timecall()
-        if self.mut_opt != 3:
-            self.nmutate = 0
-            self.nmutate_success = []
-            # if self.mut_opt == 0:
-            for i in range(self.npops):
-                if random.random()*100 < self.mut_chance:
-                    self.nmutate += 1
-                    self.Populations[i] = self.mutateIndi(i)
-
-            if self.mut_opt == 2:
-                self.logger.info(f"Total Metroplis Hasting Success: {sum(self.nmutate_success)}")
-
-            self.logger.info(f"Mutate Times: {self.nmutate}")
-        elif self.mut_opt == 3:
-            self.mutated_Populations = []
-            for i in range(self.npops):
-                candidates = [candidate for candidate in range(self.npops) if candidate != i]
-                a,b,c = np.random.choice(candidates,3,replace=False)
-                mutation_vectors = [self.Populations[a],self.Populations[b],self.Populations[c]]
-                temp_individual = self.mutate_DE(mutation_vectors,self.F)
-                temp_individual = self.check_for_bound(temp_individual)
-                self.mutated_Populations.append(temp_individual)
-
-        tdiff = helper.timecall() - st
-        self.logger.info(f"Mutate Time: {str(round(tdiff, 3))} s")
-
-    @staticmethod
-    def check_for_bound(individual):
-        """_summary_
-
-        Args:
-            individual (Individual): _description_
-
-        Returns:
-            _type_: _description_
-        """
-        pars = individual.get_func()[0].get_func()
-
-        bounds = individual.get_bounds(0)
-        temp_pars = []
-        for i,(par,value) in enumerate(pars.items()):
-            temp_pars.append(np.clip(value,bounds[par][0],bounds[par][1]))
-
-        individual.set_path(0,temp_pars)
-        return individual
-
-    def mutate_DE(self,mutated_individuals: list,F: float):
-        """
-        Mutate the individuals using DE mutation
-
-        Args:
-            mutated_individuals (list): _description_
-            F (float): _description_
-        """
-        length = len(mutated_individuals[0])
-        assert all(len(lst) == length for lst in mutated_individuals)
-
-        x_list = np.array(mutated_individuals[0].get())[0]
-        y_list = np.array(mutated_individuals[1].get())[0]
-        z_list = np.array(mutated_individuals[2].get())[0]
-
-        new_Pars = x_list + F *(y_list - z_list)
-
-        temp_individual = self.generateIndividual()
-        temp_individual.set_path(0,new_Pars)
-        # return mutated_individuals[0] + self.F*(mutated_individuals[1]-mutated_individuals[2])
-
-        return temp_individual
-
-    def mutateIndi(self,indi):
-        """Mutate each individual
-
-        Args:
-            indi (ind_type): individual to be mutated
-
-        Returns:
-            ind_type: mutated individual
-        """
-
-        # Metroplis Hastings Mutation
-        if self.mut_opt == 2:
-            n_success = 0
-            og_individual = self.generateIndividual()
-            # Create a new individual with the same parameters
-            og_pars = copy.copy(self.Populations[indi].get_func()[0].get())
-            og_individual.set_path(0,og_pars)
-            og_score = fitness.fitness((og_individual,self.xspec))
-
-            new_individual = self.generateIndividual()
-            mut_score = fitness.fitness((new_individual,self.xspec))
-
-            T = - self.bestDiff/(np.log(1-(self.genNum/self.ngen))+ np.nan)
-            if mut_score < og_score:
-                n_success = n_success + 1
-
-                newIndi = new_individual
-            elif np.exp(-(mut_score-og_score)/(T+np.nan)) > np.random.uniform():
-                n_success = n_success + 1
-                newIndi = new_individual
-            else:
-                newIndi = og_individual
-
-            self.nmutate_success.append(n_success)
-            # self.logger.info(f"Metroplis Hasting Success: {nmutate_success}")
-        else:
-            newIndi = self.generateIndividual()
-        return newIndi
-
-
-
-    def selectFromPopulation(self):
-        self.parents = []
-        # choose the top samples
-        for i in range(self.n_bestsam):
-            self.parents.append(self.sorted_population[i][0])
-
-    def crossoverPopulation(self):
-        self.trialPopulations = []
-        for i in range(self.npops):
-            self.trialPopulations.append(self.crossover_DE(self.mutated_Populations[i],self.Populations[i],self.cR))
-
-
-    def crossover_DE(self,mutate_ind,pop_ind,cR: int):
-        """_summary_
-
-        Args:
-            mutate_ind (individal): _description_
-            pop_ind (individual): _description_
-            cR (int): _description_
-
-        Returns:
-            _type_: _description_
-        """
-
-        p = np.random.rand(len(mutate_ind))
-        # temp_pars = self.generative
-        temp_ind = self.generateIndividual()
-        mutate_Pars = mutate_ind.get()[0]
-        pop_Pars = pop_ind.get()[0]
-        temp_Pars = []
-        for i in range(len(mutate_ind)):
-            if p[i] < cR:
-                temp_Pars.append(mutate_Pars[i])
-            else:
-                temp_Pars.append(pop_Pars[i])
-
-        temp_ind.set_path(0,temp_Pars)
-        return temp_ind
-
-
-
-    def crossover(self, individual1, individual2):
-        """
-        Uniform Cross-Over, 50% percentage chance
-        """
-        child = self.generateIndividual()
-
-        for i in range(self.npaths):
-            individual1_path = individual1.get_path(i)
-            individual2_path = individual2.get_path(i)
-
-            n_params = len(individual1_path)
-            temp_path = []
-            for j in range(n_params):
-                if np.random.randint(0, 2) == True:
-                    temp_path.append(individual1_path[j])
-                else:
-                    temp_path.append(individual2_path[j])
-
-            child.set_path(i, temp_path)
-
-        return child
-
-    def createChildren(self):
-        """
-        Generate Children
-        """
-        self.nextPopulation = []
-        # --- append the breeder ---
-        for i in range(len(self.parents)):
-            self.nextPopulation.append(self.parents[i])
-        # print(len(self.nextPopulation))
-        # --- use the breeder to crossover
-        for i in range(abs(self.npops-self.n_bestsam)-self.n_lucksam):
-            par_ind = np.random.choice(
-                len(self.parents), size=2, replace=False)
-            child = self.crossover(
-                self.parents[par_ind[0]], self.parents[par_ind[1]])
-            self.nextPopulation.append(child)
-        # print(len(self.nextPopulation))
-
-        for i in range(self.n_lucksam):
-            self.nextPopulation.append(self.generateIndividual())
-
-        random.shuffle(self.nextPopulation)
-        self.Populations = self.nextPopulation
-
-    def run_verbose_start(self):
-        """Generate Verbose output at the start
-        """
-        self.logger.info("-----------Inputs File Stats---------------")
-        self.logger.info(f"{helper.bcolors.BOLD}File{helper.bcolors.ENDC}: {self.data_file}")
-        self.logger.info(f"{helper.bcolors.BOLD}File{helper.bcolors.ENDC}: {self.output_path}")
-        self.logger.info(f"{helper.bcolors.BOLD}Population{helper.bcolors.ENDC}: {self.npops}")
-        self.logger.info(f"{helper.bcolors.BOLD}Num Gen{helper.bcolors.ENDC}: {self.ngen}")
-        self.logger.info(f"{helper.bcolors.BOLD}Num Path{helper.bcolors.ENDC}: {self.npaths}")
-        self.logger.info(f"{helper.bcolors.BOLD}Fits{helper.bcolors.ENDC}: {self.fits}")
-        self.logger.info(f"{helper.bcolors.BOLD}Printout{helper.bcolors.ENDC}: {self.printgraph}")
-        self.logger.info(f"{helper.bcolors.BOLD}Profiler{helper.bcolors.ENDC}: {self.profile_toggle}")
-        self.logger.info(f"{helper.bcolors.BOLD}Distributed{helper.bcolors.ENDC}: {self.distributed}")
-        self.logger.info("-------------------------------------------")
-
-    def run_verbose_end(self):
-        """Generate verbose output at the end
-        """
-        self.logger.info("-----------Output Stats---------------")
-        self.logger.info(f"{helper.bcolors.BOLD}Total Time(s){helper.bcolors.ENDC}: {round(self.tt,4)}")
-        self.logger.info("-------------------------------------------")
-
-
+        # TODO:
+        #  1. At mid point, do a E0 optimization
+        self.exafs_neo_pars.read_inputs(self.input_parameters)
+        self.logger.initialize_logging(self.exafs_neo_pars.neoFilePars.log_path)
+        self.neo_population = NeoPopulations(self.exafs_neo_pars)
+        self.neo_population.initialize_populations()
+        self.result.initialize(self.exafs_neo_pars)
+        # Initialize all the operators
+        self.selector.initialize(self.exafs_neo_pars)
+        self.crossOver.initialize(self.exafs_neo_pars)
+        self.mutator.initialize(self.exafs_neo_pars)
+        self.solver.initialize(self.exafs_neo_pars)
 
     def run(self):
-        self.run_verbose_start()
-        self.historic = []
-        self.historic.append(self.Populations)
-        for i in range(self.ngen):
-            # self.active_background(self.globBestFit[0])
-            temp_gen = self.next_generation()
-            self.output_generations()
-
-
-            if self.printgraph:
-                # test_y = self.export_paths(self.globBestFit[0])
-                # real_y = np.array(self.y_scaler.inverse_transform(
-                #     test_y.reshape(-1, 1))).flatten() + self.bg
-                # self.ax.plot(self.x_scaler.inverse_transform(
-                #     self.x_normal.reshape(-1, 1)), real_y, 'k--', label='Fit')
-                # self.ax.set_title('Generation: ' + str(i+1))
-                # self.ax.scatter(self.x_raw, self.y_background +
-                #                 self.bg, s=10, label='data')
-                # self.out_str = str(np.asarray(self.currBestFit[0].get()))
-                # self.ax.text(0.1, 0.8, s=self.out_str,
-                #              transform=self.ax.transAxes)
-                model_params = self.globBestFit[0].get_func()[0].get_func()
-                """
-
-                model = self.xspec.Model("tbabs*po+lsmooth*vapec")
-                model.TBabs.nH.frozen = True
-                model.lsmooth.Sig_6keV.frozen = True
-                model.lsmooth.Index = 1
-                model.vapec.C.frozen = False
-                model.vapec.N.frozen = False
-                model.vapec.O.frozen = False
-                model.vapec.Ne.frozen = False
-                model.vapec.Mg.frozen = False
-                model.vapec.Fe.frozen = False
-                model.vapec.Redshift.frozen = True
-
-                # nH
-                model.TBabs.nH = model_params['nH']
-                # Powerlaw
-                model.powerlaw.PhoIndex = model_params['PhoIndex']
-                model.powerlaw.norm = model_params['Plnorm']
-                # lsmooth
-                model.lsmooth.Sig_6keV = model_params['Sig_6keV']
-                # Vapec
-                model.vapec.kT = model_params['kT']
-                model.vapec.C = model_params['C']
-                model.vapec.N = model_params['N']
-                model.vapec.O = model_params['O']
-                model.vapec.Ne = model_params['Ne']
-                model.vapec.Mg = model_params['Mg']
-                model.vapec.Fe = model_params['Fe']
-                model.vapec.Redshift = model_params['Redshift']
-                model.vapec.norm = model_params['VapecNorm']
-                """
-                model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))")
-
-                # Model
-
-                # Tbabs <1>
-                model.TBabs.nH.frozen = True
-                model.TBabs.nH = 0.0279
-
-                # Tbabs <2>
-
-                # Powerlaw <3>
-
-                # lsmooth <4>
-                model.lsmooth.Sig_6keV.frozen = True
-                model.lsmooth.Sig_6keV = 0.02
-                model.lsmooth.Index.frozen = True
-                model.lsmooth.Index = 1
-
-                # vapec <5>
-                model.vapec.C.frozen = False
-                model.vapec.N.frozen = False
-                model.vapec.O.frozen = False
-                model.vapec.Ne.frozen = False
-                model.vapec.Mg.frozen = False
-                model.vapec.Fe.frozen = False
-                # self.model.vapec.Redshift.frozen = True
-                model.vapec.Redshift = 0.00081
-
-                # model.vapec.N = 0.990385
-                # model.vapec.O = 6.48552e-18
-                # model.vapec.Ne = 0.839257
-                # model.vapec.Mg = 1.53165
-                # model.vapec.Fe = 0.179656
-                # self.model.vapec.Redshift.frozen = True
-                model.vapec.Redshift = 0.00081
-
-                # vapec <6>
-                model.vapec_6.kT.frozen = False
-                model.vapec_6.C.link = model.vapec.C
-                model.vapec_6.N.link = model.vapec.N
-                model.vapec_6.O.link = model.vapec.O
-                model.vapec_6.Ne.link = model.vapec.Ne
-                model.vapec_6.Mg.link = model.vapec.Mg
-                model.vapec_6.Fe.link = model.vapec.Fe
-                model.vapec_6.Redshift.link = model.vapec.Redshift
-
-                # zashift <7>
-                model.zashift.Redshift.frozen = True
-                model.zashift.Redshift = 0.00081
-
-                # vacx2 <8>
-                model.vacx2.temperature.link = model.vapec_6.kT
-                model.vacx2.collnpar = 280
-                model.vacx2.collntype = 4
-                model.vacx2.acxmodel = 2
-                model.vacx2.recombtype = 2
-
-                model.vacx2.C.link = model.vapec.C
-                model.vacx2.N.link = model.vapec.N
-                model.vacx2.O.link = model.vapec.O
-                model.vacx2.Ne.link = model.vapec.Ne
-                model.vacx2.Mg.link = model.vapec.Mg
-                model.vacx2.Fe.link = model.vapec.Fe
-
-
-                # Set up params afterward
-                model.TBabs_2.nH = model_params['TBabs_2_nH']
-                # --------
-                model.powerlaw.PhoIndex = model_params['PhoIndex']
-                model.powerlaw.norm = model_params['Pl_norm']
-                # --------
-                model.vapec.kT = model_params['vapec_kT']
-                model.vapec.C = model_params['vapec_C']
-                model.vapec.N = model_params['vapec_N']
-                model.vapec.O = model_params['vapec_O']
-                model.vapec.Ne = model_params['vapec_Ne']
-                model.vapec.Mg = model_params['vapec_Mg']
-                model.vapec.Fe = model_params['vapec_Fe']
-                model.vapec.norm = model_params['vapec_norm']
-                # --------
-                model.vapec_6.kT = model_params['vapec_6_kT']
-                model.vapec_6.norm = model_params['vapec_6_norm']
-                # --------
-                model.vacx2.collnpar = model_params['vacx2_collnpar']
-                # model.vacx2.C = model_params['vacx2_C']
-                # model.vacx2.N = model_params['vacx2_N']
-                # model.vacx2.O = model_params['vacx2_O']
-                # model.vacx2.Ne = model_params['vacx2_Ne']
-                model.vacx2.norm = model_params['vacx2_norm']
-
-
-                # ------
-                self.l_src.ignore("**-7.0 30.0-**")
-
-                self.xspec.Plot("data")
-                self.xspec.Plot.show()
-                l_folded = self.xspec.Plot.model()
-
-
-
-                # plt.plot()
-
-                plt.step(self.l_chans,self.l_rates, where='mid', color='blue', linewidth=1.2, alpha=1)
-                plt.step(self.l_chans, l_folded, where='mid', color='red', linewidth=2,label='Fit')
-                # plt.xlim([7,30])
-                # plt.ylim([-0.00005,0.00035])
-
-
-                # plot_fit(1)
-                plt.title(f'Generation: {self.genNum}')
-                plt.show(block=False)
-                plt.pause(0.001)
-                plt.cla()
-                if i == self.ngen-1:
-                    time.sleep(10)
-                    plt.close('all')
-
-        # shutdown pool
-        if self.distributed != 1:
-            self.ProcessPool.shutdown()
-        self.run_verbose_end()
-        # Final
-        # model = self.globBestFit[0].get_func()[0].get_func()
-        # set_source(1, model)
-        # plot_fit(1)
-        plt.title(f'Final Result')
-        # Exit profiler
-
-        plt.legend()
-        plt.show
-
-        if self.profile_toggle:
-            self.profiler.disable()
-            stats = pstats.Stats(self.profiler).sort_stats('cumtime')
-            ('Visualze result using Snakeviz')
-            stats.dump_stats('Export_Data.txt')
-
-
-    def output_generations(self):
         """
-        Output generations result into two files
+        Initialize a EXAFS Run
+        :return: result class
         """
+        STRColors.run_verbose_start(self.logger, self.exafs_neo_pars, verbose_lvl=self.verbose_lvl)
 
-        # file_name = '/Users/andy/projects/Astro_Neo/result/test_Population/Population.csv'
-        # with open (file_name, 'a') as f:
-        #     for i in range(self.npops):
-        #         f.write(str(self.sorted_population[i][1]))
-        #         if i != self.npops-1:
-        #             f.write(',')
-        #     f.write('\n')
+        for currGen in range(self.exafs_neo_pars.fixedPars.nGen):
+            self.exafs_neo_pars.runPars.start_gen()
 
-        with open(self.output_path,'a') as f1:
-            file_str = f'{self.genNum}, {self.tdiff}, {self.currBestFit[1]}, {self.currBestFit[0].get()}, {self.globBestFit[1]}, {self.globBestFit[0].get()}'
-            f1.write(str(self.genNum) + "," + str(self.tdiff) + "," +
-                     str(self.currBestFit[1]) + "," + str(self.currBestFit[0].get()) + "," +
-                     str(self.globBestFit[1]) + "," + str(self.globBestFit[0].get()) + "\n")
+            self.solver.solve(self.neo_population, self.selector, self.crossOver, self.mutator, self.exafs_neo_pars)
 
-        with open(self.file_data,"a") as f2:
-            write = csv.writer(f2)
-            bestFit = self.globBestFit[0].get()
-            for i in range(self.npaths):
-                write_row_data = []
-                for j in range(len(bestFit[i])):
-                    write_row_data.append(bestFit[i][j])
-                write.writerow(write_row_data)
-            f2.write("#################################\n")
+            # End of generation verbose
+            STRColors.run_verbose_gen(self.logger, self.exafs_neo_pars, self.neo_population,
+                                      verbose_lvl=self.verbose_lvl)
+            self.result.collect(self.neo_population, self.exafs_neo_pars)
+
+            # self.exafs_neo_pars.runPars.end_gen(self.neo_population)
+            self.exafs_neo_pars.end_gen(self.neo_population)
+        # End of run verbose
+        STRColors.run_verbose_end(self.logger, self.exafs_neo_pars, verbose_lvl=self.verbose_lvl)
+        return self.result
 
 
-    def __init__(self):
-        """
-        Steps to Initalize AstroNEO
-        """
-        # initialize params
-        self.initialize_params()
-        # variables
-        self.initialize_variable()
-        # initialze file paths
-        self.initialize_file_path()
-        # initialize logger
-        self.initialize_logger()
-        # initialize range
-        self.initialize_fits()
-        # Generate first generation
-        self.generateFirstGen()
+if __name__ == "__main__":
+    initializer_override = {
+        'printGraph': False
+    }
 
-        self.run()
+    exafs_temp = AstroNeo(verbose_lvl=5)
 
+    input_dict = {
+        'data_file': '../path_files/Cu/cu_10k.xmu',
+        'output_file': 'test.csv',
+        'feff_file': '../path_files/Cu/path_75/feff',
+        'nGen': 20,
+        'kmin': 0.95,
+        'kmax': 9.775,
+        'kweight': 3.0,
+        'deltak': 0.05,
+        'rbkg': 1.1,
+        'bkgkw': 1.0,
+        'bkgkmax': 15.0,
+        'printGraph': False,
+        'pathrange': [1, 2, 3, 4, 5],
+        'solver_type': 1,
+    }
+    exafs_temp.neo_read(input_parameters=input_dict)
+    exafs_temp.neo_setup()
 
-def main():
-
-    # profiler = cProfile.Profile()
-    # import helper
-
-    # profiler.enable()
-    AstroNEO()
-    # profiler.disable()
-    # stats = pstats.Stats(profiler).sort_stats('cumtime')
-    # stats.print_stats()
-    # stats.dump_stats('Export_Data.txt')
-
-    # GAMO()
-
-
-if __name__ == '__main__':
-    main()
+    result = exafs_temp.run()
+    print(result)

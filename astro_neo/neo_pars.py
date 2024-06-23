@@ -238,7 +238,10 @@ class NeoPath:
     center: list = field(factory=list)
 
     def read_inputs(self, input_dicts):
-        pass
+
+        self.npath = checkKey('npath', input_dicts, 1)
+        self.fits = checkKey('fits', input_dicts, ['XspecSpectrum']*self.npath)
+        self.center = checkKey('center', input_dicts, [0]*self.npath)
 
 
 if __name__ == "__main__":

@@ -104,10 +104,8 @@ class NeoPopulations:
 
 if __name__ == "__main__":
     inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': '',
-                   'feff_file': '../path_files/Cu/path_75/feff', 'kmin': 0.95,
-                   'kmax': 9.775,
-                   'kweight': 3.0, 'pathrange': [1, 2, 3, 4, 5],
-                   'deltak': 0.05, 'rbkg': 1.1, 'bkgkw': 1.0, 'bkgkmax': 15.0}
+                   'npath': 1, 'fits': ['XspecSpectrum'], 'center':[8.422],
+                   'solver_type': 1}
     neo_pars = NeoPars()
     # neo_pars.read_inputs(inputs_pars)
     # neo_population = NeoPopulations(neo_pars)
