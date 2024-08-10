@@ -1,34 +1,70 @@
 from . import parser as fileParser
 from . import helper
 import argparse, os, sys
+from astro_neo.AstroNeo import AstroNeo
+from astro_neo.ini_parser import  validate_input_file
+from astro_neo.parser import InputParamsParser
+from astro_neo._version import __version__
 
-def input():
-    parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--input', help="Submit input file to EXAFS")
+parser.add_argument("-v", "--verbose", help="output verbosity", action="store_true")
+parser.add_argument("-s", "--show_input", help="show input file", action="store_true")
+parser.add_argument("-t", help="Timeing mode", action="store_true")
 
-    parser.add_argument('-i','--input',help="Submit input file to EXAFS")
-    parser.add_argument("-v","--verbose",help="output verbosity",action="store_true")
-    parser.add_argument("-s","--show_input",help = "show input file",action="store_true")
-    parser.add_argument("-t",help = "Timeing mode",action="store_true")
+args = parser.parse_args()
+if len(sys.argv) == 1:
+    parser.print_help(sys.stderr)
+    sys.exit(1)
+
+if args.input is not None:
+    file_path = os.path.join(os.getcwd(), args.input)
+    print(f"EXAFS Neo {__version__}")
+    input_params = InputParamsParser()
+    input_params.read_input_file(file_path, verbose=args.show_input)
+    input_params.input_dict = validate_input_file(input_params.input_dict)
+
+    input_pars = input_params.export_input_dict()
+
+else:
+    print("No input file is given")
 
 
-    args = parser.parse_args()
+debug_mode = args.d
+timeing_mode = args.t
 
-    if len(sys.argv)==1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
+def main():
+    astro_neo = AstroNeo()
+    astro_neo.neo_read(input_parameters=input_pars)
+    astro_neo.neo_setup()
+    astro_neo.run()
 
-    # Read in file if -i argument is printed
-    if args.input!=None:
-        file_path = os.path.join(os.getcwd(),args.input)
-        file_dict = fileParser.read_input_file(file_path)
-
-    # Read input file
-    if args.show_input==True and args.input != None:
-        file_dict = fileParser.read_input_file(file_path,verbose=True)
-
-    timeing_mode = args.t
-
-    return file_dict, timeing_mode
+# def input():
+#     parser = argparse.ArgumentParser()
+#
+#     parser.add_argument('-i', '--input', help="Submit input file to EXAFS")
+#     parser.add_argument("-v", "--verbose", help="output verbosity", action="store_true")
+#     parser.add_argument("-s", "--show_input", help="show input file", action="store_true")
+#     parser.add_argument("-t", help="Timeing mode", action="store_true")
+#
+#     args = parser.parse_args()
+#
+#     if len(sys.argv) == 1:
+#         parser.print_help(sys.stderr)
+#         sys.exit(1)
+#
+#     # Read in file if -i argument is printed
+#     if args.input != None:
+#         file_path = os.path.join(os.getcwd(), args.input)
+#         file_dict = fileParser.read_input_file(file_path)
+#
+#     # Read input file
+#     if args.show_input == True and args.input != None:
+#         file_dict = fileParser.read_input_file(file_path, verbose=True)
+#
+#     timeing_mode = args.t
+#
+#     return file_dict, timeing_mode
 
 
 def ini_parser(file_dict):
@@ -43,7 +79,6 @@ def ini_parser(file_dict):
     Mutations_dict = file_dict['Mutations']
     Paths_dict = file_dict['Paths']
     Outputs_dict = file_dict['Outputs']
-
 
     # Input
     data_dir = Inputs_dict['data_dir']
@@ -71,7 +106,6 @@ def ini_parser(file_dict):
     fits = Paths_dict['fits']
     center = helper.str_to_list(Paths_dict['center'])
 
-
     # Output
     printgraph = helper.str_to_bool(Outputs_dict['print_graph'])
     num_output_paths = helper.str_to_bool(Outputs_dict['num_output_paths'])
@@ -92,27 +126,27 @@ def ini_parser(file_dict):
 
     clean_dict = {
         'data_dir': data_dir,
-        'data_file':data_file,
-        'bg_file':bg_file,
-        'rsp_file':rsp_file,
-        'output_file':output_file,
-        'size_population':size_population,
-        'number_of_generation':number_of_generation,
-        'best_sample':best_sample,
-        'lucky_few':lucky_few,
-        'chance_of_mutation':chance_of_mutation,
-        'original_chance_of_mutation':original_chance_of_mutation,
-        'mutated_options':mutated_options,
+        'data_file': data_file,
+        'bg_file': bg_file,
+        'rsp_file': rsp_file,
+        'output_file': output_file,
+        'size_population': size_population,
+        'number_of_generation': number_of_generation,
+        'best_sample': best_sample,
+        'lucky_few': lucky_few,
+        'chance_of_mutation': chance_of_mutation,
+        'original_chance_of_mutation': original_chance_of_mutation,
+        'mutated_options': mutated_options,
         'F': F_par,
         'CR': cR,
-        'npaths':npaths,
-        'fits':fits,
-        'center':center,
-        'printgraph':printgraph,
-        'num_output_paths':num_output_paths,
-        'steady_state':steady_state,
-        'distributed':distributed,
-        'profile':profile
+        'npaths': npaths,
+        'fits': fits,
+        'center': center,
+        'printgraph': printgraph,
+        'num_output_paths': num_output_paths,
+        'steady_state': steady_state,
+        'distributed': distributed,
+        'profile': profile
     }
 
     return clean_dict

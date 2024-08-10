@@ -34,7 +34,7 @@ setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            'astro_neo=astro_neo.astro_neo:main',
+            'astro_neo=astro_neo.input_arg:main',
         ]
     },
     license='GPLv3',

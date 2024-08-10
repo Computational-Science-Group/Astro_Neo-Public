@@ -5,14 +5,31 @@ from dataclasses import dataclass, field
 from astro_neo.helper import Bcolors
 
 
-def CheckKey(dict, key_list):
-    for i in range(len(key_list)):
-        try:
-            dict[key_list[i]]
-        except KeyError:
-            raise KeyError(str(key_list[i]) + ' is missing')
-            # break
+def check_key(data_list, key_list):
+    # for i in range(len(key_list)):
+    #     try:
+    #         check_dict[key_list[i]]
+    #     except KeyError:
+    #         raise KeyError(str(key_list[i]) + ' is missing')
+    # ---------
+    # for this_key in key_list:
+    #     try:
+    #         data_dict[this_key]
+    #     except KeyError:
+    #         raise KeyError(str(this_key) + ' is missing')
+    #             # break
+    # ---------
+    for this_key in key_list:
+        if this_key not in data_list:
+            raise KeyError(str(this_key) + ' is missing')
 
+
+# def check_key(data_dict, key_list):
+#     for i in range(len(key_list)):
+#         try:
+#             data_dict[key_list[i]]
+#         except KeyError:
+#             raise KeyError(str(key_list[i]) + ' is missing')
 
 def print_input_file(file_dict):
     for key, value in file_dict.items():
@@ -39,52 +56,52 @@ class InputParamsParser:
     def read_input_file(self, input_file, verbose=False):
         config_parser = configparser.ConfigParser()
         config_parser.read(input_file)
-        config = config_parser._sections
+        config = config_parser.sections()
         # read into each dict
-        file_min = ['Inputs', 'Populations', 'Mutations', 'Paths', 'Larch_Paths', 'Outputs']
-        CheckKey(config, file_min)
+        file_min = ['Inputs', 'Populations', 'Mutations', 'Paths', 'Outputs']
 
-        Inputs_dict = config['Inputs']
-        Populations_dict = config['Populations']
-        Mutations_dict = config['Mutations']
-        Paths_dict = config['Paths']
-        Larch_dict = config['Larch_Paths']
-        Outputs_dict = config['Outputs']
+        check_key(config, file_min)
+
+        inputs_dict = config_parser['Inputs']
+        populations_dict = config_parser['Populations']
+        mutations_dict = config_parser['Mutations']
+        paths_dict = config_parser['Paths']
+        Outputs_dict = config_parser['Outputs']
 
         # Checking for minimum inputs
-        input_min = ['csv_file', 'output_file', 'feff_file']
-        input_optional = ['num_compounds', 'pathrange_file', 'sabcor_file']
-        CheckKey(Inputs_dict, input_min)
-        input_missing = check_optional_key(Inputs_dict, input_optional)
+        input_min = ['data_dir', 'data_file', 'output_file']
+        input_optional = ['bg_file', 'rsp_file']
+        check_key(inputs_dict.keys(), input_min)
+        input_missing = check_optional_key(inputs_dict, input_optional)
 
         population_min = ['population', 'num_gen', 'best_sample', 'lucky_few']
-        CheckKey(Populations_dict, population_min)
+        check_key(populations_dict.keys(), population_min)
 
-        mutation_min = ['chance_of_mutation', 'original_chance_of_mutation', 'chance_of_mutation_e0']
+        mutation_min = ['chance_of_mutation', 'original_chance_of_mutation']
         mutation_optional = ['mutated_options', 'selection_options', 'crossover_options']
-        CheckKey(Mutations_dict, mutation_min)
+        check_key(mutations_dict.keys(), mutation_min)
         # mut_optional = CheckOptionalKey(Mutations_dict,mutation_optional)
 
-        path_min = ['path_range', 'path_list', 'individual_path']
-        path_optional = ['path_optimize', 'optimize_percent', 'optimize_only']
-        CheckKey(Paths_dict, path_min)
-        path_missing = check_optional_key(Paths_dict, path_optional)
+        path_min = ['npaths', 'center', 'fits']
+        # path_optional = ['path_optimize', 'optimize_percent', 'optimize_only']
+        path_optional = []
+        check_key(paths_dict.keys(), path_min)
+        path_missing = check_optional_key(paths_dict, path_optional)
 
-        larch_min = ['kmin', 'kmax', 'kweight', 'deltak', 'rbkg', 'bkgkw', 'bkgkmax']
-        CheckKey(Larch_dict, larch_min)
+        # larch_min = ['kmin', 'kmax', 'kweight', 'deltak', 'rbkg', 'bkgkw', 'bkgkmax']
+        # check_key(Larch_dict, larch_min)
 
         output_min = ['print_graph', 'num_output_paths']
         output_optional = ['steady_state_exit']
-        CheckKey(Outputs_dict, output_min)
+        check_key(Outputs_dict.keys(), output_min)
         output_missing = check_optional_key(Outputs_dict, output_optional)
         # Adjust values
 
         # Pack all of them into a single dicts
-        self.input_dict['Inputs'] = Inputs_dict
-        self.input_dict['Populations'] = Populations_dict
-        self.input_dict['Mutations'] = Mutations_dict
-        self.input_dict['Paths'] = Paths_dict
-        self.input_dict['Larch_Paths'] = Larch_dict
+        self.input_dict['Inputs'] = inputs_dict
+        self.input_dict['Populations'] = populations_dict
+        self.input_dict['Mutations'] = mutations_dict
+        self.input_dict['Paths'] = paths_dict
         self.input_dict['Outputs'] = Outputs_dict
 
         if verbose:

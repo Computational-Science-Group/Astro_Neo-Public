@@ -49,7 +49,7 @@ class BackgroundObj():
         return y
 
 
-class Individual():
+class Individual:
     def __init__(self, npaths, fits, center):
         """_summary_
 

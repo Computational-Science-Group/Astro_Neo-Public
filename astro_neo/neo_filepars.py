@@ -29,10 +29,9 @@ class NeoFilePars:
     pathOptimize: bool = False
     end: str = ".dat"
 
-    def initialize_filepath(self, cycles=0):
+    def initialize_filepath(self):
         """
         Initialize File Path
-        @param int cycles: the cycles of multiple run
         @return:
         """
         self.data_path = self.base / self.data_file
@@ -42,14 +41,9 @@ class NeoFilePars:
         self.initialize_outputs()
 
     def read_inputs(self, input_dicts):
-        # self.nComp = checkKey('nComp', input_dicts, 1)
-        # if self.nComp > 1:
-        #     try:
-        #         self.feff_file = list(input_dicts['feff_file'].split(","))
-        #     except FileNotFoundError:
-        #         print("Feff folder is not correct")
-        # else:
-        #     self.feff_file = input_dicts['feff_file']
+        """
+
+        """
 
         self.data_file = checkKey('data_file', input_dicts, '')
         self.output_file = checkKey('output_file', input_dicts, 'exafs_neo_out.csv')
@@ -57,10 +51,14 @@ class NeoFilePars:
         self.pathOptimize = checkKey('pathOptimize', input_dicts, False)
 
     def initialize_outputs(self):
+        """
+
+        """
         base_file = self.output_path.stem
         self.output_datafile = self.output_path.with_name(f'{base_file}_data.csv')
 
     def write_outputs(self, neoRunPars, bestFitPars):
+
         with open(self.output_path, "a") as f1:
             data_line = f"{neoRunPars.currGen},{neoRunPars.tt},{bestFitPars.globBestVal}\n"
             f1.writelines(data_line)
@@ -70,7 +68,6 @@ class NeoFilePars:
         with open(self.output_datafile, "a") as f2:
             bestFit = globBestFit
             for path in bestFit:
-                # f2.writerow(f"{i}")
                 line = f"{path[0]},{path[1]},{path[2]},{path[3]}\n"
                 f2.writelines(line)
             f2.write("#################################\n")
