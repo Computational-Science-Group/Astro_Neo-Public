@@ -1,16 +1,19 @@
-from . import parser as fileParser
-from . import helper
-import argparse, os, sys
+import argparse
+import os
+import sys
+
 from astro_neo.AstroNeo import AstroNeo
-from astro_neo.ini_parser import  validate_input_file
-from astro_neo.parser import InputParamsParser
 from astro_neo._version import __version__
+from astro_neo.ini_parser import validate_input_file
+from astro_neo.parser import InputParamsParser
+from . import helper
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--input', help="Submit input file to EXAFS")
 parser.add_argument("-v", "--verbose", help="output verbosity", action="store_true")
 parser.add_argument("-s", "--show_input", help="show input file", action="store_true")
 parser.add_argument("-t", help="Timeing mode", action="store_true")
+parser.add_argument("-d", help="Debug mode", action="store_true")
 
 args = parser.parse_args()
 if len(sys.argv) == 1:
@@ -29,15 +32,16 @@ if args.input is not None:
 else:
     print("No input file is given")
 
-
 debug_mode = args.d
 timeing_mode = args.t
+
 
 def main():
     astro_neo = AstroNeo()
     astro_neo.neo_read(input_parameters=input_pars)
     astro_neo.neo_setup()
     astro_neo.run()
+
 
 # def input():
 #     parser = argparse.ArgumentParser()

@@ -1,5 +1,5 @@
-from attrs import define, field
 import numpy as np
+from attrs import define, field
 
 from astro_neo.helper import time_call
 from astro_neo.neo_filepars import NeoFilePars
@@ -193,7 +193,7 @@ class NeoPars:
         self.selPars.read_inputs(input_dicts)
         self.solPars.read_inputs(input_dicts)
         self.crossPars.read_inputs(input_dicts)
-        self.neoFilePars.initialize_filepath(cycles=0)
+        self.neoFilePars.initialize_filepath()
 
         # self.exafsPathPars.read_inputs(self.neoFilePars, self.exafsPars)
 
@@ -238,10 +238,9 @@ class NeoPath:
     center: list = field(factory=list)
 
     def read_inputs(self, input_dicts):
-
         self.npath = checkKey('npath', input_dicts, 1)
-        self.fits = checkKey('fits', input_dicts, ['XspecSpectrum']*self.npath)
-        self.center = checkKey('center', input_dicts, [0]*self.npath)
+        self.fits = checkKey('fits', input_dicts, ['XspecSpectrum'] * self.npath)
+        self.center = checkKey('center', input_dicts, [0] * self.npath)
 
 
 if __name__ == "__main__":

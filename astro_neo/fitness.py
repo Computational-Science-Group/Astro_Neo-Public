@@ -1,9 +1,10 @@
+import os
+import sys
+
 import xspec
-import sys, os
 
 xspec.xset.Xset.chatter = 0
 sys.path.append("/Users/andy/projects/Astro_Neo/input_files/ACX2")
-import acx2_xspec
 
 
 def init_process():
@@ -33,7 +34,7 @@ def init_process():
     xspec.Fit.statMethod = "cstat"  # using the Cash statistic
 
 
-def fitness(input):
+def fitness(input, individual):
     """
   Evaluate fitness of an individual
 
@@ -44,9 +45,9 @@ def fitness(input):
     xspec_data = input[1]
     Individual = indObj.get_func()[0]
 
-    Params_list = [2, 3, 4, 7, 9, 10, 11, 12, 13, 19, 22, 23, 38, 41, 60]
+    params_list = [2, 3, 4, 7, 9, 10, 11, 12, 13, 19, 22, 23, 38, 41, 60]
 
-    model_params = Individual.get_pars_dicts(Params_list)
+    model_params = Individual.get_pars_dicts(params_list)
 
     set_Pars = {
         1: 2.79000E-02,

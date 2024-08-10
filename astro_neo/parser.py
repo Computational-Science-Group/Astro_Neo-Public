@@ -116,13 +116,12 @@ class InputParamsParser:
         """
         temp_dict = {
             # Input
-            'num_compounds': self.input_dict['Inputs']['num_compounds'],
-            'data_file': self.input_dict['Inputs']['csv_file'],
+            'data_dir': self.input_dict['Inputs']['data_dir'],
+            'data_file': self.input_dict['Inputs']['data_file'],
             'output_file': self.input_dict['Inputs']['output_file'],
-            'pathrange_file': self.input_dict['Inputs']['pathrange_file'],
-            # 'log_file': self.input_dict['Inputs']['log_file'],
-            'feff_file': self.input_dict['Inputs']['feff_file'],
-            'sabcor_file': self.input_dict['Inputs']['sabcor_file'],
+            'bg_file': self.input_dict['Inputs']['bg_file'],
+            'rsp_file': self.input_dict['Inputs']['rsp_file'],
+
             # Population
             'nPops': int(self.input_dict['Populations']['population']),
             'nGen': int(self.input_dict['Populations']['num_gen']),
@@ -131,27 +130,21 @@ class InputParamsParser:
             'nBestSample': int(self.input_dict['Populations']['best_sample']),
             'nLuckySample': int(self.input_dict['Populations']['lucky_few']),
 
-            'steadyState': self.input_dict['Outputs']['steady_state_exit'],
-            'printGraph': self.input_dict['Outputs']['print_graph'],
-
             'mut_options': int(self.input_dict['Mutations']['mutated_options']),
             'mutChance': int(self.input_dict['Mutations']['chance_of_mutation']),
-            'mutChanceE0': int(self.input_dict['Mutations']['chance_of_mutation_e0']),
 
             'croOpt': int(self.input_dict['Mutations']['crossover_options']),
 
-            # Larch
-            'kmin': float(self.input_dict['Larch_Paths']['kmin']),
-            'kmax': float(self.input_dict['Larch_Paths']['kmax']),
-            'kweight': float(self.input_dict['Larch_Paths']['kweight']),
-            'deltak': float(self.input_dict['Larch_Paths']['deltak']),
-            'rbkg': float(self.input_dict['Larch_Paths']['rbkg']),
-            'bkgkw': float(self.input_dict['Larch_Paths']['bkgkw']),
-            'bkgkmax': float(self.input_dict['Larch_Paths']['bkgkmax']),
-
             # Paths
-            'pathrange': self.input_dict['Paths']['path_list'],
-            'individualOptions': self.input_dict['Paths']['individual_path'],
+            'npaths': int(self.input_dict['Paths']['npaths']),
+            'center': self.input_dict['Paths']['center'],
+            'fits': self.input_dict['Paths']['fits'],
+            # 'npaths': self.input_dict['Paths']['path_list'],
+            # 'individualOptions': self.input_dict['Paths']['individual_path'],
+
+            # Outputs
+            'steadyState': self.input_dict['Outputs']['steady_state_exit'],
+            'printGraph': self.input_dict['Outputs']['print_graph'],
 
         }
 

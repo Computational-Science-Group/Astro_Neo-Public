@@ -16,6 +16,13 @@ Changes:
 """
 
 
+def split_list(arr_str, convert_type=None):
+    if convert_type is None:
+        return arr_str.split(',')
+    else:
+        return [convert_type(i) for i in arr_str.split(',')]
+
+
 def split_path_arr(arr_str, num_compounds):
     """
     Read the path list
@@ -85,99 +92,55 @@ def optional_var(input_dict, name_var, alt_var=None, type_var=int, output_var=Tr
 
 
 def validate_input_file(file_dict):
-    Inputs_dict = file_dict['Inputs']
-    Populations_dict = file_dict['Populations']
-    Mutations_dict = file_dict['Mutations']
-    Paths_dict = file_dict['Paths']
-    Larch_dict = file_dict['Larch_Paths']
-    Outputs_dict = file_dict['Outputs']
+    inputs_dict = dict(file_dict['Inputs'].items())
+    populations_dict = dict(file_dict['Populations'].items())
+    mutations_dict = dict(file_dict['Mutations'].items())
+    paths_dict = dict(file_dict['Paths'].items())
+    outputs_dict = dict(file_dict['Outputs'].items())
 
     # Inputs
-    num_compounds = optional_var(Inputs_dict, 'num_compounds', 1, int)
-    csv_file = Inputs_dict['csv_file']
-    output_file = Inputs_dict['output_file']
-    pathrange_file = optional_var(Inputs_dict, 'pathrange_file', None, None)
-    sabcor_file = optional_var(Inputs_dict, 'sabcor_file', None, None)
+    data_dir = inputs_dict['data_dir']
+    data_file = inputs_dict['data_file']
+    output_file = inputs_dict['output_file']
+    bg_file = optional_var(inputs_dict, 'bg_file', None, None)
+    rsp_file = optional_var(inputs_dict, 'rsp_file', None, None)
 
-    # Compounds
-    if num_compounds > 1:
-        try:
-            feff_file = list(Inputs_dict['feff_file'].split(","))
-        except:
-            print("Feff folder is not correct")
-    else:
-        feff_file = Inputs_dict['feff_file']
-
-    try:
-        csv_series = str_to_bool(Inputs_dict['csv_series'])
-        if csv_series:
-            csv_file = list(Inputs_dict['csv_file'].split(","))
-    except KeyError:
-        csv_series = False
-
-    # population
-    size_population = int(Populations_dict['population'])
-    number_of_generation = int(Populations_dict['num_gen'])
-    Populations_dict['best_sample'] = int(float(Populations_dict['best_sample']) / size_population)
-    Populations_dict['lucky_few'] = int(float(Populations_dict['lucky_few']) / size_population)
+    # Population
+    size_population = int(populations_dict['population'])
+    number_of_generation = int(populations_dict['num_gen'])
+    # print(populations_dict)
+    populations_dict['best_sample'] = int(float(populations_dict['best_sample']) / size_population)
+    populations_dict['lucky_few'] = int(float(populations_dict['lucky_few']) / size_population)
 
     # Mutations
-    Mutations_dict['chance_of_mutation'] = 0.01 * float(Mutations_dict['chance_of_mutation'])
-    Mutations_dict['original_chance_of_mutation'] = 0.01 * float((Mutations_dict['original_chance_of_mutation']))
-    Mutations_dict['chance_of_mutation_e0'] = 0.01 * float((Mutations_dict['chance_of_mutation_e0']))
-    selection_options = optional_var(Mutations_dict, 'selection_options', 0, int)
-    mutation_options = optional_var(Mutations_dict, 'mutated_options', 0, int)
-    crossover_options = optional_var(Mutations_dict, 'crossover_options', 0, int)
-    # mutated_options = int(Mutations_dict['mutated_options'])
+    mutations_dict['chance_of_mutation'] = 0.01 * float(mutations_dict['chance_of_mutation'])
+    mutations_dict['original_chance_of_mutation'] = 0.01 * float((mutations_dict['original_chance_of_mutation']))
+    # mutations_dict['chance_of_mutation_e0'] = 0.01 * float((mutations_dict['chance_of_mutation_e0']))
+    selection_options = optional_var(mutations_dict, 'selection_options', 0, int)
+    mutation_options = optional_var(mutations_dict, 'mutated_options', 0, int)
+    crossover_options = optional_var(mutations_dict, 'crossover_options', 0, int)
 
     # Paths
-    if num_compounds > 1:
-        individual_path = True
-    else:
-        individual_path = str_to_bool(Paths_dict['individual_path'])
-        pathrange = int(Paths_dict['path_range'])
+    npaths = int(paths_dict['npaths'])
+    paths_dict['center'] = split_list(paths_dict['center'], float)
+    paths_dict['fits'] = split_list(paths_dict['fits'])
 
-    try:
-        optimize_only = str_to_bool(Paths_dict['optimize_only'])
-    except KeyError:
-        optimize_only = False
-
-    try:
-        path_optimize = str_to_bool(Paths_dict['path_optimize'])
-    except KeyError:
-        path_optimize = False
-
-    try:
-        Paths_dict['path_optimize_percent'] = float(Paths_dict['path_optimize_percent'])
-    except KeyError:
-        Paths_dict['path_optimize_percent'] = 0.01
-
-    Paths_dict['path_list'] = split_path_arr(Paths_dict['path_list'], num_compounds)
-    Paths_dict['path_optimize'] = optional_var(Paths_dict, 'path_optimize', False, bool)
-    Paths_dict['path_optimize_percent'] = path_optimize_percent = optional_var(Paths_dict, 'path_optimize_percent',
-                                                                               0.01, float)
-    # Larch Paths
-    kmin = float(Larch_dict['kmin'])
-    kmax = float(Larch_dict['kmax'])
-    kweight = float(Larch_dict['kweight'])
-    deltak = float(Larch_dict['deltak'])
-    rbkg = float(Larch_dict['rbkg'])
-    bkgkw = float(Larch_dict['bkgkw'])
-    bkgkmax = float(Larch_dict['bkgkmax'])
+    # paths_dict['path_optimize'] = optional_var(paths_dict, 'path_optimize', False, bool)
+    # paths_dict['path_optimize_percent'] = optional_var(paths_dict, 'path_optimize_percent',
+    #                                                    0.01, float)
 
     # Output
-    printgraph = str_to_bool(Outputs_dict['print_graph'])
-    num_output_paths = str_to_bool(Outputs_dict['num_output_paths'])
-    steady_state = optional_var(Outputs_dict, 'steady_state_exit', False, bool)
+    printgraph = str_to_bool(outputs_dict['print_graph'])
+    num_output_paths = str_to_bool(outputs_dict['num_output_paths'])
+    outputs_dict['steady_state_exit'] = optional_var(outputs_dict, 'steady_state_exit', False, bool)
 
     # Map it back into single dictionary
-    temp_dict = {
-        'Inputs': Inputs_dict,
-        'Populations': Populations_dict,
-        'Mutations': Mutations_dict,
-        'Paths': Paths_dict,
-        'Larch_Paths': Larch_dict,
-        'Outputs': Outputs_dict
+    validated_data_dict = {
+        'Inputs': inputs_dict,
+        'Populations': populations_dict,
+        'Mutations': mutations_dict,
+        'Paths': paths_dict,
+        'Outputs': outputs_dict
     }
     # Package into a single dictionary
-    return temp_dict
+    return validated_data_dict
