@@ -84,7 +84,13 @@ class NeoPopulations:
 
     def initialize_process_pool(self, num_distributed):
         if num_distributed > 1:
-            self.processPool = ProcessPoolExecutor(num_distributed, initializer=init_process, initargs=())
+            print("Hi")
+            file_pars = self.neo_pars.neoFilePars
+            data_pack = (str(file_pars.data_path), str(file_pars.bg_file), str(file_pars.rsp_file))
+            self.processPool = ProcessPoolExecutor(num_distributed, initializer=init_process,
+                                                   initargs=(data_pack,))
+
+        # self.processPool.submit(worker_function, [0, 1])
 
     def initialize_populations(self):
         """
@@ -121,13 +127,13 @@ class NeoPopulations:
 if __name__ == "__main__":
     inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': 'test',
                    'npath': 1, 'fits': ['XspecSpectrum'], 'center': [8.422],
-                   'solver_type': 1, 'distributed': 1}
+                   'solver_type': 1, 'distributed': 8}
     neo_pars = NeoPars()
     neo_pars.read_inputs(inputs_pars)
     neo_population = NeoPopulations()
 
     neo_population.initialize(neo_pars=neo_pars)
 
-    neo_population.initialize_populations()
+    # neo_population.initialize_populations()
 
     neo_population.shutdown_process_pool()

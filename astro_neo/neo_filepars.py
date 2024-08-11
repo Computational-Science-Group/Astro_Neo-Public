@@ -1,7 +1,7 @@
 # from dataclasses import dataclass, field
-from attrs import define, field
-
 from pathlib import Path
+
+from attrs import define, field
 
 from astro_neo.utils import checkKey
 
@@ -10,9 +10,10 @@ from astro_neo.utils import checkKey
 class NeoFilePars:
     base: str = Path.cwd()
     data_file: str = ''
+    bg_file: str = ''
+    rsp_file: str = ''
     output_file: Path = ''
     output_datafile: Path = ''
-    feff_file: list = field(factory=list)
     log_file: str = 'test.csv'
 
     firstPass: bool = False
@@ -23,6 +24,8 @@ class NeoFilePars:
     front: list = field(factory=list)
 
     data_path: Path = None
+    bg_path: Path = None
+    rsp_path: Path = None
     output_path: Path = None
     log_path: Path = None
 
@@ -35,6 +38,8 @@ class NeoFilePars:
         @return:
         """
         self.data_path = self.base / self.data_file
+        self.bg_path = self.base / self.bg_file
+        self.rsp_path = self.base / self.rsp_file
         self.output_path = self.base / self.output_file
         self.log_path = Path(str(self.output_path.with_suffix('')) + ".log")
 
@@ -58,7 +63,6 @@ class NeoFilePars:
         self.output_datafile = self.output_path.with_name(f'{base_file}_data.csv')
 
     def write_outputs(self, neoRunPars, bestFitPars):
-
         with open(self.output_path, "a") as f1:
             data_line = f"{neoRunPars.currGen},{neoRunPars.tt},{bestFitPars.globBestVal}\n"
             f1.writelines(data_line)

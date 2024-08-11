@@ -6,16 +6,30 @@ import xspec
 xspec.xset.Xset.chatter = 0
 sys.path.append("/Users/andy/projects/Astro_Neo/input_files/ACX2")
 
+current_data_pack = None
 
-def init_process():
+
+def temp_worker_function(data):
+    global current_data_pack
+    # Perform some computation using the shared_resource
+    print(current_data_pack[0])
+    print(data)
+    # return result
+
+
+def init_process(data_pack):
     """Summary process
   """
+    global current_data_pack
     old_dir = os.getcwd()
-    data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
-    bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_mbg.fits"
-    rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_rmf.fits"
-
+    # data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
+    # bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_mbg.fits"
+    # rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_rmf.fits"
+    #
     file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
+    current_data_pack = data_pack
+    print(current_data_pack)
+
     xspec.AllData.clear()
 
     # l_src = xspec.Spectrum('right_pha_grp.fits')
