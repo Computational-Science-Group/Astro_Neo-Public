@@ -1,12 +1,13 @@
-import copy
 import operator
 
 import numpy as np
 from attrs import define, field
+from loky import ProcessPoolExecutor
 
-from astro_neo.fitness import fitness
+from astro_neo.fitness import fitness, init_process
 from astro_neo.individual import Individual
 from astro_neo.neo_pars import NeoPars
+from astro_neo.utils import NeoLogger
 
 
 #
@@ -41,7 +42,7 @@ from astro_neo.neo_pars import NeoPars
 #         return loss
 
 
-@define
+@define(kw_only=True, slots=True)
 class NeoPopulations:
     neo_pars: NeoPars = None
     population: list = field(factory=list)
@@ -49,6 +50,14 @@ class NeoPopulations:
     population_score: list = field(factory=list)
     population_perf: dict = field(factory=dict)
     next_population: list = field(factory=list)
+    num_distributed: int = None
+    processPool: ProcessPoolExecutor = None
+    logger: NeoLogger = None
+
+    def initialize(self, neo_pars: NeoPars):
+        self.neo_pars = neo_pars
+        self.num_distributed = neo_pars.fixedPars.distributed
+        self.initialize_process_pool(self.num_distributed)
 
     def generate_individual(self):
         npaths = self.neo_pars.neo_paths.npath
@@ -70,9 +79,12 @@ class NeoPopulations:
             self.population_sorted = sorted(
                 population_perf.items(), key=operator.itemgetter(1), reverse=False)
         if replace:
-            # self.currBestFit = list(self.population_sorted[0])
             self.__replace_bestfit()
         return score
+
+    def initialize_process_pool(self, num_distributed):
+        if num_distributed > 1:
+            self.processPool = ProcessPoolExecutor(num_distributed, initializer=init_process, initargs=())
 
     def initialize_populations(self):
         """
@@ -101,13 +113,21 @@ class NeoPopulations:
             self.neo_pars.bestFitPars.globBestInd = self.neo_pars.bestFitPars.currBestInd
             self.neo_pars.bestFitPars.globBestVal = self.neo_pars.bestFitPars.currBestVal
 
+    def shutdown_process_pool(self):
+        if self.num_distributed > 1:
+            self.processPool.shutdown()
+
 
 if __name__ == "__main__":
-    inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': '',
-                   'npath': 1, 'fits': ['XspecSpectrum'], 'center':[8.422],
-                   'solver_type': 1}
+    inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': 'test',
+                   'npath': 1, 'fits': ['XspecSpectrum'], 'center': [8.422],
+                   'solver_type': 1, 'distributed': 1}
     neo_pars = NeoPars()
-    # neo_pars.read_inputs(inputs_pars)
-    # neo_population = NeoPopulations(neo_pars)
+    neo_pars.read_inputs(inputs_pars)
+    neo_population = NeoPopulations()
 
-    # neo_population.initialize_populations()
+    neo_population.initialize(neo_pars=neo_pars)
+
+    neo_population.initialize_populations()
+
+    neo_population.shutdown_process_pool()

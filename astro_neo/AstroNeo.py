@@ -1,16 +1,16 @@
 import os
 
-from astro_neo.mutator import NeoMutator
-from astro_neo.neo_pops import NeoPopulations
-from astro_neo.neo_pars import NeoPars
 from astro_neo.helper import banner
-from astro_neo.utils import NeoLogger, STRColors
-from astro_neo.neo_crossover import NeoCrossover
-from astro_neo.neo_selector import NeoSelector
-from astro_neo.neo_result import NeoResult
 from astro_neo.ini_parser import validate_input_file
-from astro_neo.parser import InputParamsParser
+from astro_neo.mutator import NeoMutator
+from astro_neo.neo_crossover import NeoCrossover
+from astro_neo.neo_pars import NeoPars
+from astro_neo.neo_pops import NeoPopulations
+from astro_neo.neo_result import NeoResult
+from astro_neo.neo_selector import NeoSelector
 from astro_neo.neo_solver import NeoSolver
+from astro_neo.parser import InputParamsParser
+from astro_neo.utils import NeoLogger, STRColors
 
 
 class AstroNeo:
@@ -28,7 +28,7 @@ class AstroNeo:
         self.selector = NeoSelector(logger=self.logger)
         self.crossOver = NeoCrossover(logger=self.logger)
         self.solver = NeoSolver(logger=self.logger)
-        self.neo_population = None
+        self.neo_population = NeoPopulations(logger=self.logger)
         self.verbose_lvl = verbose_lvl
         self.result = NeoResult(logger=self.logger)
         self.input_parameters = None
@@ -58,11 +58,9 @@ class AstroNeo:
         Setup EXAFS run subroutine
         :return:
         """
-        # TODO:
-        #  1. At mid point, do a E0 optimization
         self.exafs_neo_pars.read_inputs(self.input_parameters)
         self.logger.initialize_logging(self.exafs_neo_pars.neoFilePars.log_path)
-        self.neo_population = NeoPopulations(self.exafs_neo_pars)
+        self.neo_population.initialize(self.exafs_neo_pars)
         self.neo_population.initialize_populations()
         self.result.initialize(self.exafs_neo_pars)
         # Initialize all the operators

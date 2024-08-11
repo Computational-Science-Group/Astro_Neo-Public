@@ -49,6 +49,7 @@ class NeoFixedPars:
     solver: str = 'GA'
 
     printGraph: bool = True
+    distributed: int = 1
     debug_mode: bool = False
 
     def read_inputs(self, input_dicts):
@@ -72,7 +73,7 @@ class NeoFixedPars:
 
         self.printGraph = checkKey('printGraph', input_dicts, True)
         self.debug_mode = checkKey('debug_mode', input_dicts, False)
-
+        self.distributed = checkKey('distributed', input_dicts, 1)
         if self.printGraph:
             # TODO: Implement this
             # self.fig = plt.figure()

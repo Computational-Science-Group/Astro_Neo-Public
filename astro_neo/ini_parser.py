@@ -105,6 +105,8 @@ def validate_input_file(file_dict):
     bg_file = optional_var(inputs_dict, 'bg_file', None, None)
     rsp_file = optional_var(inputs_dict, 'rsp_file', None, None)
 
+    # Solver Options
+
     # Population
     size_population = int(populations_dict['population'])
     number_of_generation = int(populations_dict['num_gen'])
@@ -132,6 +134,7 @@ def validate_input_file(file_dict):
     # Output
     printgraph = str_to_bool(outputs_dict['print_graph'])
     num_output_paths = str_to_bool(outputs_dict['num_output_paths'])
+    outputs_dict['distributed'] = optional_var(outputs_dict, 'distributed', 1, int)
     outputs_dict['steady_state_exit'] = optional_var(outputs_dict, 'steady_state_exit', False, bool)
 
     # Map it back into single dictionary
