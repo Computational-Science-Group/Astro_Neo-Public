@@ -1,35 +1,21 @@
-from astro_neo.pathObj import GaussianObj, VoigtObj, DoniachObj, ShirleyBG_Obj, ShirleyExpObj, \
-    ExponentialObj, DoniachObjGauss, DoniachObj_Test, DS_Jeff, Thermal, Gaussian_Abs, \
-    XStabsBG, EmissionLorentz, XspecSpectrum
-
 import sys
 
+from attr import define
 
-def shape_function_parser(Fit, center_range=0, *args):
+from astro_neo.pathObj import XspecSpectrum, NgcPar
+
+
+def shape_function_parser(shape_fit, *args):
     switch = {
-        "Gaussian": GaussianObj(center_range),
-        "Voigt": VoigtObj(center_range),
-        "DoniachSunjic": DoniachObj(center_range),
-        "Exponential": ExponentialObj(center_range),
-        # "ShirleyExp": ShirleyExpObj(center_range),
-        "DoniachObjGauss": DoniachObjGauss(center_range),
-        "DoniachObj_Test": DoniachObj_Test(center_range),
-        # "GLP": GLPObj(center_range),
-        "ShirleyBG": ShirleyBG_Obj(center_range),
-        "ShirleyExp": ShirleyExpObj(center_range),
-        "DS_Jeff": DS_Jeff(center_range),
-        "Thermal": Thermal(center_range),
-        "Gauss_Abs": Gaussian_Abs(center_range),
-        "XStabsBG": XStabsBG(),
-        "EmissionLorentz": EmissionLorentz(center_range),
-        "XspecSpectrum": XspecSpectrum(center_range),
-        # "Sherpa_APEC": Sherpa_APEC(),
+        "Xspectrum": XspecSpectrum(*args),
+        "NGC_Test": NgcPar(*args),
         # "Sherpa_APEC_BG": Sherpa_APEC_BG()
     }
-    return switch.get(Fit, "Invalid")
+    return switch.get(shape_fit, "Invalid")
 
 
 class BackgroundObj():
+    # TODO: Need to rebuild this function
     def __init__(self, nfuncs, fits, center):
         self.nfuncs = nfuncs
         self.fits = fits
@@ -49,7 +35,48 @@ class BackgroundObj():
         return y
 
 
+@define(kw_only=True, slots=True)
 class Individual:
+    """
+
+    """
+    npaths: int = None
+    fits: list = []
+    model: object = None
+
+    def __attrs_post_init__(self):
+        """
+        post Init to determine the value
+        :return:
+        """
+        self.model = shape_function_parser(self.fits)
+        if self.model == 'Invalid':
+            print("Invalid Fits selection: " + str(self.fits))
+            sys.exit()
+
+    def get_model(self):
+        """
+        Get the desired func back from xspec
+
+        :return:
+        """
+
+        return self.model
+
+    def set_single_pars(self, par: str):
+        self.models.set_par()
+
+    def mutate_individual(self):
+        pass
+
+    def get_bound(self):
+        pass
+
+    def get_pars_bounds(self, pars):
+        pass
+
+
+class Old_Individual:
     def __init__(self, npaths, fits, center):
         """_summary_
 

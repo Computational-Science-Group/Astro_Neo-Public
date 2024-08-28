@@ -1,12 +1,12 @@
-import numpy as np
-from attrs import define, field
 import pickle
 
+import numpy as np
+from attrs import define, field
 from matplotlib import pyplot as plt
 
+from astro_neo.individual import Individual
 from astro_neo.neo_pars import NeoPars
 from astro_neo.utils import NeoLogger
-from astro_neo.individual import Individual
 
 
 @define
@@ -18,7 +18,6 @@ class NeoResult:
     crossover_scorelist: list[float] = field(factory=list)
     mutation_scorelist: list[float] = field(factory=list)
     logger: NeoLogger = None
-
 
     def __str__(self):
         if self.best_individual is None:
@@ -69,9 +68,8 @@ class NeoResult:
         self.best_individual = neo_population.population_sorted[0][0]
         self.historyBest.append(exafs_pars.bestFitPars.globBestVal)
         global_r = exafs_pars.bestFitPars.globBestVal / (
-                len(exafs_pars.exafsPars.intervalK) - 3 * exafs_pars.exafsPars.npath + 1)
+                len(exafs_pars.exafsPars.intervalK) - 3 * exafs_pars.exafsPars.npaths + 1)
         self.historyBestChiR.append(global_r)
-
 
     def plot_fitness(self):
         """

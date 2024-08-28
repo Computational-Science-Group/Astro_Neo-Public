@@ -234,14 +234,14 @@ class NeoStaticPars:
 
 @define
 class NeoPath:
-    npath: int = 1
+    npaths: int = 1
     fits: list = field(factory=list)
     center: list = field(factory=list)
 
     def read_inputs(self, input_dicts):
-        self.npath = checkKey('npath', input_dicts, 1)
-        self.fits = checkKey('fits', input_dicts, ['XspecSpectrum'] * self.npath)
-        self.center = checkKey('center', input_dicts, [0] * self.npath)
+        self.npaths = checkKey('npath', input_dicts, 1)
+        self.fits = checkKey('fits', input_dicts, ['XspecSpectrum'] * self.npaths)
+        self.center = checkKey('center', input_dicts, [0] * self.npaths)
 
 
 if __name__ == "__main__":

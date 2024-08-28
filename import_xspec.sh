@@ -17,4 +17,4 @@
 
 export ATOMDB=$HOME/atomdb
 export HEADAS=$HOME/projects/xspec/heasoft-6.31.1/aarch64-apple-darwin22.4.0
-source $HEADAS/headas-init.sh
+source "$HEADAS"/headas-init.sh

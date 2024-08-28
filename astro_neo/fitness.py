@@ -12,14 +12,17 @@ current_data_pack = None
 def temp_worker_function(data):
     global current_data_pack
     # Perform some computation using the shared_resource
-    print(current_data_pack[0])
-    print(data)
+    # print(data)
+
+    return data * data
     # return result
 
 
 def init_process(data_pack):
     """Summary process
   """
+    xspec.xset.Xset.chatter = 0
+
     global current_data_pack
     old_dir = os.getcwd()
     # data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
@@ -28,6 +31,8 @@ def init_process(data_pack):
     #
     file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
     current_data_pack = data_pack
+
+    Pathlib.path(data_pack[0]).exist()
     print(current_data_pack)
 
     xspec.AllData.clear()

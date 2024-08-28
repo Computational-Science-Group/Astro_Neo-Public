@@ -1,14 +1,13 @@
 import numpy as np
-import os
-from scipy import integrate
-from scipy.special import gammaln, wofz
 import xspec
+from scipy.special import gammaln, wofz
+
 # from sherpa.astro.ui import create_model_component, set_par, set_source, get_data, get_fit_plot
 
 # ----
 # DEBUG:
 ##
-import sys
+
 """
 Author: Andy Lau
 """
@@ -66,12 +65,18 @@ def separate_dicts(source_dict, prefixs):
 
 
 class ParamsDict:
+
     def __init__(self, params, params_type='GA'):
+        """
+
+        :param params:
+        :param params_type:
+        """
         self.params = params
         self.params_type = params_type
         self.nparams = len(params)
         self.dicts = {}
-        # Initalize the whole dictionary first
+        # Initialize the whole dictionary first
         for i in range(self.nparams):
             self.dicts[self.params[i]] = None
 
@@ -86,7 +91,7 @@ class ParamsDict:
         return self.dicts
 
     @staticmethod
-    def random_generate(lower,higher):
+    def random_generate(lower, higher):
         return lower + np.random.rand() * (higher - lower)
 
     def initialize_range(self, range_dicts):
@@ -136,10 +141,14 @@ class ParamsDict:
 
             self.dicts[pars] = np.random.choice(limits_range)
 
+
 class BaseObj:
     """
-    Each Base Objects requires the following methods and var:
+    Each Base Objects requires the overloading the  following methods and var:
     Var:
+        _params_names # The parameters name
+        _indep # Number of independent parameters
+
     # Number of independent variables (ex, gaussian: 3, voigt, 4)
     Methods:
 
@@ -158,7 +167,6 @@ class BaseObj:
         self._Params.initialize_range(self.range_dicts)
 
     def set(self, param_dicts):
-
         self._Params.set(param_dicts)
 
     def get(self):
@@ -184,7 +192,6 @@ class BaseObj:
         :rtype: int, nparray
         """
         return None
-
 
     def get_params_names(self):
         """Get the parametes name
@@ -215,7 +222,7 @@ class GaussianObj(BaseObj):
 
         self.range_dicts = {
             'amplitude': (0.00, 1.5, 0.001),
-            'center': (center, center+1, 0.01),
+            'center': (center, center + 1, 0.01),
             'sigma': (0, 1.5, 0.001)
         }
 
@@ -235,8 +242,8 @@ class GaussianObj(BaseObj):
         center = Params['center']
         sigma = Params['sigma']
 
-        return ((amplitude/(max(tiny, np.sqrt(2*np.pi)*sigma)))
-                * np.exp(-(1.0*x-center)**2 / max(tiny, (2*sigma**2))))
+        return ((amplitude / (max(tiny, np.sqrt(2 * np.pi) * sigma)))
+                * np.exp(-(1.0 * x - center) ** 2 / max(tiny, (2 * sigma ** 2))))
 
 
 class VoigtObj(BaseObj):
@@ -248,7 +255,7 @@ class VoigtObj(BaseObj):
             'amplitude': (0.00, 10, 0.001),
             'sigma': (0.0, 10, 0.001),
             'gamma': (0.0, 10, 0.001),
-            'center': (center-1, center+1, 0.01)
+            'center': (center - 1, center + 1, 0.01)
         }
 
         self._Params = ParamsDict(self._params_names)
@@ -261,8 +268,8 @@ class VoigtObj(BaseObj):
         gamma = Params['gamma']
         sigma = Params['sigma']
 
-        return amplitude*np.real(wofz((x - center + 1j*gamma)/max(tiny, sigma)/np.sqrt(2))) / max(tiny, sigma)\
-            / max(tiny, np.sqrt(2*np.pi))
+        return amplitude * np.real(wofz((x - center + 1j * gamma) / max(tiny, sigma) / np.sqrt(2))) / max(tiny, sigma) \
+            / max(tiny, np.sqrt(2 * np.pi))
 
 
 class DoubleVoigtObj(VoigtObj):
@@ -284,7 +291,7 @@ class DoubleVoigtObj_fix(VoigtObj):
         params = self._model1.get()
         # self.Bg_obj = Background_Obj(1,'ShirleyExp')
 
-        self._model2 = VoigtObj(center-orbit_split, amplitude=params[0]/2,
+        self._model2 = VoigtObj(center - orbit_split, amplitude=params[0] / 2,
                                 gamma=params[2],
                                 sigma=params[3])
 
@@ -300,7 +307,7 @@ class DoniachObj(BaseObj):
         # self._model = DoniachModel(['x'])
         self.range_dicts = {
             'amplitude': (0.00, 1.5, 0.001),
-            'center': (center-20, center+20, 0.01),
+            'center': (center - 20, center + 20, 0.01),
             'sigma': (0, 1.0, 0.001),
             'gamma': (0, 1.5, 0.001)
         }
@@ -315,10 +322,10 @@ class DoniachObj(BaseObj):
         gamma = Params['gamma']
         sigma = Params['sigma']
 
-        arg = (x-center)/max(tiny, sigma)
+        arg = (x - center) / max(tiny, sigma)
         gm1 = (1.0 - gamma)
-        scale = amplitude/max(tiny, (sigma**gm1))
-        return scale*np.cos(np.pi*gamma/2 + gm1*np.arctan(arg))/(1 + arg**2)**(gm1/2)
+        scale = amplitude / max(tiny, (sigma ** gm1))
+        return scale * np.cos(np.pi * gamma / 2 + gm1 * np.arctan(arg)) / (1 + arg ** 2) ** (gm1 / 2)
 
 
 class DoniachObj_Test(BaseObj):
@@ -330,7 +337,7 @@ class DoniachObj_Test(BaseObj):
         self.range_dicts = {
             'amplitude': (0.00, 1.5, 0.001),
             'asymmetry': (0.00, 0.5, 0.01),
-            'center': (center-20, center+20, 0.01),
+            'center': (center - 20, center + 20, 0.01),
             'F': (0, 1.0, 0.001)
         }
 
@@ -344,17 +351,17 @@ class DoniachObj_Test(BaseObj):
         center = Params['center']
         F = Params['F']
 
-        arg = (x-center)/max(tiny, F)
+        arg = (x - center) / max(tiny, F)
         # gm1 = (1.0 - gamma)
         # scale = amplitude/max(tiny, (sigma**gm1))
-        top = np.cos(((np.pi*asymmetry)/2) + (1-asymmetry)*np.arctan(arg))
-        bot = (F**2 + (x-center)**2)**((1-asymmetry)/2)
+        top = np.cos(((np.pi * asymmetry) / 2) + (1 - asymmetry) * np.arctan(arg))
+        bot = (F ** 2 + (x - center) ** 2) ** ((1 - asymmetry) / 2)
 
-        return amplitude * top/bot
+        return amplitude * top / bot
 
     def calculate_fhwm(self):
-        fg = 2*self._params['sigma']*np.sqrt(2*np.log(2))
-        fl = 2*self._params['gamma']
+        fg = 2 * self._params['sigma'] * np.sqrt(2 * np.log(2))
+        fl = 2 * self._params['gamma']
         return (fg, fl)
 
 
@@ -393,6 +400,7 @@ class DoniachObjGauss(DoniachObj, GaussianObj):
         self._model1.verbose()
         print("------------------------------------------------")
         self._model2.verbose()
+
     #
     # def get_indept(self):
     #     return self._model1.get_indept() + self._model2.get_indept()
@@ -409,7 +417,7 @@ class DoubletDoniachObj(DoniachObj):
         orbit_split = 5
         params = self._model1.get()
 
-        self._model2 = DoniachObj(center-orbit_split, amplitude=params[0]/2,
+        self._model2 = DoniachObj(center - orbit_split, amplitude=params[0] / 2,
                                   gamma=params[2],
                                   sigma=params[3])
 
@@ -438,7 +446,8 @@ class ExponentialObj(BaseObj):
         amplitude = Params['amplitude']
         decay = Params['decay']
 
-        return amplitude*np.exp(-x/decay)
+        return amplitude * np.exp(-x / decay)
+
 
 # Gaussian Lorentization Product Form
 
@@ -454,14 +463,15 @@ class GLPObj(BaseObj):
         self._indep = 4
 
         def func(x, center, A, m, F):
-            first_term = A*np.exp(-4*np.log(2)*(1-m)*(x-center)**2/(F**2))
-            second_term = 1/(1+4*m*(x-center)**2/(F**2))
-            return first_term*second_term
+            first_term = A * np.exp(-4 * np.log(2) * (1 - m) * (x - center) ** 2 / (F ** 2))
+            second_term = 1 / (1 + 4 * m * (x - center) ** 2 / (F ** 2))
+            return first_term * second_term
+
         self._model = Model(func)
 
         A_range = np.arange(0, 1.5, 0.05)
         m_range = np.arange(0.00, 1.001, 0.001)
-        center_range = np.arange(center-0.5, center+0.5, 0.01)
+        center_range = np.arange(center - 0.5, center + 0.5, 0.01)
         F_range = np.arange(0.0, 1, 0.01)
 
         self._model.set_param_hint('A',
@@ -487,6 +497,7 @@ class GLPObj(BaseObj):
                                    min=0.0, max=1.0)
 
         self._params = self._model.make_params()
+
 
 # Temp Shirley Exponential Obj
 
@@ -514,7 +525,7 @@ class ShirleyExpObj(BaseObj):
         decay = Params['decay']
 
         background_y = shirley(x, args[0])
-        exp_y = amplitude*np.exp(-x/decay)
+        exp_y = amplitude * np.exp(-x / decay)
         total = exp_y + background_y
         return total
 
@@ -547,10 +558,10 @@ class ShirleyBG_Obj(BaseObj):
         lwid = Params['lwid']
         center = Params['center']
 
-        thewid_1 = np.sqrt((gwid/2)**2+np.sqrt(lwid*1.233)**2)
-        thewid_2 = (gwid/2) + (lwid*1.233)
-        comb_thewid = (thewid_1 + thewid_2)/2
-        return amplitude*(1-(1-1/(1+np.exp((x-center)/comb_thewid))))
+        thewid_1 = np.sqrt((gwid / 2) ** 2 + np.sqrt(lwid * 1.233) ** 2)
+        thewid_2 = (gwid / 2) + (lwid * 1.233)
+        comb_thewid = (thewid_1 + thewid_2) / 2
+        return amplitude * (1 - (1 - 1 / (1 + np.exp((x - center) / comb_thewid))))
 
 
 class DS_Jeff(BaseObj):
@@ -571,7 +582,7 @@ class DS_Jeff(BaseObj):
 
         self.range_dicts = {
             'alpha': (0.00, 1.5, 0.001),
-            'center': (center-20, center+20, 0.01),
+            'center': (center - 20, center + 20, 0.01),
             'lwid': (0, 1.0, 0.001),
         }
 
@@ -584,10 +595,10 @@ class DS_Jeff(BaseObj):
         center = Params['center']
         lwid = Params['lwid']
 
-        top = gammaln(1-alpha)*np.cos(np.pi*(alpha/2) +
-                                      (1-alpha)*np.arctan((x-center)/lwid))
-        bot = ((lwid * lwid) + ((x-center)*(x-center)))**((1-alpha)/2)
-        return top/bot
+        top = gammaln(1 - alpha) * np.cos(np.pi * (alpha / 2) +
+                                          (1 - alpha) * np.arctan((x - center) / lwid))
+        bot = ((lwid * lwid) + ((x - center) * (x - center))) ** ((1 - alpha) / 2)
+        return top / bot
 
 
 class Thermal(BaseObj):
@@ -607,7 +618,7 @@ class Thermal(BaseObj):
 
         self.range_dicts = {
             'amplitude': (0.00, 1.5, 0.001),
-            'center': (center-20, center+20, 0.01),
+            'center': (center - 20, center + 20, 0.01),
             'kt': (0, 1.0, 0.001),
         }
 
@@ -623,7 +634,7 @@ class Thermal(BaseObj):
         # sys.exit()
         offset = -1
         # test_no_zero = not_zero(kt)
-        return 1/(amplitude*np.exp((x - center)/kt) + offset)
+        return 1 / (amplitude * np.exp((x - center) / kt) + offset)
 
 
 class Eggholder:
@@ -649,18 +660,17 @@ class Eggholder:
         Params = self._Params.get()
         y = Params['y']
 
-        return -(y+47) * np.sin(np.sqrt(np.abs(y + 0.5*x + 47))) - x*np.sin(np.sqrt(np.abs(x-(y+47))))
+        return -(y + 47) * np.sin(np.sqrt(np.abs(y + 0.5 * x + 47))) - x * np.sin(np.sqrt(np.abs(x - (y + 47))))
 
 
 class Gaussian_Abs(BaseObj):
     def __init__(self, center=None, _prefix=''):
-
         self._prefix = ''
         self._params_names = ['center', 'par2', 'par3']
         self._indep = 3
 
         self.range_dicts = {
-            'center': (center, center+1, 0.01),
+            'center': (center, center + 1, 0.01),
             'par2': (0.00, 1500, 0.01),
             'par3': (0.00, 1500, 0.01)
         }
@@ -674,9 +684,9 @@ class Gaussian_Abs(BaseObj):
         par2 = Params['par2']
         par3 = Params['par3']
 
-        term_1 = -(par3/np.sqrt(2*np.pi)*par2)
-        term_2 = np.exp(-0.5*((x-center)/par2)**2)
-        return np.exp(term_1*term_2)
+        term_1 = -(par3 / np.sqrt(2 * np.pi) * par2)
+        term_2 = np.exp(-0.5 * ((x - center) / par2) ** 2)
+        return np.exp(term_1 * term_2)
 
 
 class EmissionLorentz(BaseObj):
@@ -699,7 +709,7 @@ class EmissionLorentz(BaseObj):
         self._indep = 4
 
         self.range_dicts = {
-            'center': (center-0.5, center+0.5, 0.001),
+            'center': (center - 0.5, center + 0.5, 0.001),
             'fwhm': (0, 1e6, 1e-2),
             'flux': (0, 1, 1e-4),
             'kurt': (0, 2, 1e-3)
@@ -715,8 +725,8 @@ class EmissionLorentz(BaseObj):
         flux = Params['flux']
         kurt = Params['kurt']
 
-        s = center * fwhm/c
-        l = np.abs(x - center)**kurt + (0.5*s)**2
+        s = center * fwhm / c
+        l = np.abs(x - center) ** kurt + (0.5 * s) ** 2
 
         return flux * 2 * np.pi * s / l
 
@@ -794,8 +804,7 @@ class Test_NGC_Model(BaseObj):
         self._Params = ParamsDict(self._params_names)
         self._Params.initialize_range(self.range_dicts)
 
-
-# class Sherpa_APEC(BaseObj):
+    # class Sherpa_APEC(BaseObj):
     """Calculate the model response for APEC model
 
     Tbabs(lsmooth*vapec)
@@ -858,11 +867,10 @@ class Test_NGC_Model(BaseObj):
         set_par(self.m3.Fe, Params['m3_Fe'])
         set_par(self.m3.norm, Params['m3_norm'])
 
-        model = self.m1*(self.m2(self.m3))
+        model = self.m1 * (self.m2(self.m3))
         return model
 
-
-# class Sherpa_APEC_BG(BaseObj):
+    # class Sherpa_APEC_BG(BaseObj):
     """Calculate the model response for APEC model
 
     TBabs(TBabs*powerlaw + lsmooth(vapec))
@@ -938,7 +946,7 @@ class Test_NGC_Model(BaseObj):
 
         # set_par(self.m5.nH, Params['m5_nH'])
 
-        model = self.m1*(self.m5*self.m4 + self.m2(self.m3))
+        model = self.m1 * (self.m5 * self.m4 + self.m2(self.m3))
         return model
 
 
@@ -951,13 +959,12 @@ class XspecSpectrum(BaseObj):
         """
         self._prefix = ''
 
-
         self._params_names = [
             'TBabs_2_nH',
             'PhoIndex', 'Pl_norm',
-            'vapec_kT','vapec_C','vapec_N','vapec_O','vapec_Ne','vapec_Mg','vapec_Fe','vapec_norm',
-            'vapec_6_kT','vapec_6_norm',
-            'vacx2_collnpar','vacx2_norm'
+            'vapec_kT', 'vapec_C', 'vapec_N', 'vapec_O', 'vapec_Ne', 'vapec_Mg', 'vapec_Fe', 'vapec_norm',
+            'vapec_6_kT', 'vapec_6_norm',
+            'vacx2_collnpar', 'vacx2_norm'
         ]
         # self._pars_
         self._indep = 15
@@ -1038,7 +1045,7 @@ class XspecSpectrum(BaseObj):
             # TBabs <1>
             # 'nH': (0.00, 0.03, 0.001),
             # TBabs_2 <2>
-            'TBabs_2_nH': (0.00,2e-5,1e7, 'number'),
+            'TBabs_2_nH': (0.00, 2e-5, 1e7, 'number'),
             # Powerlaw
             'PhoIndex': (0.05, 1.1, 1e7, 'number'),
             'Pl_norm': (1e-4, 1e-3, 1e7, 'number'),
@@ -1050,7 +1057,7 @@ class XspecSpectrum(BaseObj):
             'vapec_N': (0.00, 1.50, 0.001),
             'vapec_O': (0.0, 1.00, 0.001),
             'vapec_Ne': (0.0, 1.00, 1e-5),
-            'vapec_Mg': (0.0, 2.00 , 0.0001),
+            'vapec_Mg': (0.0, 2.00, 0.0001),
             'vapec_Fe': (0.0, 1.00, 1e-4),
             # 'Redshift': (0.0001, 0.00081, 1e-5),
             'vapec_norm': (0.0001, 0.0010, 1e8, 'number'),
@@ -1058,22 +1065,22 @@ class XspecSpectrum(BaseObj):
             'vapec_6_norm': (0, 0.0010, 1e8, 'number'),
             # zashift <6>
             # vacx2 <7>
-            'vacx2_collnpar': (250, 500, 1e6,'number'),
+            'vacx2_collnpar': (250, 500, 1e6, 'number'),
             # 'vacx2_C': (0, 0.005, 1e-5),
             # 'vacx2_N': (0, 10, 0.01),
             # 'vacx2_O': (0, 10, 0.01),
             # 'vacx2_Ne': (0, 10, 0.01),
-            'vacx2_norm': (2e-4,5e-4,1e6, 'number'),
+            'vacx2_norm': (2e-4, 5e-4, 1e6, 'number'),
         }
-        self._Params = ParamsDict(self._params_names,params_type='DE')
+        self._Params = ParamsDict(self._params_names, params_type='DE')
         self._Params.initialize_range(self.range_dicts)
 
-    def get_func(self,*args):
+    def get_func(self, *args):
         Params = self._Params.get()
 
         return Params
 
-    def get_pars_dicts(self,pars_list):
+    def get_pars_dicts(self, pars_list):
         """Get parameters list in xspec dictionary form
         """
 
@@ -1081,7 +1088,7 @@ class XspecSpectrum(BaseObj):
 
         assert len(pars_list) == len(Params), "Length of pars_list must be equal to length of Params"
         xspec_dicts = {}
-        for i,(k,v) in enumerate(Params.items()):
+        for i, (k, v) in enumerate(Params.items()):
             xspec_dicts[pars_list[i]] = v
 
         return xspec_dicts
@@ -1089,7 +1096,7 @@ class XspecSpectrum(BaseObj):
     def mutate(self):
         self._Params.initialize_range(self.range_dicts)
 
-    def mutate_par(self,par):
+    def mutate_par(self, par):
         """Mutate specfic parameters
 
         Args:
@@ -1099,4 +1106,6 @@ class XspecSpectrum(BaseObj):
         self._Params.random_pars(par)
 
 
-
+class NgcPar(BaseObj):
+    def __init__(self, src__prefix=''):
+        pass

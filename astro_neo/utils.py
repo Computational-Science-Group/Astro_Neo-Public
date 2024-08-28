@@ -4,6 +4,7 @@ import pathlib
 import sys
 
 import numpy as np
+
 from astro_neo.helper import time_call
 from astro_neo.utils_mapping import neocrossover_int2str, neomutator_int2str, neoselector_int2str
 
@@ -249,13 +250,13 @@ class STRColors:
         STRColors.logger_print_based_on_verbose_lvl(logger, STRColors.BOLD + "Best fit: " + STRColors.OKBLUE + str(
             np.round(exafs_NeoPars.bestFitPars.currBestVal, 3)) + STRColors.ENDC, verbose_lvl, 5)
         CurrchiR = np.round(exafs_NeoPars.bestFitPars.currBestVal / (
-                    len(exafs_NeoPars.exafsPars.intervalK) - 3 * exafs_NeoPars.exafsPars.npath + 1), 3)
+                len(exafs_NeoPars.exafsPars.intervalK) - 3 * exafs_NeoPars.exafsPars.npaths + 1), 3)
         STRColors.logger_print_based_on_verbose_lvl(logger, STRColors.BOLD + "Best fit ChiR: " + STRColors.OKBLUE + str(
             CurrchiR) + STRColors.ENDC, verbose_lvl, 5)
         STRColors.logger_print_based_on_verbose_lvl(logger, STRColors.BOLD + "History Best: " + STRColors.OKBLUE + str(
             np.round(exafs_NeoPars.bestFitPars.globBestVal, 4)) + STRColors.ENDC, verbose_lvl, 1)
         GlobchiR = exafs_NeoPars.bestFitPars.globBestVal / (
-                    len(exafs_NeoPars.exafsPars.intervalK) - 3 * exafs_NeoPars.exafsPars.npath + 1)
+                len(exafs_NeoPars.exafsPars.intervalK) - 3 * exafs_NeoPars.exafsPars.npaths + 1)
         STRColors.logger_print_based_on_verbose_lvl(logger,
                                                     STRColors.BOLD + "History Best ChiR: " + STRColors.OKBLUE + str(
                                                         np.round(GlobchiR, 4)) + STRColors.ENDC, verbose_lvl, 1)
@@ -299,7 +300,6 @@ class STRColors:
             # TODO: Reimplement this
             pass
             # self.verbose_graph()
-
 
 
 if __name__ == "__main__":

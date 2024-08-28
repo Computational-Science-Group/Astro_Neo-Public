@@ -4,7 +4,7 @@ import numpy as np
 from attrs import define, field
 from loky import ProcessPoolExecutor
 
-from astro_neo.fitness import fitness, init_process
+from astro_neo.fitness import fitness, init_process, temp_worker_function
 from astro_neo.individual import Individual
 from astro_neo.neo_pars import NeoPars
 from astro_neo.utils import NeoLogger
@@ -52,18 +52,23 @@ class NeoPopulations:
     next_population: list = field(factory=list)
     num_distributed: int = None
     processPool: ProcessPoolExecutor = None
+    num_pops: int = None
     logger: NeoLogger = None
 
     def initialize(self, neo_pars: NeoPars):
         self.neo_pars = neo_pars
+        self.num_pops = neo_pars.fixedPars.nPops
         self.num_distributed = neo_pars.fixedPars.distributed
         self.initialize_process_pool(self.num_distributed)
 
     def generate_individual(self):
-        npaths = self.neo_pars.neo_paths.npath
-        fits = self.neo_pars.neo_paths.fits
-        center = self.neo_pars.neo_paths.center
-        ind = Individual(npaths, fits, center)
+        npaths = self.neo_pars.neo_paths.npaths
+        this_fits = self.neo_pars.neo_paths.fits
+        # center = self.neo_pars.neo_paths.center
+        # model = self.neo_pars.neo_paths.
+        print(npaths)
+        print(this_fits)
+        ind = Individual(npaths=npaths, fits=this_fits)
         return ind
 
     def eval_population(self, replace=True, sorting=True):
@@ -84,7 +89,6 @@ class NeoPopulations:
 
     def initialize_process_pool(self, num_distributed):
         if num_distributed > 1:
-            print("Hi")
             file_pars = self.neo_pars.neoFilePars
             data_pack = (str(file_pars.data_path), str(file_pars.bg_file), str(file_pars.rsp_file))
             self.processPool = ProcessPoolExecutor(num_distributed, initializer=init_process,
@@ -92,15 +96,24 @@ class NeoPopulations:
 
         # self.processPool.submit(worker_function, [0, 1])
 
+    def test_process_pool(self):
+        """
+        Test method for process pool ..., not used in production
+        :return:
+        """
+        data = list(self.processPool.map(temp_worker_function, np.arange(16)))
+        print(data)
+
     def initialize_populations(self):
         """
         Initialize populations
         :return:
         """
-        for i in range(self.neo_pars.fixedPars.nPops):
+        for i in range(self.num_pops):
             self.population.append(self.generate_individual())
 
-        self.eval_population()
+        # temporally stopping eval first...
+        # self.eval_population()
 
     def __getitem__(self, item):
         return self.population_sorted[item]
@@ -127,13 +140,13 @@ class NeoPopulations:
 if __name__ == "__main__":
     inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': 'test',
                    'npath': 1, 'fits': ['XspecSpectrum'], 'center': [8.422],
-                   'solver_type': 1, 'distributed': 8}
+                   'solver_type': 1, 'distributed': 4}
     neo_pars = NeoPars()
     neo_pars.read_inputs(inputs_pars)
     neo_population = NeoPopulations()
 
     neo_population.initialize(neo_pars=neo_pars)
-
+    neo_population.test_process_pool()
     # neo_population.initialize_populations()
 
     neo_population.shutdown_process_pool()
