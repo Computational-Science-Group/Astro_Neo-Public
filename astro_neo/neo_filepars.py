@@ -8,7 +8,7 @@ from astro_neo.utils import checkKey
 
 @define
 class NeoFilePars:
-    base: str = Path.cwd()
+    data_dir: Path = Path.cwd()
     data_file: str = ''
     bg_file: str = ''
     rsp_file: str = ''
@@ -37,10 +37,10 @@ class NeoFilePars:
         Initialize File Path
         @return:
         """
-        self.data_path = self.base / self.data_file
-        self.bg_path = self.base / self.bg_file
-        self.rsp_path = self.base / self.rsp_file
-        self.output_path = self.base / self.output_file
+        self.data_path = self.data_dir / self.data_file
+        self.bg_path = self.data_dir / self.bg_file
+        self.rsp_path = self.data_dir / self.rsp_file
+        self.output_path = self.data_dir / self.output_file
         self.log_path = Path(str(self.output_path.with_suffix('')) + ".log")
 
         self.initialize_outputs()
@@ -49,9 +49,13 @@ class NeoFilePars:
         """
 
         """
-
+        self.data_dir = checkKey('data_dir', input_dicts, Path.cwd())
+        if isinstance(self.data_dir, str):
+            self.data_dir = Path(self.data_dir)
         self.data_file = checkKey('data_file', input_dicts, '')
-        self.output_file = checkKey('output_file', input_dicts, 'exafs_neo_out.csv')
+        self.bg_file = checkKey('bg_file', input_dicts, 'bg_file.fits')
+        self.rsp_file = checkKey('rsp_file', input_dicts, 'rsp_file.fits')
+        self.output_file = checkKey('output_file', input_dicts, 'neo_out.csv')
         self.log_file = checkKey('log_file', input_dicts, 'exafs_neo.log')
         self.pathOptimize = checkKey('pathOptimize', input_dicts, False)
 
@@ -79,7 +83,8 @@ class NeoFilePars:
 
 if __name__ == "__main__":
     # exafs_pars = EXAFSPars()
-    inputs_pars = {'data_file': 'path_files/Cu/cu_10k.xmu', 'output_file': 'tests/output.csv', 'feff_file': 'test/feff',
+    inputs_pars = {'data_dir': '/Users/andy/projects/Astro_Neo', 'data_file': 'path_files/Cu/cu_10k.xmu',
+                   'output_file': 'tests/output.csv', 'feff_file': 'test/feff',
                    'kmin': 0.95,
                    'kmax': 9.775,
                    'kweight': 3.0,

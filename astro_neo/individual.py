@@ -7,14 +7,14 @@ from astro_neo.pathObj import XspecSpectrum, NgcPar
 
 def shape_function_parser(shape_fit, *args):
     switch = {
-        "Xspectrum": XspecSpectrum(*args),
+        "XspecSpectrum": XspecSpectrum(*args),
         "NGC_Test": NgcPar(*args),
         # "Sherpa_APEC_BG": Sherpa_APEC_BG()
     }
     return switch.get(shape_fit, "Invalid")
 
 
-class BackgroundObj():
+class BackgroundObj:
     # TODO: Need to rebuild this function
     def __init__(self, nfuncs, fits, center):
         self.nfuncs = nfuncs
@@ -41,7 +41,7 @@ class Individual:
 
     """
     npaths: int = None
-    fits: list = []
+    fits: str = ""
     model: object = None
 
     def __attrs_post_init__(self):
@@ -64,7 +64,7 @@ class Individual:
         return self.model
 
     def set_single_pars(self, par: str):
-        self.models.set_par()
+        self.model.set_par()
 
     def mutate_individual(self):
         pass

@@ -66,8 +66,8 @@ class NeoPopulations:
         this_fits = self.neo_pars.neo_paths.fits
         # center = self.neo_pars.neo_paths.center
         # model = self.neo_pars.neo_paths.
-        print(npaths)
-        print(this_fits)
+        # print(npaths)
+        # print(this_fits)
         ind = Individual(npaths=npaths, fits=this_fits)
         return ind
 
@@ -90,7 +90,8 @@ class NeoPopulations:
     def initialize_process_pool(self, num_distributed):
         if num_distributed > 1:
             file_pars = self.neo_pars.neoFilePars
-            data_pack = (str(file_pars.data_path), str(file_pars.bg_file), str(file_pars.rsp_file))
+            data_pack = (
+                str(file_pars.data_dir), str(file_pars.data_file), str(file_pars.bg_file), str(file_pars.rsp_file))
             self.processPool = ProcessPoolExecutor(num_distributed, initializer=init_process,
                                                    initargs=(data_pack,))
 
@@ -138,8 +139,12 @@ class NeoPopulations:
 
 
 if __name__ == "__main__":
-    inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': 'test',
-                   'npath': 1, 'fits': ['XspecSpectrum'], 'center': [8.422],
+    # /Users/andy/projects/Astro_Neo/input_files/astronomy_test 2/left_pha_grp.fits
+    inputs_pars = {'data_dir': '/Users/andy/projects/Astro_Neo/input_files/astronomy_test 2/',
+                   'data_file': 'left_pha_grp.fits',
+                   'output_file': 'test',
+                   'bg_file': 'left_mbg.fits', 'rsp_file': 'left_rmf.fits',
+                   'npath': 1, 'fits': 'NGC_Test', 'center': [8.422],
                    'solver_type': 1, 'distributed': 4}
     neo_pars = NeoPars()
     neo_pars.read_inputs(inputs_pars)
@@ -147,6 +152,8 @@ if __name__ == "__main__":
 
     neo_population.initialize(neo_pars=neo_pars)
     neo_population.test_process_pool()
-    # neo_population.initialize_populations()
+    neo_population.initialize_populations()
+
+    # neo_population.eval_population()
 
     neo_population.shutdown_process_pool()

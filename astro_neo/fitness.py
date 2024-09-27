@@ -24,21 +24,25 @@ def init_process(data_pack):
     xspec.xset.Xset.chatter = 0
 
     global current_data_pack
-    old_dir = os.getcwd()
+    # old_dir = os.getcwd()
     # data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
     # bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_mbg.fits"
     # rsp_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_rmf.fits"
     #
-    file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
+    # file_dir = os.chdir('/Users/andy/projects/Astro_Neo/input_files/astronomy_test/')
     current_data_pack = data_pack
-
-    Pathlib.path(data_pack[0]).exist()
-    print(current_data_pack)
+    current_data_pack = {
+        'data_dir': data_pack[0],
+        'data_file': data_pack[1],
+        'bg_file': data_pack[2],
+        'rsp_file': data_pack[3]
+    }
+    os.chdir(data_pack[0])
 
     xspec.AllData.clear()
 
     # l_src = xspec.Spectrum('right_pha_grp.fits')
-    l_src = xspec.Spectrum('left_pha_grp.fits')
+    l_src = xspec.Spectrum(data_pack[1])
     xspec.Plot.xAxis = "angstrom"
     l_src.ignore("**-7.0 30.0-**")
 
