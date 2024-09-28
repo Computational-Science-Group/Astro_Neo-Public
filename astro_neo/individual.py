@@ -35,7 +35,7 @@ class BackgroundObj:
         return y
 
 
-@define(kw_only=True, slots=True)
+@define(kw_only=True)
 class Individual:
     """
 

@@ -2,9 +2,9 @@ import os
 import sys
 
 import xspec
-
 xspec.xset.Xset.chatter = 0
 sys.path.append("/Users/andy/projects/Astro_Neo/input_files/ACX2")
+import acx2_xspec
 
 current_data_pack = None
 
@@ -20,10 +20,11 @@ def temp_worker_function(data):
 
 def init_process(data_pack):
     """Summary process
-  """
-    xspec.xset.Xset.chatter = 0
+    """
 
     global current_data_pack
+    xspec.xset.Xset.chatter = 0
+
     # old_dir = os.getcwd()
     # data_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_pha_grp.fits"
     # bg_file = "/Users/andy/projects/Astro_Neo/input_files/astronomy_test/left_mbg.fits"
@@ -57,21 +58,21 @@ def init_process(data_pack):
     xspec.Fit.statMethod = "cstat"  # using the Cash statistic
 
 
-def fitness(input, individual):
+def fitness(individual):
     """
   Evaluate fitness of an individual
 
   """
     loss = 0
 
-    indObj = input[0]
-    xspec_data = input[1]
-    Individual = indObj.get_func()[0]
+    # indObj [0]
+    # xspec_data = input[1]
+    Individual = individual.get_model()
 
     params_list = [2, 3, 4, 7, 9, 10, 11, 12, 13, 19, 22, 23, 38, 41, 60]
 
     model_params = Individual.get_pars_dicts(params_list)
-
+    print()
     set_Pars = {
         1: 2.79000E-02,
         2: 1.87763E-05,
@@ -134,9 +135,9 @@ def fitness(input, individual):
         59: 1.00000,
         60: 2.43828E-04
     }
-
-    model = xspec_data.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))",
-                             setPars=set_Pars)  # <- set up model and input a dictionry for iniital parametres
+    # Set up model and input a dictionary for initial parameters
+    model = xspec.Model("TBabs(TBabs*powerlaw + lsmooth(vapec + vapec + zashift*vacx2))",
+                        setPars=set_Pars)
 
     # Model
 
@@ -222,6 +223,6 @@ def fitness(input, individual):
 
     model.setPars(model_params)  # set the model with GA parameters
 
-    loss = xspec_data.Fit.statistic  # <- calculate loss
+    loss = xspec.Fit.statistic  # <- calculate loss
 
     return loss  # <-- return loss

@@ -42,13 +42,12 @@ from astro_neo.utils import NeoLogger
 #         return loss
 
 
-@define(kw_only=True, slots=True)
+@define(kw_only=True)
 class NeoPopulations:
     neo_pars: NeoPars = None
     population: list = field(factory=list)
     population_sorted: list = field(factory=list)
-    population_score: list = field(factory=list)
-    population_perf: dict = field(factory=dict)
+    score_sorted: list = field(factory=list)
     next_population: list = field(factory=list)
     num_distributed: int = None
     processPool: ProcessPoolExecutor = None
@@ -72,20 +71,20 @@ class NeoPopulations:
         return ind
 
     def eval_population(self, replace=True, sorting=True):
-        score = []
-        population_perf = {}
 
-        for i, individual in enumerate(self.population):
-            temp_score = fitness(self.neo_pars, individual)
-            score.append(temp_score)
-
-            population_perf[individual] = temp_score
+        # for i, individual in enumerate(self.population):
+        #     temp_score = fitness(self.neo_pars, individual)
+        #     score.append(temp_score)
+        #     print(temp_score)
+        #     population_perf[individual] = temp_score
+        score_list = list(self.processPool.map(fitness, self.population))
         if sorting:
-            self.population_sorted = sorted(
-                population_perf.items(), key=operator.itemgetter(1), reverse=False)
-        if replace:
-            self.__replace_bestfit()
-        return score
+            self.population_sorted = [x for _, x in sorted(zip(score_list, self.population))]
+            self.score_sorted = sorted(score_list)
+
+            if replace:
+                self.__replace_bestfit()
+        # print(self.population_sorted)
 
     def initialize_process_pool(self, num_distributed):
         if num_distributed > 1:
@@ -95,7 +94,6 @@ class NeoPopulations:
             self.processPool = ProcessPoolExecutor(num_distributed, initializer=init_process,
                                                    initargs=(data_pack,))
 
-        # self.processPool.submit(worker_function, [0, 1])
 
     def test_process_pool(self):
         """
@@ -114,14 +112,14 @@ class NeoPopulations:
             self.population.append(self.generate_individual())
 
         # temporally stopping eval first...
-        # self.eval_population()
+        self.eval_population()
 
     def __getitem__(self, item):
         return self.population_sorted[item]
 
     def __replace_bestfit(self):
-        self.neo_pars.bestFitPars.currBestInd = self.population_sorted[0][0]
-        self.neo_pars.bestFitPars.currBestVal = self.population_sorted[0][1]
+        self.neo_pars.bestFitPars.currBestInd = self.population_sorted[0]
+        self.neo_pars.bestFitPars.currBestVal = self.score_sorted[0]
 
         delta = np.abs(self.neo_pars.bestFitPars.currBestVal - self.neo_pars.bestFitPars.globBestVal)
         if delta > 0.01:
@@ -144,7 +142,7 @@ if __name__ == "__main__":
                    'data_file': 'left_pha_grp.fits',
                    'output_file': 'test',
                    'bg_file': 'left_mbg.fits', 'rsp_file': 'left_rmf.fits',
-                   'npath': 1, 'fits': 'NGC_Test', 'center': [8.422],
+                   'npath': 1, 'fits': 'XspecSpectrum', 'center': [8.422],
                    'solver_type': 1, 'distributed': 4}
     neo_pars = NeoPars()
     neo_pars.read_inputs(inputs_pars)
@@ -154,6 +152,6 @@ if __name__ == "__main__":
     neo_population.test_process_pool()
     neo_population.initialize_populations()
 
-    # neo_population.eval_population()
+    neo_population.eval_population(replace=True)
 
     neo_population.shutdown_process_pool()
