@@ -11,8 +11,6 @@ current_data_pack = None
 
 def temp_worker_function(data):
     global current_data_pack
-    # Perform some computation using the shared_resource
-    # print(data)
 
     return data * data
     # return result
@@ -72,7 +70,6 @@ def fitness(individual):
     params_list = [2, 3, 4, 7, 9, 10, 11, 12, 13, 19, 22, 23, 38, 41, 60]
 
     model_params = Individual.get_pars_dicts(params_list)
-    print()
     set_Pars = {
         1: 2.79000E-02,
         2: 1.87763E-05,

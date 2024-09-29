@@ -38,7 +38,7 @@ class NeoSelector_RouletteWheel(NeoSelectorBase):
         # Create parents
         next_population = []
         for i in range(self.nBest):
-            next_population.append(pops.population_sorted[i][0])
+            next_population.append(pops.population_sorted[i])
 
         # Create lucky
         for i in range(self.nLucky):

@@ -12,6 +12,7 @@ from astro_neo.utils import NeoLogger
 @define
 class NeoResult:
     exafs_pars: NeoPars = None
+    best_score: float = None
     best_individual: Individual = None
     historyBest: list[float] = field(factory=list)
     historyBestChiR: list[float] = field(factory=list)
@@ -65,11 +66,9 @@ class NeoResult:
         :return:
         """
         self.exafs_pars = exafs_pars
-        self.best_individual = neo_population.population_sorted[0][0]
+        self.best_individual = neo_population.population_sorted[0]
+        self.best_score = neo_population.score_sorted[0]
         self.historyBest.append(exafs_pars.bestFitPars.globBestVal)
-        global_r = exafs_pars.bestFitPars.globBestVal / (
-                len(exafs_pars.exafsPars.intervalK) - 3 * exafs_pars.exafsPars.npaths + 1)
-        self.historyBestChiR.append(global_r)
 
     def plot_fitness(self):
         """

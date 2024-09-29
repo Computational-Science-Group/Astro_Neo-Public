@@ -1,5 +1,6 @@
 import numpy as np
 
+from astro_neo.individual import Individual
 from astro_neo.neo_pops import NeoPopulations
 from astro_neo.neo_pars import NeoPars
 
@@ -25,27 +26,38 @@ class EXAFS_UniformCrossover(EXAFS_CrossoverBase):
         self.croType = "Uniform Crossover"
 
     def crossover(self, pops, individual1, individual2):
+        # child = pops.generate_individual()
+        #
+        #
+        # for i in range(self.exafs_pars.exafsPathPars.npaths):
+        #     individual1_path = individual1.get_path(i)
+        #     individual2_path = individual2.get_path(i)
+        #
+        #     temp_path = []
+        #     for path_pars in range(4):
+        #         if np.random.randint(0, 2):
+        #             temp_path.append(individual1_path[path_pars])
+        #         else:
+        #             temp_path.append(individual2_path[path_pars])
+        #
+        #     child.set_path(i, temp_path[0], temp_path[2], temp_path[3])
+        #
+        # return child
         child = pops.generate_individual()
-        if np.random.randint(0, 1):
-            child.set_e0(individual1.get_e0())
-        else:
-            child.set_e0(individual2.get_e0())
 
-        for i in range(self.exafs_pars.exafsPathPars.npaths):
-            individual1_path = individual1.get_path(i)
-            individual2_path = individual2.get_path(i)
+        ind1_dict = individual1.get_model().get_func()
+        ind2_dict = individual2.get_model().get_func()
 
-            temp_path = []
-            for path_pars in range(4):
-                if np.random.randint(0, 2):
-                    temp_path.append(individual1_path[path_pars])
-                else:
-                    temp_path.append(individual2_path[path_pars])
-
-            child.set_path(i, temp_path[0], temp_path[2], temp_path[3])
-
+        keys = sorted(ind1_dict.keys())
+        new_keys_dict = {}
+        for key in keys:
+            if np.random.randint(0, 2):
+                # ind1_dict[key] = ind2_dict[key]
+                new_keys_dict[key] = ind1_dict[key]
+            else:
+                new_keys_dict[key] = ind2_dict[key]
+        child.set_pars(new_keys_dict)
         return child
-
 
 class EXAFS_SinglePointCrossover(EXAFS_CrossoverBase):
     def __init__(self, exafs_pars, logger):
@@ -236,21 +248,30 @@ class NeoCrossover:
 
 
 if __name__ == "__main__":
-    inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': '',
-                   'feff_file': '../path_files/Cu/path_75/feff', 'kmin': 0.95,
-                   'kmax': 9.775,
-                   'kweight': 3.0, 'pathrange': [1, 2, 3, 4, 5],
-                   'deltak': 0.05, 'rbkg': 1.1, 'bkgkw': 1.0, 'bkgkmax': 15.0,
-                   'mut_options': 1,
-                   'croOpt': 1}
-    exafs_Pars = NeoPars()
-    exafs_Pars.read_inputs(inputs_pars)
+    # inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': '',
+    #                'feff_file': '../path_files/Cu/path_75/feff', 'kmin': 0.95,
+    #                'kmax': 9.775,
+    #                'kweight': 3.0, 'pathrange': [1, 2, 3, 4, 5],
+    #                'deltak': 0.05, 'rbkg': 1.1, 'bkgkw': 1.0, 'bkgkmax': 15.0,
+    #                'mut_options': 1,
+    #                'croOpt': 1}
+    # exafs_Pars = NeoPars()
+    # exafs_Pars.read_inputs(inputs_pars)
+    #
+    # neo_population = NeoPopulations(exafs_Pars)
+    # neo_population.initialize_populations()
+    # print(neo_population.population[0].get_var())
+    #
+    # crossover_operator = NeoCrossover()
+    # crossover_operator.initialize(exafs_pars=exafs_Pars)
+    # crossover_operator.crossover(neo_population)
+    # print(crossover_operator)
 
-    neo_population = NeoPopulations(exafs_Pars)
-    neo_population.initialize_populations()
-    print(neo_population.population[0].get_var())
-
-    crossover_operator = NeoCrossover()
-    crossover_operator.initialize(exafs_pars=exafs_Pars)
-    crossover_operator.crossover(neo_population)
-    print(crossover_operator)
+    individual1 = Individual(npaths=1,fits="XspecSpectrum")
+    individual2 = Individual(npaths=1,fits="XspecSpectrum")
+    # params_list = [2, 3, 4, 7, 9, 10, 11, 12, 13, 19, 22, 23, 38, 41, 60]
+    # print(individual.get_model().get_pars_dicts(params_list))
+    ind1_dict = individual1.get_model().get_func()
+    ind2_dict = individual2.get_model().get_func()
+    print(ind1_dict)
+    print(ind2_dict)

@@ -2,7 +2,7 @@ import sys
 
 from attr import define
 
-from astro_neo.pathObj import XspecSpectrum, NgcPar
+from astro_neo.pathObj import XspecSpectrum, NgcPar, BaseObj
 
 
 def shape_function_parser(shape_fit, *args):
@@ -42,7 +42,7 @@ class Individual:
     """
     npaths: int = None
     fits: str = ""
-    model: object = None
+    model: BaseObj = None
 
     def __attrs_post_init__(self):
         """
@@ -63,11 +63,12 @@ class Individual:
 
         return self.model
 
-    def set_single_pars(self, par: str):
-        self.model.set_par()
+    def set_pars(self, pars: dict):
+        self.model.set(pars)
 
-    def mutate_individual(self):
-        pass
+    def mutate(self):
+
+        self.model.mutate()
 
     def get_bound(self):
         pass
@@ -140,3 +141,10 @@ class Old_Individual:
 
     def __len__(self):
         return len(self.population[0])
+
+
+if __name__ == "__main__":
+    individual = Individual(npaths=1,fits="XspecSpectrum")
+    # params_list = [2, 3, 4, 7, 9, 10, 11, 12, 13, 19, 22, 23, 38, 41, 60]
+    # print(individual.get_model().get_pars_dicts(params_list))
+    # print(individual.get_model().get_func())

@@ -101,20 +101,15 @@ if __name__ == "__main__":
     exafs_temp = AstroNeo(verbose_lvl=5)
 
     input_dict = {
-        'data_file': '../path_files/Cu/cu_10k.xmu',
-        'output_file': 'test.csv',
-        'feff_file': '../path_files/Cu/path_75/feff',
+        'data_dir': '/Users/andy/projects/Astro_Neo/input_files/astronomy_test 2/',
+        'data_file': 'left_pha_grp.fits',
+        'output_file': 'test',
+        'bg_file': 'left_mbg.fits',
+        'rsp_file': 'left_rmf.fits',
         'nGen': 20,
-        'kmin': 0.95,
-        'kmax': 9.775,
-        'kweight': 3.0,
-        'deltak': 0.05,
-        'rbkg': 1.1,
-        'bkgkw': 1.0,
-        'bkgkmax': 15.0,
-        'printGraph': False,
-        'pathrange': [1, 2, 3, 4, 5],
+        'fits': 'XspecSpectrum',
         'solver_type': 1,
+        'distributed': 4
     }
     exafs_temp.neo_read(input_parameters=input_dict)
     exafs_temp.neo_setup()

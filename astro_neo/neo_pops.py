@@ -149,7 +149,7 @@ if __name__ == "__main__":
     neo_population = NeoPopulations()
 
     neo_population.initialize(neo_pars=neo_pars)
-    neo_population.test_process_pool()
+    # neo_population.test_process_pool()
     neo_population.initialize_populations()
 
     neo_population.eval_population(replace=True)

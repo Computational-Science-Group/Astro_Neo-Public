@@ -178,7 +178,7 @@ class BaseObj:
         return params_list
 
     def get_indept(self):
-        """Return the number of indepedent variable
+        """Return the number of independent variable
         :return x: return a list of independent var
         :rtype: list
         """
