@@ -97,8 +97,10 @@ class NeoRunPars:
 
     def end_gen(self, neo_population):
         self.currGen += 1
-        self.currGen_tt = time_call() - self.currGen_st
         self.tt += self.currGen_tt
+
+    def calc_curr_gen_time(self):
+        self.currGen_tt = time_call() - self.currGen_st
 
     def read_inputs(self, input_dicts):
         self.nGen = checkKey('nGen', input_dicts, 100)
@@ -205,8 +207,8 @@ class NeoPars:
         self.neoFilePars.write_data_outputs(self.bestFitPars)
 
     def end_gen(self, neo_population):
-        self.output()
         self.runPars.end_gen(neo_population)
+        self.output()
 
 
 @define(slots=True)

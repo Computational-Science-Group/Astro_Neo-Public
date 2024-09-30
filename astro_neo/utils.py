@@ -168,6 +168,7 @@ class STRColors:
         Verbose generation
         """
         st = time_call()
+        neo_pars.runPars.calc_curr_gen_time()
         score_sorted = neo_population.score_sorted
         STRColors.logger_print_based_on_verbose_lvl(logger, "---------------------------------------------------------",
                                                     verbose_lvl, 1)

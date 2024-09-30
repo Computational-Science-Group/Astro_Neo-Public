@@ -90,6 +90,7 @@ class AstroNeo:
             self.exafs_neo_pars.end_gen(self.neo_population)
         # End of run verbose
         STRColors.run_verbose_end(self.logger, self.exafs_neo_pars, verbose_lvl=self.verbose_lvl)
+        self.neo_population.shutdown_process_pool()
         return self.result
 
 
@@ -109,7 +110,8 @@ if __name__ == "__main__":
         'nGen': 20,
         'fits': 'XspecSpectrum',
         'solver_type': 1,
-        'distributed': 4
+        'distributed': 4,
+        'nPops': 20
     }
     exafs_temp.neo_read(input_parameters=input_dict)
     exafs_temp.neo_setup()
