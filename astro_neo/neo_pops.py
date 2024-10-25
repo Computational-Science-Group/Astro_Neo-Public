@@ -78,8 +78,11 @@ class NeoPopulations:
         #     print(temp_score)
         #     population_perf[individual] = temp_score
         score_list = list(self.processPool.map(fitness, self.population))
+        combined_list = [[score_list[i], self.population[i]] for i in range(len(score_list))]
         if sorting:
-            self.population_sorted = [x for _, x in sorted(zip(score_list, self.population))]
+
+            # self.population_sorted = [x for _, x in sorted(zip(score_list, self.population))]
+            self.population_sorted = [x[1] for x in sorted(combined_list, key=operator.itemgetter(0))]
             self.score_sorted = sorted(score_list)
 
             if replace:
@@ -93,7 +96,6 @@ class NeoPopulations:
                 str(file_pars.data_dir), str(file_pars.data_file), str(file_pars.bg_file), str(file_pars.rsp_file))
             self.processPool = ProcessPoolExecutor(num_distributed, initializer=init_process,
                                                    initargs=(data_pack,))
-
 
     def test_process_pool(self):
         """

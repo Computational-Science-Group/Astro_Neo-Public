@@ -104,14 +104,14 @@ if __name__ == "__main__":
     input_dict = {
         'data_dir': '/Users/andy/projects/Astro_Neo/input_files/astronomy_test 2/',
         'data_file': 'left_pha_grp.fits',
-        'output_file': 'test',
+        'output_file': 'test_2',
         'bg_file': 'left_mbg.fits',
         'rsp_file': 'left_rmf.fits',
         'nGen': 20,
         'fits': 'XspecSpectrum',
         'solver_type': 1,
-        'distributed': 4,
-        'nPops': 20
+        'distributed': 6,
+        'nPops': 1000
     }
     exafs_temp.neo_read(input_parameters=input_dict)
     exafs_temp.neo_setup()

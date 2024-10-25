@@ -3,7 +3,7 @@ import sys
 
 import xspec
 xspec.xset.Xset.chatter = 0
-sys.path.append("/Users/andy/projects/Astro_Neo/input_files/ACX2")
+sys.path.append("models/ACX2")
 import acx2_xspec
 
 current_data_pack = None
