@@ -2,5 +2,5 @@
 # Numpy>=1.17.2
 psutil
 loky==3.4.0
-attr==23.1.0
+attrs==23.1.0
 scipy==1.10.1
