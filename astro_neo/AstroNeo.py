@@ -2,7 +2,7 @@ import os
 
 from astro_neo.helper import banner
 from astro_neo.ini_parser import validate_input_file
-from astro_neo.mutator import NeoMutator
+from astro_neo.neo_mutator import NeoMutator
 from astro_neo.neo_crossover import NeoCrossover
 from astro_neo.neo_pars import NeoPars
 from astro_neo.neo_pops import NeoPopulations
