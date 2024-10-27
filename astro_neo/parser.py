@@ -6,30 +6,11 @@ from astro_neo.helper import Bcolors
 
 
 def check_key(data_list, key_list):
-    # for i in range(len(key_list)):
-    #     try:
-    #         check_dict[key_list[i]]
-    #     except KeyError:
-    #         raise KeyError(str(key_list[i]) + ' is missing')
-    # ---------
-    # for this_key in key_list:
-    #     try:
-    #         data_dict[this_key]
-    #     except KeyError:
-    #         raise KeyError(str(this_key) + ' is missing')
-    #             # break
-    # ---------
+
     for this_key in key_list:
         if this_key not in data_list:
             raise KeyError(str(this_key) + ' is missing')
 
-
-# def check_key(data_dict, key_list):
-#     for i in range(len(key_list)):
-#         try:
-#             data_dict[key_list[i]]
-#         except KeyError:
-#             raise KeyError(str(key_list[i]) + ' is missing')
 
 def print_input_file(file_dict):
     for key, value in file_dict.items():
@@ -83,16 +64,12 @@ class InputParamsParser:
         # mut_optional = CheckOptionalKey(Mutations_dict,mutation_optional)
 
         path_min = ['npaths', 'center', 'fits']
-        # path_optional = ['path_optimize', 'optimize_percent', 'optimize_only']
         path_optional = []
         check_key(paths_dict.keys(), path_min)
         path_missing = check_optional_key(paths_dict, path_optional)
 
-        # larch_min = ['kmin', 'kmax', 'kweight', 'deltak', 'rbkg', 'bkgkw', 'bkgkmax']
-        # check_key(Larch_dict, larch_min)
-
         output_min = ['print_graph', 'num_output_paths']
-        output_optional = ['steady_state_exit']
+        output_optional = ['steady_state_exit', 'distributed']
         check_key(Outputs_dict.keys(), output_min)
         output_missing = check_optional_key(Outputs_dict, output_optional)
         # Adjust values
@@ -145,7 +122,7 @@ class InputParamsParser:
             # Outputs
             'steadyState': self.input_dict['Outputs']['steady_state_exit'],
             'printGraph': self.input_dict['Outputs']['print_graph'],
-
+            'distributed': self.input_dict['Outputs']['distributed'],
         }
 
         return temp_dict

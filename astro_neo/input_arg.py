@@ -9,7 +9,7 @@ from astro_neo.parser import InputParamsParser
 from . import helper
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input', help="Submit input file to EXAFS")
+parser.add_argument('-i', '--input', help="Submit input file to Astro Neo")
 parser.add_argument("-v", "--verbose", help="output verbosity", action="store_true")
 parser.add_argument("-s", "--show_input", help="show input file", action="store_true")
 parser.add_argument("-t", help="Timeing mode", action="store_true")
@@ -22,13 +22,13 @@ if len(sys.argv) == 1:
 
 if args.input is not None:
     file_path = os.path.join(os.getcwd(), args.input)
-    print(f"EXAFS Neo {__version__}")
+    print(f"Astro Neo {__version__}")
     input_params = InputParamsParser()
     input_params.read_input_file(file_path, verbose=args.show_input)
     input_params.input_dict = validate_input_file(input_params.input_dict)
 
     input_pars = input_params.export_input_dict()
-
+    print(input_pars)
 else:
     print("No input file is given")
 
@@ -37,38 +37,11 @@ timeing_mode = args.t
 
 
 def main():
+
     astro_neo = AstroNeo()
     astro_neo.neo_read(input_parameters=input_pars)
     astro_neo.neo_setup()
     astro_neo.run()
-
-
-# def input():
-#     parser = argparse.ArgumentParser()
-#
-#     parser.add_argument('-i', '--input', help="Submit input file to EXAFS")
-#     parser.add_argument("-v", "--verbose", help="output verbosity", action="store_true")
-#     parser.add_argument("-s", "--show_input", help="show input file", action="store_true")
-#     parser.add_argument("-t", help="Timeing mode", action="store_true")
-#
-#     args = parser.parse_args()
-#
-#     if len(sys.argv) == 1:
-#         parser.print_help(sys.stderr)
-#         sys.exit(1)
-#
-#     # Read in file if -i argument is printed
-#     if args.input != None:
-#         file_path = os.path.join(os.getcwd(), args.input)
-#         file_dict = fileParser.read_input_file(file_path)
-#
-#     # Read input file
-#     if args.show_input == True and args.input != None:
-#         file_dict = fileParser.read_input_file(file_path, verbose=True)
-#
-#     timeing_mode = args.t
-#
-#     return file_dict, timeing_mode
 
 
 def ini_parser(file_dict):

@@ -125,7 +125,7 @@ def validate_input_file(file_dict):
     # Paths
     npaths = int(paths_dict['npaths'])
     paths_dict['center'] = split_list(paths_dict['center'], float)
-    paths_dict['fits'] = split_list(paths_dict['fits'])
+    paths_dict['fits'] = paths_dict['fits']
 
     # paths_dict['path_optimize'] = optional_var(paths_dict, 'path_optimize', False, bool)
     # paths_dict['path_optimize_percent'] = optional_var(paths_dict, 'path_optimize_percent',
