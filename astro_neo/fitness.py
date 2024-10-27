@@ -4,7 +4,7 @@ import sys
 import xspec
 xspec.xset.Xset.chatter = 0
 
-acx2_path = os.path.expanduser("~") + "/projects/Astro_Neo/inputs_files/ACX2"
+acx2_path = os.path.expanduser("~") + "/projects/Astro_Neo/input_files/ACX2"
 sys.path.append(acx2_path)
 # sys.path.append("/Users/andy/projects/Astro_Neo/input_files/ACX2")
 
