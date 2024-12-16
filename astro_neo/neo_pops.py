@@ -10,38 +10,6 @@ from astro_neo.neo_pars import NeoPars
 from astro_neo.utils import NeoLogger
 
 
-#
-# def fitness(astro_pars, astro_obj, return_tot=False):
-#     """
-#     Evaluate fitness of a individual
-#     """
-#     loss = 0
-#     y_total = np.zeros(401)
-#     intervalK = astro_pars.exafsPars.intervalK
-#     larch = astro_pars.exafsPathPars.mylarch
-#     kweight = astro_pars.exafsPars.kweight
-#     for i in range(astro_pars.exafsPars.npath):
-#         pathname = astro_pars.exafsPathPars.pathname[i]
-#         pathdictionary = astro_pars.exafsPathPars.pathDictionary
-#         path = pathdictionary.get(pathname)
-#         path.e0 = astro_obj.get_e0()
-#         path.s02 = astro_obj.get_path(i)[0]
-#         path.sigma2 = astro_obj.get_path(i)[2]
-#         path.deltar = astro_obj.get_path(i)[3]
-#         y = path.chi
-#         for k in intervalK:
-#             y_total[int(k)] += y[int(k)]
-#     # compute loss function
-#     for j in intervalK:
-#         loss = loss + (y_total[int(j)] * astro_pars.exafsPathPars.g.k[int(j)] ** kweight -
-#                        astro_pars.exafsPathPars.exp[int(j)] * astro_pars.exafsPathPars.g.k[
-#                            int(j)] ** kweight) ** 2
-#     if return_tot:
-#         return loss, y_total
-#     else:
-#         return loss
-
-
 @define(kw_only=True)
 class NeoPopulations:
     neo_pars: NeoPars = None
@@ -63,10 +31,6 @@ class NeoPopulations:
     def generate_individual(self):
         npaths = self.neo_pars.neo_paths.npaths
         this_fits = self.neo_pars.neo_paths.fits
-        # center = self.neo_pars.neo_paths.center
-        # model = self.neo_pars.neo_paths.
-        # print(npaths)
-        # print(this_fits)
         ind = Individual(npaths=npaths, fits=this_fits)
         return ind
 

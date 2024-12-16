@@ -13,6 +13,20 @@ def raise_error(msg='Error'):
     raise Exception(msg)
 
 
+def clamp_checkKey(key, dictionary, alt_value, clip_list: list, logger=None, verbose=False):
+    if key not in dictionary:
+        if verbose:
+            warn_str = f'{key} not found! Using default value of {key}: {alt_value}'
+            if logger is None:
+                print(warn_str)
+            else:
+                logger.warn(warn_str)
+        if dictionary[key] > clip_list[0] or dictionary[key] < clip_list[1]:
+            return alt_value
+    else:
+        return dictionary[key]
+
+
 def checkKey(key, dictionary, alt_value=None, logger=None, verbose=False):
     # TODO: Raise checker for alternative response
     if key not in dictionary:
@@ -175,19 +189,19 @@ class STRColors:
         STRColors.logger_print_based_on_verbose_lvl(logger, datetime.datetime.fromtimestamp(st).strftime(
             '%H:%M:%S') + f"{STRColors.BOLD} Gen: {STRColors.ENDC}{neo_pars.runPars.currGen}", verbose_lvl, 1)
         STRColors.logger_print_based_on_verbose_lvl(logger,
-                                                    f"Best Fit: {STRColors.BOLD}{round(score_sorted[0],3)}{STRColors.ENDC}",
+                                                    f"Best Fit: {STRColors.BOLD}{round(score_sorted[0], 3)}{STRColors.ENDC}",
                                                     verbose_lvl, 5)
         STRColors.logger_print_based_on_verbose_lvl(logger,
-                                                    f"2nd Fit: {STRColors.BOLD}{round(score_sorted[1],3)}{STRColors.ENDC}",
+                                                    f"2nd Fit: {STRColors.BOLD}{round(score_sorted[1], 3)}{STRColors.ENDC}",
                                                     verbose_lvl, 5)
         STRColors.logger_print_based_on_verbose_lvl(logger,
-                                                    f"3rd Fit: {STRColors.BOLD}{round(score_sorted[2],3)}{STRColors.ENDC}",
+                                                    f"3rd Fit: {STRColors.BOLD}{round(score_sorted[2], 3)}{STRColors.ENDC}",
                                                     verbose_lvl, 5)
         STRColors.logger_print_based_on_verbose_lvl(logger,
-                                                    f"4th Fit: {STRColors.BOLD}{round(score_sorted[3],3)}{STRColors.ENDC}",
+                                                    f"4th Fit: {STRColors.BOLD}{round(score_sorted[3], 3)}{STRColors.ENDC}",
                                                     verbose_lvl, 5)
         STRColors.logger_print_based_on_verbose_lvl(logger,
-                                                    f"Last Fit: {STRColors.BOLD}{round(score_sorted[-1],3)}{STRColors.ENDC}",
+                                                    f"Last Fit: {STRColors.BOLD}{round(score_sorted[-1], 3)}{STRColors.ENDC}",
                                                     verbose_lvl, 5)
         STRColors.logger_print_based_on_verbose_lvl(logger,
                                                     f"Different from last best fit: {neo_pars.bestFitPars.bestDiff:.4f}",

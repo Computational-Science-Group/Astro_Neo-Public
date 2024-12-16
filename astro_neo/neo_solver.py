@@ -44,7 +44,7 @@ class NeoSolver_GA(NeoSolverBase):
         pops.eval_population()
 
 
-class NeoSolver_GA_Rechenberg(NeoSolverBase):
+class NeoSolverGARechenberg(NeoSolverBase):
     """
     Standard GA with Rechenberg addition
     """
@@ -82,7 +82,7 @@ class NeoSolver_GA_Rechenberg(NeoSolverBase):
             exafs_pars.mutPars.mutChance = np.clip(exafs_pars.mutPars.mutChance, 0, 100)
 
 
-class NeoSolver_DE(NeoSolverBase):
+class NeoSolverDiff(NeoSolverBase):
     """
     Standard Differential Evolution
     """
@@ -91,6 +91,23 @@ class NeoSolver_DE(NeoSolverBase):
         super().__init__(exafs_pars, logger)
         self.solver_type = 2
         self.solver_operator = "Differential Evolution"
+
+    def solve(self, pops, selector, crossover, mutator, exafs_pars):
+        selector.select(pops)
+        crossover.crossover(pops)
+        mutator.mutate(pops)
+        pops.eval_population()
+
+
+class NeoSolverDiffClustering(NeoSolverBase):
+    """
+    Differential Evolution with Clustering
+    """
+
+    def __init__(self,exafs_pars, logger):
+        super().__init__(exafs_pars, logger)
+        self.solver_type = 3
+        self.solver_operator = "Differential Evolution with Clustering"
 
     def solve(self, pops, selector, crossover, mutator, exafs_pars):
         pass
@@ -120,17 +137,17 @@ class NeoSolver:
         if self.solver_type == 0:
             self.solver_operator = NeoSolver_GA(exafs_pars, logger=self.logger)
         elif self.solver_type == 1:
-            self.solver_operator = NeoSolver_GA_Rechenberg(exafs_pars, logger=self.logger)
+            self.solver_operator = NeoSolverGARechenberg(exafs_pars, logger=self.logger)
         elif self.solver_type == 2:
-            self.solver_operator = NeoSolver_DE(exafs_pars, logger=self.logger)
+            self.solver_operator = NeoSolverDiff(exafs_pars, logger=self.logger)
         else:
             self.solver_operator = NeoSolverBase(exafs_pars, logger=self.logger)
             raise ValueError("Invalid selector type, returning standard selector type.")
 
-    def solve(self, pops, selector, crossover, mutator, exafs_pars):
+    def solve(self, pops, selector, crossover, mutator, neo_pars):
         """
         Perform the actual selection
-        :param exafs_pars:
+        :param neo_pars:
         :param selector:
         :param mutator:
         :param crossover:
@@ -140,7 +157,7 @@ class NeoSolver:
         if self.solver_operator is None:
             raise ValueError("Solver is not initialized")
         else:
-            return self.solver_operator.solve(pops, selector, crossover, mutator, exafs_pars)
+            return self.solver_operator.solve(pops, selector, crossover, mutator, neo_pars)
 
     def __str__(self):
         if self.solver_operator is None:
@@ -151,15 +168,15 @@ class NeoSolver:
 
 if __name__ == "__main__":
     inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': '',
-                   'npath': 1, 'fits': ['XspecSpectrum'], 'center':[8.422],
+                   'npath': 1, 'fits': ['XspecSpectrum'], 'center': [8.422],
                    'solver_type': 1}
-    exafs_NeoPars = NeoPars()
-    exafs_NeoPars.read_inputs(inputs_pars)
+    neoPars = NeoPars()
+    neoPars.read_inputs(inputs_pars)
 
-    neo_population = NeoPopulations(exafs_NeoPars)
+    neo_population = NeoPopulations(neo_pars=neoPars)
     neo_population.initialize_populations()
 
     exafs_solver = NeoSolver()
-    exafs_solver.initialize(exafs_pars=exafs_NeoPars)
+    exafs_solver.initialize(exafs_pars=neoPars)
     # exafs_selector.solve(neo_population)
     print(exafs_solver)

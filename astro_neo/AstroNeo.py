@@ -23,10 +23,10 @@ class AstroNeo:
 
         print(banner())
         self.logger = NeoLogger()
-        self.exafs_neo_pars = NeoPars()
+        self.neo_pars = NeoPars()
         self.mutator = NeoMutator(logger=self.logger)
         self.selector = NeoSelector(logger=self.logger)
-        self.crossOver = NeoCrossover(logger=self.logger)
+        self.crossover = NeoCrossover(logger=self.logger)
         self.solver = NeoSolver(logger=self.logger)
         self.neo_population = NeoPopulations(logger=self.logger)
         self.verbose_lvl = verbose_lvl
@@ -58,38 +58,38 @@ class AstroNeo:
         Setup EXAFS run subroutine
         :return:
         """
-        self.exafs_neo_pars.read_inputs(self.input_parameters)
-        self.logger.initialize_logging(self.exafs_neo_pars.neoFilePars.log_path)
-        self.neo_population.initialize(self.exafs_neo_pars)
+        self.neo_pars.read_inputs(self.input_parameters)
+        self.logger.initialize_logging(self.neo_pars.neoFilePars.log_path)
+        self.neo_population.initialize(self.neo_pars)
         self.neo_population.initialize_populations()
-        self.result.initialize(self.exafs_neo_pars)
+        self.result.initialize(self.neo_pars)
         # Initialize all the operators
-        self.selector.initialize(self.exafs_neo_pars)
-        self.crossOver.initialize(self.exafs_neo_pars)
-        self.mutator.initialize(self.exafs_neo_pars)
-        self.solver.initialize(self.exafs_neo_pars)
+        self.selector.initialize(self.neo_pars)
+        self.crossover.initialize(self.neo_pars)
+        self.mutator.initialize(self.neo_pars)
+        self.solver.initialize(self.neo_pars)
 
     def run(self):
         """
         Initialize a EXAFS Run
         :return: result class
         """
-        STRColors.run_verbose_start(self.logger, self.exafs_neo_pars, verbose_lvl=self.verbose_lvl)
+        STRColors.run_verbose_start(self.logger, self.neo_pars, verbose_lvl=self.verbose_lvl)
 
-        for currGen in range(self.exafs_neo_pars.fixedPars.nGen):
-            self.exafs_neo_pars.runPars.start_gen()
+        for currGen in range(self.neo_pars.fixedPars.nGen):
+            self.neo_pars.runPars.start_gen()
 
-            self.solver.solve(self.neo_population, self.selector, self.crossOver, self.mutator, self.exafs_neo_pars)
+            self.solver.solve(self.neo_population, self.selector, self.crossover, self.mutator, self.neo_pars)
 
             # End of generation verbose
-            STRColors.run_verbose_gen(self.logger, self.exafs_neo_pars, self.neo_population,
+            STRColors.run_verbose_gen(self.logger, self.neo_pars, self.neo_population,
                                       verbose_lvl=self.verbose_lvl)
-            self.result.collect(self.neo_population, self.exafs_neo_pars)
+            self.result.collect(self.neo_population, self.neo_pars)
 
             # self.exafs_neo_pars.runPars.end_gen(self.neo_population)
-            self.exafs_neo_pars.end_gen(self.neo_population)
+            self.neo_pars.end_gen(self.neo_population)
         # End of run verbose
-        STRColors.run_verbose_end(self.logger, self.exafs_neo_pars, verbose_lvl=self.verbose_lvl)
+        STRColors.run_verbose_end(self.logger, self.neo_pars, verbose_lvl=self.verbose_lvl)
         self.neo_population.shutdown_process_pool()
         return self.result
 
@@ -109,9 +109,10 @@ if __name__ == "__main__":
         'rsp_file': 'left_rmf.fits',
         'nGen': 20,
         'fits': 'XspecSpectrum',
-        'solver_type': 1,
+        'solver_type': 2,
+        'mut_options': 1,
         'distributed': 6,
-        'nPops': 1000
+        'nPops': 20
     }
     exafs_temp.neo_read(input_parameters=input_dict)
     exafs_temp.neo_setup()

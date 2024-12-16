@@ -54,14 +54,14 @@ class Individual:
             print("Invalid Fits selection: " + str(self.fits))
             sys.exit()
 
-    def get_model(self):
+    def get_model_params(self):
         """
         Get the desired func back from xspec
 
         :return:
         """
 
-        return self.model
+        return self.model.get()
 
     def set_pars(self, pars: dict):
         self.model.set(pars)
@@ -75,6 +75,16 @@ class Individual:
 
     def get_pars_bounds(self, pars):
         pass
+
+    def set_path(self, params: list):
+        params_names = self.model.get_params_names()
+        dicts = {}
+        for j, key in enumerate(params_names):
+            dicts[key] = params[j]
+        self.model.set(dicts)
+
+    def __len__(self):
+        return len(self.model)
 
 
 class Old_Individual:
@@ -144,7 +154,10 @@ class Old_Individual:
 
 
 if __name__ == "__main__":
-    individual = Individual(npaths=1,fits="XspecSpectrum")
+    individual = Individual(npaths=1, fits="XspecSpectrum")
+    # print(len(individual))
+    print(individual.get_model_params())
+    print(individual.model.get_params_names())
     # params_list = [2, 3, 4, 7, 9, 10, 11, 12, 13, 19, 22, 23, 38, 41, 60]
     # print(individual.get_model().get_pars_dicts(params_list))
     # print(individual.get_model().get_func())

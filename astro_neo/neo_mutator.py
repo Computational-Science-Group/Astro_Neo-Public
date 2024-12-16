@@ -5,6 +5,7 @@ import numpy as np
 from astro_neo.individual import Individual
 from astro_neo.fitness import fitness
 
+
 class NeoMutatorBase:
     """Base class for mutator class in astro_neo.
   """
@@ -53,6 +54,7 @@ class NeoMutatorPerPars(NeoMutatorBase):
             if np.random.random() < self.mutChance:
                 individual.mutate()
 
+
 class NeoMutatorMetropolis(NeoMutatorBase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
@@ -65,10 +67,10 @@ class NeoMutatorMetropolis(NeoMutatorBase):
                 nmutate_success = 0
 
                 og_indi = copy.deepcopy(indi)
-                og_score = fitness(self.neo_pars, og_indi)
+                og_score = fitness(og_indi)
                 mut_indi = copy.deepcopy(indi)
                 mut_indi.mutate_paths(self.mutChance)
-                mut_score = fitness(self.neo_pars, mut_indi)
+                mut_score = fitness(mut_indi)
                 # T = - self.bestDiff / np.log(1 - (self.genNum / self.ngen))
                 T = - self.neo_pars.bestFitPars.bestDiff / np.log(
                     1 - (self.neo_pars.runPars.currGen / self.neo_pars.fixedPars.nGen))
@@ -85,13 +87,82 @@ class NeoMutatorMetropolis(NeoMutatorBase):
 
 
 class NeoMutatorDE(NeoMutatorBase):
+    """Mutator class that uses Differential Evolution (DE) for mutation."""
+
     def __init__(self, neo_pars, logger):
+        """Initializes the mutator with parameters and logger.
+
+        Args:
+            neo_pars: Parameters for the mutation process.
+            logger: Logger for logging information.
+        """
         super().__init__(neo_pars, logger)
         self.mutOpt = 4
         self.mutType = "Mutate DE"
 
-    def mutate(self, pops) -> list:
-        pass
+    def mutate(self, pops):
+        """Mutates individuals in the population using Differential Evolution.
+
+        Args:
+            pops: Population to mutate.
+
+        Returns:
+            list: List of mutated populations.
+        """
+        mutated_Populations = []
+        for this_pop in range(pops):
+            candidates = [candidate for candidate in range(pops) if candidate != this_pop]
+            a, b, c = np.random.choice(candidates, 3, replace=False)
+            mutation_vectors = [pops[a], pops[b], pops[c]]
+            temp_individual = self._mutate_DE(mutation_vectors, self.neo_pars.mutPars.mutF)
+            # temp_individual = self._check_for_bound(temp_individual)
+            # self.mutated_Populations.append(temp_individual)
+
+    def _mutate_DE(self, mutation_vectors, F):
+        """Performs the mutation operation for Differential Evolution.
+
+        Args:
+            mutation_vectors: Vectors used for mutation.
+            F: Mutation factor.
+
+        Returns:
+            Individual: Mutated individual.
+        """
+
+        x_list = np.array(mutation_vectors[0].get_model_params())
+        y_list = np.array(mutation_vectors[1].get_model_params())
+        z_list = np.array(mutation_vectors[2].get_model_params())
+
+        new_Pars = x_list + F * (y_list - z_list)
+
+        temp_individual = self._generate_individual()
+        temp_individual.set_path(new_Pars)
+        return temp_individual
+
+    def _generate_individual(self):
+        npaths = self.neo_pars.neo_paths.npaths
+        this_fits = self.neo_pars.neo_paths.fits
+        ind = Individual(npaths=npaths, fits=this_fits)
+        return ind
+
+    def _check_for_bound(self, individual):
+        """Checks if the mutated individual is within the bounds.
+
+        Args:
+            individual: Mutated individual.
+
+        Returns:
+            Individual: Mutated individual within bounds.
+        """
+        pars = individual.get_func()[0].get_func()
+
+        bounds = individual.get_bounds(0)
+        temp_pars = []
+        for i, (par, value) in enumerate(pars.items()):
+            temp_pars.append(np.clip(value, bounds[par][0], bounds[par][1]))
+
+        individual.set_path(0, temp_pars)
+        return individual
 
 
 class NeoMutator:
@@ -133,61 +204,6 @@ class NeoMutator:
             raise ValueError("Mutator is not initialized")
         else:
             self.mutator.mutate(pops)
-
-
-class Mutator:
-    """Mutator class for astro_neo.
-  """
-
-    def __init__(self, mutate_type) -> None:
-        self.mutate_type = mutate_type
-
-    def mutate_type_selector(self):
-        pass
-
-    def mutate(self, Individuals: list, temp_Individual: Individual, F: float):
-        """_summary_
-
-    Args:
-        individual (_type_): _description_
-        F (_type_): _description_
-    """
-        length = len(Individuals[0])
-        assert all(len(lst) == length for lst in Individuals)
-
-    def mutate_1(self, individuals: list, temp_Individual: Individual, F: float):
-        """_summary_
-
-    Args:
-        individuals (list): _description_
-        temp_Individual (individual.Individual): _description_
-        F (float): _description_
-
-    Returns:
-        _type_: _description_
-    """
-
-        length = len(individuals[0])
-
-        assert all(len(lst) == length for lst in individuals)
-        r1_list = np.array(individuals[0].get())[0]
-        r2_list = np.array(individuals[1].get())[0]
-        r3_list = np.array(individuals[2].get())[0]
-
-        new_Pars = r1_list + F * (r2_list - r3_list)
-
-        temp_Individual.set_path(0, new_Pars)
-
-        return temp_Individual
-
-    def mutate_2(self, individuals: list, temp_Individual: Individual, F: float):
-        """_summary_
-
-    Args:
-        individuals (list): _description_
-        temp_Individual (individual.Individual): _description_
-        F (float): _description_
-    """
 
 
 if __name__ == "__main__":
