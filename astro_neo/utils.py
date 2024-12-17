@@ -21,10 +21,12 @@ def clamp_checkKey(key, dictionary, alt_value, clip_list: list, logger=None, ver
                 print(warn_str)
             else:
                 logger.warn(warn_str)
-        if dictionary[key] > clip_list[0] or dictionary[key] < clip_list[1]:
-            return alt_value
+        return alt_value
     else:
-        return dictionary[key]
+        if dictionary[key] > clip_list[0] or dictionary[key] < clip_list[1]:
+            return dictionary[key]
+        else:
+            return np.clip(dictionary[key], clip_list[1], clip_list[0])
 
 
 def checkKey(key, dictionary, alt_value=None, logger=None, verbose=False):
