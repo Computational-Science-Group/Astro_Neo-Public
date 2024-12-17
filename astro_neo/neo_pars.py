@@ -120,20 +120,21 @@ class NeoMutPars:
         self.mutCR = clamp_checkKey('mutCR', input_dicts, 0.9, [0.0, 1.0])
         self.mutF = clamp_checkKey('mutF', input_dicts, 0.8, [0.0, 2.0])
 
-    @mutChance.validator
-    def check_mutchance(self, attribute, value):
-        if value > 1.0 or value < 0.0:
-            raise ValueError("mutChance should be between 0 and 1")
-
-    @mutCR.validator
-    def check_mutCR(self, attribute, value):
-        if value > 1.0 or value < 0.0:
-            raise ValueError("mutCR should be between 0 and 1")
-
-    @mutF.validator
-    def check_mutF(self, attribute, value):
-        if value > 2.0 or value < 0.0:
-            raise ValueError("mutF should be between 0 and 1")
+    # @mutChance.validator
+    # def check_mutchance(self, attribute, value):
+    #     if float(value) > 1.0 or float(value) < 0.0:
+    #         raise ValueError("mutChance should be between 0 and 1")
+    #
+    # @mutCR.validator
+    # def check_mutCR(self, attribute, value):
+    #     print(value)
+    #     if float(value) > 1.0 or float(value) < 0.0:
+    #         raise ValueError("mutCR should be between 0 and 1")
+    #
+    # @mutF.validator
+    # def check_mutF(self, attribute, value):
+    #     if value > 2.0 or value < 0.0:
+    #         raise ValueError("mutF should be between 0 and 1")
 
 
 @define
@@ -256,24 +257,13 @@ class NeoPath:
 
 
 if __name__ == "__main__":
-    # exafs_pars = EXAFSPars()
-    # inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': '',
-    #                'feff_file': '../path_files/Cu/path_75/feff', 'kmin': 0.95,
-    #                'kmax': 9.775,
-    #                'kweight': 3.0, 'pathrange': [1, 2, 3, 4, 5],
-    #                'deltak': 0.05, 'rbkg': 1.1, 'bkgkw': 1.0, 'bkgkmax': 15.0}
+    neo_pars = NeoPars()
+    inputs_pars = {'data_file': '../path_files/Cu/cu_10k.xmu', 'output_file': '',
+                   'feff_file': '../path_files/Cu/path_75/feff', 'kmin': 0.95,
+                   'kmax': 9.775,
+                   'kweight': 3.0, 'pathrange': [1, 2, 3, 4, 5],
+                   'deltak': 0.05, 'rbkg': 1.1, 'bkgkw': 1.0, 'bkgkmax': 15.0}
 
-    # exafs_NeoPars = NeoFilePars()
-    #
-    # exafs_NeoPars.read_inputs(inputs_pars)
-    # exafs_NeoPars.initialize_filepath()
-    # print(exafs_NeoPars)
-    # astro_NeoPars = NeoPars()
-    # astro_NeoPars.read_inputs(inputs_pars)
+    neo_pars.read_inputs(inputs_pars)
 
-    # print(astro_NeoPars)
-    # print(exafs_NeoPars.exafsPathPars)
 
-    neo_mut_pars = NeoMutPars(mutCR=0.5)
-    inputs_pars = {"mut_options": 1}
-    neo_mut_pars.read_inputs(input_dicts=inputs_pars)

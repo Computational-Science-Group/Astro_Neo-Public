@@ -26,23 +26,6 @@ class EXAFS_UniformCrossover(EXAFS_CrossoverBase):
         self.croType = "Uniform Crossover"
 
     def crossover(self, pops, individual1, individual2):
-        # child = pops.generate_individual()
-        #
-        #
-        # for i in range(self.exafs_pars.exafsPathPars.npaths):
-        #     individual1_path = individual1.get_path(i)
-        #     individual2_path = individual2.get_path(i)
-        #
-        #     temp_path = []
-        #     for path_pars in range(4):
-        #         if np.random.randint(0, 2):
-        #             temp_path.append(individual1_path[path_pars])
-        #         else:
-        #             temp_path.append(individual2_path[path_pars])
-        #
-        #     child.set_path(i, temp_path[0], temp_path[2], temp_path[3])
-        #
-        # return child
         child = pops.generate_individual()
 
         ind1_dict = individual1.get_model().get_func()
@@ -58,6 +41,7 @@ class EXAFS_UniformCrossover(EXAFS_CrossoverBase):
                 new_keys_dict[key] = ind2_dict[key]
         child.set_pars(new_keys_dict)
         return child
+
 
 class EXAFS_SinglePointCrossover(EXAFS_CrossoverBase):
     def __init__(self, exafs_pars, logger):
@@ -267,8 +251,8 @@ if __name__ == "__main__":
     # crossover_operator.crossover(neo_population)
     # print(crossover_operator)
 
-    individual1 = Individual(npaths=1,fits="XspecSpectrum")
-    individual2 = Individual(npaths=1,fits="XspecSpectrum")
+    individual1 = Individual(npaths=1, fits="XspecSpectrum")
+    individual2 = Individual(npaths=1, fits="XspecSpectrum")
     # params_list = [2, 3, 4, 7, 9, 10, 11, 12, 13, 19, 22, 23, 38, 41, 60]
     # print(individual.get_model().get_pars_dicts(params_list))
     ind1_dict = individual1.get_model().get_func()

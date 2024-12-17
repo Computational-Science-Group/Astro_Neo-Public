@@ -67,11 +67,13 @@ class Individual:
         self.model.set(pars)
 
     def mutate(self):
-
         self.model.mutate()
 
-    def get_bound(self):
-        pass
+    def get_params(self):
+        return self.model.get_params()
+
+    def get_bounds(self):
+        return self.model.get_bounds()
 
     def get_pars_bounds(self, pars):
         pass

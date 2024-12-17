@@ -110,14 +110,15 @@ class NeoMutatorDE(NeoMutatorBase):
             list: List of mutated populations.
         """
         mutated_Populations = []
-        for this_pop in range(pops):
-            candidates = [candidate for candidate in range(pops) if candidate != this_pop]
+        for i, indi in enumerate(pops):
+            candidates = [candidate for candidate in range(len(pops)) if candidate != i]
             a, b, c = np.random.choice(candidates, 3, replace=False)
             mutation_vectors = [pops[a], pops[b], pops[c]]
             temp_individual = self._mutate_DE(mutation_vectors, self.neo_pars.mutPars.mutF)
-            # temp_individual = self._check_for_bound(temp_individual)
-            # self.mutated_Populations.append(temp_individual)
+            temp_individual = self._check_for_bound(temp_individual)
+            mutated_Populations.append(temp_individual)
 
+        return mutated_Populations
     def _mutate_DE(self, mutation_vectors, F):
         """Performs the mutation operation for Differential Evolution.
 
@@ -134,14 +135,13 @@ class NeoMutatorDE(NeoMutatorBase):
         z_list = np.array(mutation_vectors[2].get_model_params())
 
         new_Pars = x_list + F * (y_list - z_list)
-
         temp_individual = self._generate_individual()
         temp_individual.set_path(new_Pars)
         return temp_individual
 
     def _generate_individual(self):
         npaths = self.neo_pars.neo_paths.npaths
-        this_fits = self.neo_pars.neo_paths.fits
+        this_fits = self.neo_pars.neo_paths.fits[0]
         ind = Individual(npaths=npaths, fits=this_fits)
         return ind
 
@@ -154,14 +154,13 @@ class NeoMutatorDE(NeoMutatorBase):
         Returns:
             Individual: Mutated individual within bounds.
         """
-        pars = individual.get_func()[0].get_func()
-
-        bounds = individual.get_bounds(0)
+        pars = individual.get_params()
+        bounds = individual.get_bounds()
         temp_pars = []
         for i, (par, value) in enumerate(pars.items()):
             temp_pars.append(np.clip(value, bounds[par][0], bounds[par][1]))
 
-        individual.set_path(0, temp_pars)
+        individual.set_path(temp_pars)
         return individual
 
 
@@ -207,5 +206,5 @@ class NeoMutator:
 
 
 if __name__ == "__main__":
-    center = [0]
-    x = Individual(1, ['XspecSpectrum'], center)
+    individual = Individual(npaths=1, fits="XspecSpectrum")
+    mutator = NeoMutatorDE(neo_pars=None, logger=None)

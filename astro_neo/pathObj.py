@@ -1075,10 +1075,9 @@ class XspecSpectrum(BaseObj):
         self._Params = ParamsDict(self._params_names, params_type='DE')
         self._Params.initialize_range(self.range_dicts)
 
-    def get_func(self, *args):
-        Params = self._Params.get()
-
-        return Params
+    def get_params(self):
+        params = self._Params.get()
+        return params
 
     def get_pars_dicts(self, pars_list):
         """Get parameters list in xspec dictionary form
