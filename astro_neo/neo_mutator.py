@@ -24,6 +24,11 @@ class NeoMutatorBase:
     def __str__(self):
         return f"mutation chance: {self.mutChance}%, mutation chance E0: {self.mutChanceE0}%"
 
+    def _generate_individual(self):
+        npaths = self.neo_pars.neo_paths.npaths
+        this_fits = self.neo_pars.neo_paths.fits[0]
+        ind = Individual(npaths=npaths, fits=this_fits)
+        return ind
 
 class NeoMutatorPerIndividual(NeoMutatorBase):
     def __init__(self, neo_pars, logger):
@@ -139,12 +144,6 @@ class NeoMutatorDE(NeoMutatorBase):
         temp_individual.set_path(new_Pars)
         return temp_individual
 
-    def _generate_individual(self):
-        npaths = self.neo_pars.neo_paths.npaths
-        this_fits = self.neo_pars.neo_paths.fits[0]
-        ind = Individual(npaths=npaths, fits=this_fits)
-        return ind
-
     def _check_for_bound(self, individual):
         """Checks if the mutated individual is within the bounds.
 
@@ -166,10 +165,10 @@ class NeoMutatorDE(NeoMutatorBase):
 
 class NeoMutator:
     def __init__(self, logger=None):
-        self.mutator = None
         self.logger = logger
-        self.mutator_type = None
+        self.mutator = None
         self.neo_pars = None
+        self.mutator_type = None
         self.mutator_score = 0  # TODO: need to check if this is needed
 
     def initialize(self, neo_pars):

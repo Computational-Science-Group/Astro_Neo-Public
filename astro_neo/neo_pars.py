@@ -109,7 +109,6 @@ class NeoMutPars:
     mutOpt: int = 1
     mutChance: float = field(default=0.3)
     mutChanceE0: float = field(default=0.3)
-    mutCR: float = field(default=0.9)
     mutF: float = field(default=0.8)
     nmut: int = 0
 
@@ -117,7 +116,6 @@ class NeoMutPars:
         self.mutOpt = checkKey('mut_options', input_dicts, 1)
         self.mutChance = checkKey('mutChance', input_dicts, 0.3)
         self.mutChanceE0 = checkKey('mutChanceE0', input_dicts, 0.3)
-        self.mutCR = clamp_checkKey('mutCR', input_dicts, 0.9, [0.0, 1.0])
         self.mutF = clamp_checkKey('mutF', input_dicts, 0.8, [0.0, 2.0])
 
     # @mutChance.validator
@@ -140,9 +138,11 @@ class NeoMutPars:
 @define
 class NeoCrossPars:
     croOpt: int = 0
+    cR: float = field(default=0.9)
 
     def read_inputs(self, input_dicts):
         self.croOpt = checkKey('croOpt', input_dicts, 0)
+        self.cR = clamp_checkKey('cR', input_dicts, 0.9, [0.0, 1.0])
 
 
 @define
@@ -265,5 +265,3 @@ if __name__ == "__main__":
                    'deltak': 0.05, 'rbkg': 1.1, 'bkgkw': 1.0, 'bkgkmax': 15.0}
 
     neo_pars.read_inputs(inputs_pars)
-
-

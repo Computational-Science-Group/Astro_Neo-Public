@@ -21,6 +21,7 @@ class NeoPopulations:
     processPool: ProcessPoolExecutor = None
     num_pops: int = None
     logger: NeoLogger = None
+    mut_pops:  list = field(factory=list) # For DE only
 
     def initialize(self, neo_pars: NeoPars):
         self.neo_pars = neo_pars

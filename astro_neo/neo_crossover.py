@@ -5,11 +5,11 @@ from astro_neo.neo_pops import NeoPopulations
 from astro_neo.neo_pars import NeoPars
 
 
-class EXAFS_CrossoverBase:
-    def __init__(self, exafs_pars, logger=None):
+class NeoCrossOverBase:
+    def __init__(self, neo_pars, logger=None):
         self.logger = logger
-        self.exafs_pars = exafs_pars
-        self.croOpt = self.exafs_pars.crossPars.croOpt
+        self.neo_pars = neo_pars
+        self.croOpt = self.neo_pars.crossPars.croOpt
         self.croType = None
 
     def crossover(self, pops, individual1, individual2):
@@ -18,10 +18,16 @@ class EXAFS_CrossoverBase:
     def __str__(self):
         return f"Crossover Option: {self.croType}"
 
+    def _generate_individual(self):
+        npaths = self.neo_pars.neo_paths.npaths
+        this_fits = self.neo_pars.neo_paths.fits[0]
+        ind = Individual(npaths=npaths, fits=this_fits)
+        return ind
 
-class EXAFS_UniformCrossover(EXAFS_CrossoverBase):
-    def __init__(self, exafs_pars, logger):
-        super().__init__(exafs_pars, logger)
+
+class NeoUniCrossOver(NeoCrossOverBase):
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
         self.croOpt = 0
         self.croType = "Uniform Crossover"
 
@@ -35,7 +41,6 @@ class EXAFS_UniformCrossover(EXAFS_CrossoverBase):
         new_keys_dict = {}
         for key in keys:
             if np.random.randint(0, 2):
-                # ind1_dict[key] = ind2_dict[key]
                 new_keys_dict[key] = ind1_dict[key]
             else:
                 new_keys_dict[key] = ind2_dict[key]
@@ -43,9 +48,9 @@ class EXAFS_UniformCrossover(EXAFS_CrossoverBase):
         return child
 
 
-class EXAFS_SinglePointCrossover(EXAFS_CrossoverBase):
-    def __init__(self, exafs_pars, logger):
-        super().__init__(exafs_pars, logger)
+class NeoSPCrossOver(NeoCrossOverBase):
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
         self.croOpt = 1
         self.croType = 'Single Point Crossover'
 
@@ -59,7 +64,7 @@ class EXAFS_SinglePointCrossover(EXAFS_CrossoverBase):
         else:
             child.set_e0(individual2.get_e0())
 
-        for i in range(self.exafs_pars.exafsPathPars.npaths):
+        for i in range(self.neo_pars.exafsPathPars.npaths):
             individual1_path = individual1.get_path(i)
             individual2_path = individual2.get_path(i)
 
@@ -75,9 +80,9 @@ class EXAFS_SinglePointCrossover(EXAFS_CrossoverBase):
         return child
 
 
-class EXAFS_DualPointCrossover(EXAFS_CrossoverBase):
-    def __init__(self, exafs_pars, logger):
-        super().__init__(exafs_pars, logger)
+class NeoDPCrossOver(NeoCrossOverBase):
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
         self.croOpt = 2
         self.croType = 'Dual Point Crossover'
 
@@ -85,9 +90,9 @@ class EXAFS_DualPointCrossover(EXAFS_CrossoverBase):
         pass
 
 
-class EXAFS_ArithmeticCrossover(EXAFS_CrossoverBase):
-    def __init__(self, exafs_pars, logger):
-        super().__init__(exafs_pars, logger)
+class NeoArithmeticCrossOver(NeoCrossOverBase):
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
         self.croOpt = 3
         self.croType = 'Arithmetic Crossover'
 
@@ -98,7 +103,7 @@ class EXAFS_ArithmeticCrossover(EXAFS_CrossoverBase):
         else:
             child.set_e0(individual2.get_e0())
 
-        for i in range(self.exafs_pars.exafsPathPars.npaths):
+        for i in range(self.neo_pars.exafsPathPars.npaths):
             individual1_path = individual1.get_path(i)
             individual2_path = individual2.get_path(i)
 
@@ -116,9 +121,9 @@ class EXAFS_ArithmeticCrossover(EXAFS_CrossoverBase):
         return child
 
 
-class EXAFS_OrCrossover(EXAFS_CrossoverBase):
-    def __init__(self, exafs_pars, logger):
-        super().__init__(exafs_pars, logger)
+class NeoOrCrossOver(NeoCrossOverBase):
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
         self.croOpt = 4
         self.croType = 'Or Crossover'
 
@@ -129,7 +134,7 @@ class EXAFS_OrCrossover(EXAFS_CrossoverBase):
         else:
             child.set_e0(individual2.get_e0())
 
-        for i in range(self.exafs_pars.exafsPathPars.npaths):
+        for i in range(self.neo_pars.exafsPathPars.npaths):
             individual1_path = individual1.get_path(i)
             individual2_path = individual2.get_path(i)
 
@@ -147,9 +152,9 @@ class EXAFS_OrCrossover(EXAFS_CrossoverBase):
         return child
 
 
-class EXAFS_AverageCrossOver(EXAFS_CrossoverBase):
-    def __init__(self, exafs_pars, logger):
-        super().__init__(exafs_pars, logger)
+class NeoAverageCrossOver(NeoCrossOverBase):
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
         self.croOpt = 5
         self.croType = 'Average Crossover'
 
@@ -174,33 +179,65 @@ class EXAFS_AverageCrossOver(EXAFS_CrossoverBase):
         return child
 
 
+class NeoDECrossOver(NeoCrossOverBase):
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
+        self.croOpt = 6
+        self.croType = 'DE Crossover'
+
+    def crossover(self, mut_pops, pops, **kwargs):
+        trial_pops = []
+        for i in range(pops):
+            trial_pops.append(self._crossover_DE(mut_pops[i], pops[i], self.neo_pars.mutPars.cR))
+
+    def _crossover_DE(self, mutate_ind, pop_ind, cR: int):
+        p = np.random.rand(len(mutate_ind))
+        # temp_pars = self.generative
+        temp_ind = self._generateIndividual()
+        mutate_Pars = mutate_ind.get()[0]
+        pop_Pars = pop_ind.get()[0]
+        temp_Pars = []
+        for i in range(len(mutate_ind)):
+            if p[i] < cR:
+                temp_Pars.append(mutate_Pars[i])
+            else:
+                temp_Pars.append(pop_Pars[i])
+
+        temp_ind.set_path(0, temp_Pars)
+        return temp_ind
+
+
 class NeoCrossover:
     def __init__(self, logger=None):
         self.logger = logger
-        self.exafs_pars = None
+        self.neo_pars = None
         self.crossover_type = None
         self.crossover_operator = None
         self.crossover_score = 0  # TODO: maybe implement this?
 
-    def initialize(self, exafs_pars):
-        self.exafs_pars = exafs_pars
+    def initialize(self, neo_pars):
+        self.neo_pars = neo_pars
 
-        self.crossover_type = exafs_pars.crossPars.croOpt
+        self.crossover_type = neo_pars.crossPars.croOpt
         if self.crossover_type == 0:
-            self.crossover_operator = EXAFS_UniformCrossover(exafs_pars, logger=self.logger)
+            self.crossover_operator = NeoUniCrossOver(neo_pars, logger=self.logger)
         elif self.crossover_type == 1:
-            self.crossover_operator = EXAFS_SinglePointCrossover(exafs_pars, logger=self.logger)
+            self.crossover_operator = NeoSPCrossOver(neo_pars, logger=self.logger)
         elif self.crossover_type == 2:
-            self.crossover_operator = EXAFS_DualPointCrossover(exafs_pars, logger=self.logger)
+            self.crossover_operator = NeoDPCrossOver(neo_pars, logger=self.logger)
         elif self.crossover_type == 3:
-            self.crossover_operator = EXAFS_ArithmeticCrossover(exafs_pars, logger=self.logger)
+            self.crossover_operator = NeoArithmeticCrossOver(neo_pars, logger=self.logger)
         elif self.crossover_type == 4:
-            self.crossover_operator = EXAFS_OrCrossover(exafs_pars, logger=self.logger)
+            self.crossover_operator = NeoOrCrossOver(neo_pars, logger=self.logger)
         elif self.crossover_type == 5:
-            self.crossover_operator = EXAFS_AverageCrossOver(exafs_pars, logger=self.logger)
+            self.crossover_operator = NeoAverageCrossOver(neo_pars, logger=self.logger)
+        elif self.crossover_type == 6:
+            self.crossover_operator = NeoDECrossOver(neo_pars, logger=self.logger)
         else:
-            self.crossover_operator = EXAFS_CrossoverBase(exafs_pars, logger=self.logger)
+            self.crossover_operator = NeoCrossOverBase(neo_pars, logger=self.logger)
             raise ValueError("Invalid crossover type, returning standard crossover type.")
+
+        return self.crossover_operator
 
     def __str__(self):
         if self.crossover_operator is None:
@@ -213,22 +250,26 @@ class NeoCrossover:
             raise ValueError("Crossover is not initialized")
         else:
             temp_population = []
-            if len(pops.next_population) > 2:
-                for _ in range(self.exafs_pars.selPars.nCross):
-                    par_ind = np.random.choice(len(pops.next_population), size=2, replace=False)
-                    ind1 = pops.next_population[par_ind[0]]
-                    ind2 = pops.next_population[par_ind[1]]
-                    child = self.crossover_operator.crossover(pops, ind1, ind2)
-                    temp_population.append(child)
+            if self.crossover_type != 6:
+                if len(pops.next_population) > 2:
+                    for _ in range(self.neo_pars.selPars.nCross):
+                        par_ind = np.random.choice(len(pops.next_population), size=2, replace=False)
+                        ind1 = pops.next_population[par_ind[0]]
+                        ind2 = pops.next_population[par_ind[1]]
+                        child = self.crossover_operator.crossover(pops, ind1)
+                        temp_population.append(child)
 
-                pops.next_population.extend(temp_population)
-                pops.population = pops.next_population
+                    pops.next_population.extend(temp_population)
+                    pops.population = pops.next_population
+            else:
+                self.crossover_operator.crossover(pops.mut_pops, pops)
+
 
     def crossover_single(self, pops, ind1, ind2):
         if self.crossover_operator is None:
             raise ValueError("Crossover is not initialized")
         else:
-            return self.crossover_operator.crossover(pops, ind1, ind2)
+            return self.crossover_operator.crossover(pops, ind1)
 
 
 if __name__ == "__main__":
