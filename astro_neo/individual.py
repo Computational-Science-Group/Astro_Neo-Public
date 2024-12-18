@@ -6,6 +6,8 @@ from astro_neo.pathObj import XspecSpectrum, NgcPar, BaseObj
 
 
 def shape_function_parser(shape_fit, *args):
+    if isinstance(shape_fit, list):
+        shape_fit = shape_fit[0]
     switch = {
         "XspecSpectrum": XspecSpectrum(*args),
         "NGC_Test": NgcPar(*args),

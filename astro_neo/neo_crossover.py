@@ -185,16 +185,19 @@ class NeoDECrossOver(NeoCrossOverBase):
         self.croOpt = 6
         self.croType = 'DE Crossover'
 
-    def crossover(self, mut_pops, pops, **kwargs):
+    def crossover(self, pops, **kwargs):
         trial_pops = []
-        for i in range(pops):
-            trial_pops.append(self._crossover_DE(mut_pops[i], pops[i], self.neo_pars.mutPars.cR))
+        mut_pops = pops.mut_pops
+        curr_pops = pops.population
+        for this_mut_pop, this_curr_pop in zip(mut_pops,curr_pops):
+            trial_pops.append(self._crossover_DE(this_mut_pop, this_curr_pop, self.neo_pars.mutPars.cR))
 
+        # pops.
     def _crossover_DE(self, mutate_ind, pop_ind, cR: int):
         p = np.random.rand(len(mutate_ind))
         # temp_pars = self.generative
-        temp_ind = self._generateIndividual()
-        mutate_Pars = mutate_ind.get()[0]
+        temp_ind = self._generate_individual()
+        mutate_Pars = mutate_ind.get()
         pop_Pars = pop_ind.get()[0]
         temp_Pars = []
         for i in range(len(mutate_ind)):
@@ -262,7 +265,7 @@ class NeoCrossover:
                     pops.next_population.extend(temp_population)
                     pops.population = pops.next_population
             else:
-                self.crossover_operator.crossover(pops.mut_pops, pops)
+                self.crossover_operator.crossover(pops)
 
 
     def crossover_single(self, pops, ind1, ind2):

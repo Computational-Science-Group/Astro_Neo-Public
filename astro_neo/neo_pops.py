@@ -27,7 +27,10 @@ class NeoPopulations:
         self.neo_pars = neo_pars
         self.num_pops = neo_pars.fixedPars.nPops
         self.num_distributed = neo_pars.fixedPars.distributed
-        self.initialize_process_pool(self.num_distributed)
+        # print(self.num_distributed)
+        if self.num_distributed > 1:
+            self.logger.info("Initializing Process Pool")
+            self.initialize_process_pool(self.num_distributed)
 
     def generate_individual(self):
         npaths = self.neo_pars.neo_paths.npaths
@@ -70,7 +73,7 @@ class NeoPopulations:
         data = list(self.processPool.map(temp_worker_function, np.arange(16)))
         print(data)
 
-    def initialize_populations(self):
+    def initialize_populations(self,eval=True):
         """
         Initialize populations
         :return:
@@ -79,7 +82,8 @@ class NeoPopulations:
             self.population.append(self.generate_individual())
 
         # temporally stopping eval first...
-        self.eval_population()
+        if eval:
+            self.eval_population()
 
     def __getitem__(self, item):
         return self.population_sorted[item]
@@ -116,7 +120,6 @@ if __name__ == "__main__":
     neo_population = NeoPopulations()
 
     neo_population.initialize(neo_pars=neo_pars)
-    # neo_population.test_process_pool()
     neo_population.initialize_populations()
 
     neo_population.eval_population(replace=True)
