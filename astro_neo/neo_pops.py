@@ -21,15 +21,22 @@ class NeoPopulations:
     processPool: ProcessPoolExecutor = None
     num_pops: int = None
     logger: NeoLogger = None
-    mut_pops:  list = field(factory=list) # For DE only
+    mut_pops: list = field(factory=list)  # For DE only
+    verbose: bool = False
 
     def initialize(self, neo_pars: NeoPars):
         self.neo_pars = neo_pars
         self.num_pops = neo_pars.fixedPars.nPops
         self.num_distributed = neo_pars.fixedPars.distributed
         # print(self.num_distributed)
+
+        if self.verbose:
+            if self.logger is None:
+                print("Initializing Process Pool")
+            else:
+                self.logger.print("Initializing Process Pool")
+
         if self.num_distributed > 1:
-            self.logger.info("Initializing Process Pool")
             self.initialize_process_pool(self.num_distributed)
 
     def generate_individual(self):
@@ -39,13 +46,11 @@ class NeoPopulations:
         return ind
 
     def eval_population(self, replace=True, sorting=True):
+        if self.num_distributed > 1:
+            score_list = list(self.processPool.map(fitness, self.population))
+        else:
+            score_list = [fitness(individual) for individual in self.population]
 
-        # for i, individual in enumerate(self.population):
-        #     temp_score = fitness(self.neo_pars, individual)
-        #     score.append(temp_score)
-        #     print(temp_score)
-        #     population_perf[individual] = temp_score
-        score_list = list(self.processPool.map(fitness, self.population))
         combined_list = [[score_list[i], self.population[i]] for i in range(len(score_list))]
         if sorting:
 
@@ -55,7 +60,21 @@ class NeoPopulations:
 
             if replace:
                 self.__replace_bestfit()
-        # print(self.population_sorted)
+
+    def eval_population_out_of_place(self, population: list, replace=True, sorting=True):
+        if self.num_distributed > 1:
+            score_list = list(self.processPool.map(fitness, population))
+        else:
+            score_list = [fitness(individual) for individual in population]
+
+        combined_list = [[score_list[i], population[i]] for i in range(len(score_list))]
+        if sorting:
+            population_sorted = [x[1] for x in sorted(combined_list, key=operator.itemgetter(0))]
+            score_sorted = sorted(score_list)
+
+        if replace:
+            self.__replace_bestfit()
+
 
     def initialize_process_pool(self, num_distributed):
         if num_distributed > 1:
@@ -73,7 +92,7 @@ class NeoPopulations:
         data = list(self.processPool.map(temp_worker_function, np.arange(16)))
         print(data)
 
-    def initialize_populations(self,eval=True):
+    def initialize_populations(self, eval=True):
         """
         Initialize populations
         :return:
@@ -106,6 +125,8 @@ class NeoPopulations:
         if self.num_distributed > 1:
             self.processPool.shutdown()
 
+    def __len__(self):
+        return self.num_pops
 
 if __name__ == "__main__":
     # /Users/andy/projects/Astro_Neo/input_files/astronomy_test 2/left_pha_grp.fits

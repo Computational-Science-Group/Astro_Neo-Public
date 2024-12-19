@@ -34,14 +34,12 @@ class NeoFixedPars:
     selOpt: int = 0
     croOpt: int = 0
 
-    DE: bool = False
-
     pathOptimize: bool = False
     pathOptimizePercent: float = 0.01
     pathOptimizeOnly: bool = False
     filter_percentage: float = 0.2
 
-    solver: str = 'GA'
+    solOpt: float = 0
 
     printGraph: bool = True
     distributed: int = 1
@@ -57,14 +55,14 @@ class NeoFixedPars:
         self.selOpt = checkKey('selOpt', input_dicts, 0)
         self.croOpt = checkKey('croOpt', input_dicts, 0)
 
-        self.DE = checkKey('DE', input_dicts, False)
+        # self.DE = checkKey('DE', input_dicts, False)
 
         self.pathOptimize = checkKey('pathOptimize', input_dicts, False)
         self.pathOptimizePercent = checkKey('pathOptimizePercent', input_dicts, 0.01)
         self.pathOptimizeOnly = checkKey('pathOptimizeOnly', input_dicts, False)
         self.filter_percentage = checkKey('filter_percentage', input_dicts, 0.2)
 
-        self.solver = checkKey('solver', input_dicts, 'GA')
+        self.solOpt = checkKey('solver_type', input_dicts, 0)
 
         self.printGraph = checkKey('printGraph', input_dicts, True)
         self.debug_mode = checkKey('debug_mode', input_dicts, False)

@@ -48,12 +48,13 @@ def ini_parser(file_dict):
     """Developed Ini parser for astro_neo
 
     Args:
-        file_dicts (_type_): _description_
+        :param file_dict:
     """
 
     Inputs_dict = file_dict['Inputs']
     Populations_dict = file_dict['Populations']
     Mutations_dict = file_dict['Mutations']
+    Solver_dict = file_dict['Solvers']
     Paths_dict = file_dict['Paths']
     Outputs_dict = file_dict['Outputs']
 
@@ -77,6 +78,12 @@ def ini_parser(file_dict):
         Mutations_dict['original_chance_of_mutation'])
     F_par = float(Mutations_dict['f'])
     mutated_options = int(Mutations_dict['mutated_options'])
+    crossover_options = int(Mutations_dict['crossover_options'])
+    selection_options = int(Mutations_dict['selection_options'])
+
+    # Solver
+    solver_opt = int(Solver_dict['solver_type'])
+
 
     # Paths
     npaths = int(Paths_dict['npaths'])
@@ -114,6 +121,9 @@ def ini_parser(file_dict):
         'chance_of_mutation': chance_of_mutation,
         'original_chance_of_mutation': original_chance_of_mutation,
         'mutated_options': mutated_options,
+        'crossover_options': crossover_options,
+        'selection_options': selection_options,
+        'solver_opt': solver_opt,
         'F': F_par,
         'CR': cR,
         'npaths': npaths,

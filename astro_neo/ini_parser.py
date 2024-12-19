@@ -95,6 +95,7 @@ def validate_input_file(file_dict):
     inputs_dict = dict(file_dict['Inputs'].items())
     populations_dict = dict(file_dict['Populations'].items())
     mutations_dict = dict(file_dict['Mutations'].items())
+    solver_dict = dict(file_dict['Solvers'].items())
     paths_dict = dict(file_dict['Paths'].items())
     outputs_dict = dict(file_dict['Outputs'].items())
 
@@ -104,8 +105,6 @@ def validate_input_file(file_dict):
     output_file = inputs_dict['output_file']
     bg_file = optional_var(inputs_dict, 'bg_file', None, None)
     rsp_file = optional_var(inputs_dict, 'rsp_file', None, None)
-
-    # Solver Options
 
     # Population
     size_population = int(populations_dict['population'])
@@ -121,6 +120,10 @@ def validate_input_file(file_dict):
     selection_options = optional_var(mutations_dict, 'selection_options', 0, int)
     mutation_options = optional_var(mutations_dict, 'mutated_options', 0, int)
     crossover_options = optional_var(mutations_dict, 'crossover_options', 0, int)
+
+    # Solver Options
+    solver_type = int(solver_dict['solver_type'])
+
 
     # Paths
     npaths = int(paths_dict['npaths'])
@@ -142,6 +145,7 @@ def validate_input_file(file_dict):
         'Inputs': inputs_dict,
         'Populations': populations_dict,
         'Mutations': mutations_dict,
+        'Solvers': solver_dict,
         'Paths': paths_dict,
         'Outputs': outputs_dict
     }

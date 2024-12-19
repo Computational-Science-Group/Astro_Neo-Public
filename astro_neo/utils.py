@@ -76,7 +76,8 @@ class NeoLogger:
         self.logger.setLevel(loglevel)
 
     def print(self, message: str):
-        self.logger.debug(message)
+        if self.logger is not None:
+            self.logger.debug(message)
 
     def __call__(self, message):
         self.logger.debug(message)
@@ -149,6 +150,9 @@ class STRColors:
         STRColors.logger_print_based_on_verbose_lvl(logger, "-----------------Paths---------------------",
                                                     verbose_lvl, 5)
         STRColors.logger_print_based_on_verbose_lvl(logger, "-----------------Solvers-------------------",
+                                                    verbose_lvl, 5)
+        STRColors.logger_print_based_on_verbose_lvl(logger,
+                                                    f"{STRColors.BOLD}Solver Type:{STRColors.ENDC}: {neo_pars.fixedPars.solOpt}",
                                                     verbose_lvl, 5)
         # STRColors.logger_print_based_on_verbose_lvl(logger,
         #                                             f"{STRColors.BOLD}Solver Options{STRColors.ENDC}: {exafs_NeoPars.mutPars.}",

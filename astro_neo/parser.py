@@ -39,13 +39,14 @@ class InputParamsParser:
         config_parser.read(input_file)
         config = config_parser.sections()
         # read into each dict
-        file_min = ['Inputs', 'Populations', 'Mutations', 'Paths', 'Outputs']
+        file_min = ['Inputs', 'Populations', 'Solvers', 'Mutations', 'Paths', 'Outputs']
 
         check_key(config, file_min)
 
         inputs_dict = config_parser['Inputs']
         populations_dict = config_parser['Populations']
         mutations_dict = config_parser['Mutations']
+        solvers_dict = config_parser['Solvers']
         paths_dict = config_parser['Paths']
         Outputs_dict = config_parser['Outputs']
 
@@ -63,6 +64,8 @@ class InputParamsParser:
         check_key(mutations_dict.keys(), mutation_min)
         # mut_optional = CheckOptionalKey(Mutations_dict,mutation_optional)
 
+        solver_optional = ['solver_type']
+
         path_min = ['npaths', 'center', 'fits']
         path_optional = []
         check_key(paths_dict.keys(), path_min)
@@ -78,6 +81,7 @@ class InputParamsParser:
         self.input_dict['Inputs'] = inputs_dict
         self.input_dict['Populations'] = populations_dict
         self.input_dict['Mutations'] = mutations_dict
+        self.input_dict['Solvers'] = solvers_dict
         self.input_dict['Paths'] = paths_dict
         self.input_dict['Outputs'] = Outputs_dict
 
@@ -111,6 +115,7 @@ class InputParamsParser:
             'mutChance': int(self.input_dict['Mutations']['chance_of_mutation']),
 
             'croOpt': int(self.input_dict['Mutations']['crossover_options']),
+            'solver_type': int(self.input_dict['Solvers']['solver_type']),
 
             # Paths
             'npaths': int(self.input_dict['Paths']['npaths']),

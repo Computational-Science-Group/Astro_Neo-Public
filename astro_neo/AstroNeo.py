@@ -99,7 +99,7 @@ if __name__ == "__main__":
         'printGraph': False
     }
 
-    exafs_temp = AstroNeo(verbose_lvl=5)
+    astro_neo = AstroNeo(verbose_lvl=5)
 
     input_dict = {
         'data_dir': '/Users/andy/projects/Astro_Neo/input_files/astronomy_test 2/',
@@ -114,8 +114,8 @@ if __name__ == "__main__":
         'distributed': 6,
         'nPops': 20
     }
-    exafs_temp.neo_read(input_parameters=input_dict)
-    exafs_temp.neo_setup()
+    astro_neo.neo_read(input_parameters=input_dict)
+    astro_neo.neo_setup()
 
-    result = exafs_temp.run()
+    result = astro_neo.run()
     print(result)

@@ -65,6 +65,9 @@ class Individual:
 
         return self.model.get()
 
+    def get_model(self):
+        return self.model
+
     def set_pars(self, pars: dict):
         self.model.set(pars)
 

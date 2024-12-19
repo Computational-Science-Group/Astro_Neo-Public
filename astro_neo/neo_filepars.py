@@ -72,7 +72,7 @@ class NeoFilePars:
             f1.writelines(data_line)
 
     def write_data_outputs(self, bestFitPars):
-        globBestFit = bestFitPars.globBestInd.get_model().get_func()
+        globBestFit = bestFitPars.globBestInd.get_model().get_params()
         with open(self.output_datafile, "a") as f2:
             # bestFit = globBestFit
             for key, value in sorted(globBestFit.items()):

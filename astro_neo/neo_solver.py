@@ -5,14 +5,14 @@ from astro_neo.neo_pars import NeoPars
 
 
 class NeoSolverBase:
-    def __init__(self, exafs_pars, logger):
+    def __init__(self, neo_pars, logger):
         """
         Initialize the selector base class
         :param exafs_pars:
         :param logger:
         """
         self.logger = logger
-        self.exafs_pars = exafs_pars
+        self.neo_pars = neo_pars
 
         self.sol_list = []
 
@@ -29,8 +29,8 @@ class NeoSolver_GA(NeoSolverBase):
     Standard GA algorithm solver
     """
 
-    def __init__(self, exafs_pars, logger):
-        super().__init__(exafs_pars, logger)
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
         self.solver_type = 0
         self.solver_operator = "Genetic Algorithm"
 
@@ -46,8 +46,8 @@ class NeoSolverGARechenberg(NeoSolverBase):
     Standard GA with Rechenberg addition
     """
 
-    def __init__(self, exafs_pars, logger):
-        super().__init__(exafs_pars, logger)
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
         self.solver_type = 1
         self.solver_operator = "Genetic Algorithm with Rechenberg"
 
@@ -84,16 +84,34 @@ class NeoSolverDE(NeoSolverBase):
     Standard Differential Evolution
     """
 
-    def __init__(self, exafs_pars, logger):
-        super().__init__(exafs_pars, logger)
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
         self.solver_type = 2
         self.solver_operator = "Differential Evolution"
 
-    def solve(self, pops, selector, crossover, mutator, exafs_pars):
+    def solve(self, pops, selector, crossover, mutator, neo_pars):
         selector.select(pops)
         mutated_pops = mutator.mutate(pops)
         crossover.crossover(mutated_pops, pops)
         pops.eval_population()
+
+    def _adjust_de_parameters(self):
+        """Adjust the DE parameters
+        """
+        # self.F =
+        rand_val = np.random.rand(4)
+        tau_1 = 0.1
+        tau_2 = 0.1
+        if rand_val[1] < tau_1:
+            F = 0.1 + rand_val[0] * 0.9
+            self.neo_pars.mutPars.mutF = F
+
+            self.logger.info(f"F has been adjusted to {np.round(F,4)}")
+
+        if rand_val[3] < tau_2:
+            cR = rand_val[2]
+            self.neo_pars.crossPars.cR = cR
+            self.logger.info(f"Cr has been adjusted to {np.round(cR,4)}")
 
 
 class NeoSolverDEClustering(NeoSolverBase):
@@ -101,8 +119,8 @@ class NeoSolverDEClustering(NeoSolverBase):
     Differential Evolution with Clustering
     """
 
-    def __init__(self, exafs_pars, logger):
-        super().__init__(exafs_pars, logger)
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
         self.solver_type = 3
         self.solver_operator = "Differential Evolution with Clustering"
 

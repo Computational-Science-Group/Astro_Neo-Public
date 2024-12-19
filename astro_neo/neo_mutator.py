@@ -30,6 +30,7 @@ class NeoMutatorBase:
         ind = Individual(npaths=npaths, fits=this_fits)
         return ind
 
+
 class NeoMutatorPerIndividual(NeoMutatorBase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
@@ -124,6 +125,7 @@ class NeoMutatorDE(NeoMutatorBase):
             mutated_Populations.append(temp_individual)
 
         return mutated_Populations
+
     def _mutate_DE(self, mutation_vectors, F):
         """Performs the mutation operation for Differential Evolution.
 
