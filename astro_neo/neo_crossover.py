@@ -5,7 +5,7 @@ from astro_neo.neo_pops import NeoPopulations
 from astro_neo.neo_pars import NeoPars
 
 
-class NeoCrossOverBase:
+class NeoCrossOverGABase:
     def __init__(self, neo_pars, logger=None):
         self.logger = logger
         self.neo_pars = neo_pars
@@ -25,7 +25,7 @@ class NeoCrossOverBase:
         return ind
 
 
-class NeoUniCrossOver(NeoCrossOverBase):
+class NeoUniCrossOverGA(NeoCrossOverGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
         self.croOpt = 0
@@ -48,7 +48,7 @@ class NeoUniCrossOver(NeoCrossOverBase):
         return child
 
 
-class NeoSPCrossOver(NeoCrossOverBase):
+class NeoSPCrossOverGA(NeoCrossOverGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
         self.croOpt = 1
@@ -80,7 +80,7 @@ class NeoSPCrossOver(NeoCrossOverBase):
         return child
 
 
-class NeoDPCrossOver(NeoCrossOverBase):
+class NeoDPCrossOverGA(NeoCrossOverGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
         self.croOpt = 2
@@ -90,7 +90,7 @@ class NeoDPCrossOver(NeoCrossOverBase):
         pass
 
 
-class NeoArithmeticCrossOver(NeoCrossOverBase):
+class NeoArithmeticCrossOverGA(NeoCrossOverGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
         self.croOpt = 3
@@ -121,7 +121,7 @@ class NeoArithmeticCrossOver(NeoCrossOverBase):
         return child
 
 
-class NeoOrCrossOver(NeoCrossOverBase):
+class NeoOrCrossOverGA(NeoCrossOverGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
         self.croOpt = 4
@@ -152,7 +152,7 @@ class NeoOrCrossOver(NeoCrossOverBase):
         return child
 
 
-class NeoAverageCrossOver(NeoCrossOverBase):
+class NeoAverageCrossOverGA(NeoCrossOverGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
         self.croOpt = 5
@@ -179,7 +179,26 @@ class NeoAverageCrossOver(NeoCrossOverBase):
         return child
 
 
-class NeoDECrossOver(NeoCrossOverBase):
+class NeoCrossOverDEBase:
+    def __init__(self, neo_pars, logger=None):
+        self.logger = logger
+        self.neo_pars = neo_pars
+        self.croOpt = self.neo_pars.crossPars.croOpt
+        self.croType = None
+
+    def crossover(self, pops, individual1, individual2):
+        pass
+
+    def __str__(self):
+        return f"Crossover Option: {self.croType}"
+
+    def _generate_individual(self):
+        npaths = self.neo_pars.neo_paths.npaths
+        this_fits = self.neo_pars.neo_paths.fits[0]
+        ind = Individual(npaths=npaths, fits=this_fits)
+        return ind
+
+class NeoDECrossOver(NeoCrossOverDEBase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
         self.croOpt = 6
@@ -222,21 +241,21 @@ class NeoCrossover:
 
         self.crossover_type = neo_pars.crossPars.croOpt
         if self.crossover_type == 0:
-            self.crossover_operator = NeoUniCrossOver(neo_pars, logger=self.logger)
+            self.crossover_operator = NeoUniCrossOverGA(neo_pars, logger=self.logger)
         elif self.crossover_type == 1:
-            self.crossover_operator = NeoSPCrossOver(neo_pars, logger=self.logger)
+            self.crossover_operator = NeoSPCrossOverGA(neo_pars, logger=self.logger)
         elif self.crossover_type == 2:
-            self.crossover_operator = NeoDPCrossOver(neo_pars, logger=self.logger)
+            self.crossover_operator = NeoDPCrossOverGA(neo_pars, logger=self.logger)
         elif self.crossover_type == 3:
-            self.crossover_operator = NeoArithmeticCrossOver(neo_pars, logger=self.logger)
+            self.crossover_operator = NeoArithmeticCrossOverGA(neo_pars, logger=self.logger)
         elif self.crossover_type == 4:
-            self.crossover_operator = NeoOrCrossOver(neo_pars, logger=self.logger)
+            self.crossover_operator = NeoOrCrossOverGA(neo_pars, logger=self.logger)
         elif self.crossover_type == 5:
-            self.crossover_operator = NeoAverageCrossOver(neo_pars, logger=self.logger)
+            self.crossover_operator = NeoAverageCrossOverGA(neo_pars, logger=self.logger)
         elif self.crossover_type == 6:
             self.crossover_operator = NeoDECrossOver(neo_pars, logger=self.logger)
         else:
-            self.crossover_operator = NeoCrossOverBase(neo_pars, logger=self.logger)
+            self.crossover_operator = NeoCrossOverGABase(neo_pars, logger=self.logger)
             raise ValueError("Invalid crossover type, returning standard crossover type.")
 
         return self.crossover_operator

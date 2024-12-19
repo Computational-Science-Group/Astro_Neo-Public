@@ -4,11 +4,11 @@ from astro_neo.neo_pops import NeoPopulations
 from astro_neo.neo_pars import NeoPars
 
 
-class NeoSolverBase:
+class NeoSolverGABase:
     def __init__(self, neo_pars, logger):
         """
         Initialize the selector base class
-        :param exafs_pars:
+        :param neo_pars:
         :param logger:
         """
         self.logger = logger
@@ -21,10 +21,10 @@ class NeoSolverBase:
 
     def __str__(self):
         # return f"Top Percentage: {100 * self.nBest_Percent}%, Lucky: {100 * self.nLucky_Percent}%"
-        return f"Neo Solver"
+        return f"Neo Solver GA"
 
 
-class NeoSolver_GA(NeoSolverBase):
+class NeoSolverGA(NeoSolverGABase):
     """
     Standard GA algorithm solver
     """
@@ -41,7 +41,7 @@ class NeoSolver_GA(NeoSolverBase):
         pops.eval_population()
 
 
-class NeoSolverGARechenberg(NeoSolverBase):
+class NeoSolverGARechenberg(NeoSolverGABase):
     """
     Standard GA with Rechenberg addition
     """
@@ -79,7 +79,27 @@ class NeoSolverGARechenberg(NeoSolverBase):
             exafs_pars.mutPars.mutChance = np.clip(exafs_pars.mutPars.mutChance, 0, 100)
 
 
-class NeoSolverDE(NeoSolverBase):
+class NeoSolverDEBase:
+    def __init__(self, neo_pars, logger):
+        """
+        Initialize the selector base class
+        :param neo_pars:
+        :param logger:
+        """
+        self.logger = logger
+        self.neo_pars = neo_pars
+
+        self.sol_list = []
+
+    def solve(self, pops, selector, crossover, mutator, exafs_pars):
+        pass
+
+    def __str__(self):
+        # return f"Top Percentage: {100 * self.nBest_Percent}%, Lucky: {100 * self.nLucky_Percent}%"
+        return f"Neo Solver DE"
+
+
+class NeoSolverDE(NeoSolverDEBase):
     """
     Standard Differential Evolution
     """
@@ -106,15 +126,14 @@ class NeoSolverDE(NeoSolverBase):
             F = 0.1 + rand_val[0] * 0.9
             self.neo_pars.mutPars.mutF = F
 
-            self.logger.info(f"F has been adjusted to {np.round(F,4)}")
+            self.logger.info(f"F has been adjusted to {np.round(F, 4)}")
 
         if rand_val[3] < tau_2:
             cR = rand_val[2]
             self.neo_pars.crossPars.cR = cR
-            self.logger.info(f"Cr has been adjusted to {np.round(cR,4)}")
+            self.logger.info(f"Cr has been adjusted to {np.round(cR, 4)}")
 
-
-class NeoSolverDEClustering(NeoSolverBase):
+class NeoSolverDEClustering(NeoSolverDEBase):
     """
     Differential Evolution with Clustering
     """
@@ -150,13 +169,13 @@ class NeoSolver:
         # self.solver_type = exafs_pars.selPars.selOpt
         self.solver_type = neo_pars.solPars.solOpt
         if self.solver_type == 0:
-            self.solver_operator = NeoSolver_GA(neo_pars, logger=self.logger)
+            self.solver_operator = NeoSolverGA(neo_pars, logger=self.logger)
         elif self.solver_type == 1:
             self.solver_operator = NeoSolverGARechenberg(neo_pars, logger=self.logger)
         elif self.solver_type == 2:
             self.solver_operator = NeoSolverDE(neo_pars, logger=self.logger)
         else:
-            self.solver_operator = NeoSolverBase(neo_pars, logger=self.logger)
+            self.solver_operator = NeoSolverGABase(neo_pars, logger=self.logger)
             raise ValueError("Invalid selector type, returning standard selector type.")
 
     def solve(self, pops, selector, crossover, mutator, neo_pars):

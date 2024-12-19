@@ -6,7 +6,7 @@ from astro_neo.individual import Individual
 from astro_neo.fitness import fitness
 
 
-class NeoMutatorBase:
+class NeoMutatorGABase:
     """Base class for mutator class in astro_neo.
   """
 
@@ -31,7 +31,7 @@ class NeoMutatorBase:
         return ind
 
 
-class NeoMutatorPerIndividual(NeoMutatorBase):
+class NeoMutatorGAPerIndividual(NeoMutatorGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
         self.mutOpt = 1
@@ -45,7 +45,7 @@ class NeoMutatorPerIndividual(NeoMutatorBase):
                 self.neo_pars.mutPars.nmut += 1
 
 
-class NeoMutatorPerPars(NeoMutatorBase):
+class NeoMutatorGAPerPars(NeoMutatorGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
         self.mutOpt = 2
@@ -61,7 +61,7 @@ class NeoMutatorPerPars(NeoMutatorBase):
                 individual.mutate()
 
 
-class NeoMutatorMetropolis(NeoMutatorBase):
+class NeoMutatorGAMetropolis(NeoMutatorGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
         self.mutOpt = 3
@@ -92,7 +92,32 @@ class NeoMutatorMetropolis(NeoMutatorBase):
                 pops.population[i] = newIndi
 
 
-class NeoMutatorDE(NeoMutatorBase):
+class NeoMutatorDEBase:
+    """Base class for mutator class in astro_neo.
+  """
+
+    def __init__(self, neo_pars, logger):
+        self.logger = logger
+        self.neo_pars = neo_pars
+        self.mutOpt = self.neo_pars.mutPars.mutOpt
+        self.mutChance = self.neo_pars.mutPars.mutChance
+        self.mutChanceE0 = self.neo_pars.mutPars.mutChanceE0
+        self.mutType = None
+
+    def mutate(self, pops):
+        pass
+
+    def __str__(self):
+        return f"mutation chance: {self.mutChance}%, mutation chance E0: {self.mutChanceE0}%"
+
+    def _generate_individual(self):
+        npaths = self.neo_pars.neo_paths.npaths
+        this_fits = self.neo_pars.neo_paths.fits[0]
+        ind = Individual(npaths=npaths, fits=this_fits)
+        return ind
+
+
+class NeoMutatorDE(NeoMutatorDEBase):
     """Mutator class that uses Differential Evolution (DE) for mutation."""
 
     def __init__(self, neo_pars, logger):
@@ -178,17 +203,17 @@ class NeoMutator:
 
         self.mutator_type = neo_pars.mutPars.mutOpt
         if self.mutator_type == 0:
-            self.mutator = NeoMutatorPerIndividual(self.neo_pars, logger=self.logger)
+            self.mutator = NeoMutatorGAPerIndividual(self.neo_pars, logger=self.logger)
         elif self.mutator_type == 1:
-            self.mutator = NeoMutatorPerPars(self.neo_pars, logger=self.logger)
+            self.mutator = NeoMutatorGAPerPars(self.neo_pars, logger=self.logger)
         elif self.mutator_type == 2:
-            self.mutator = NeoMutatorMetropolis(self.neo_pars, logger=self.logger)
+            self.mutator = NeoMutatorGAMetropolis(self.neo_pars, logger=self.logger)
         elif self.mutator_type == 3:
             pass
         elif self.mutator_type == 4:
             self.mutator = NeoMutatorDE(self.neo_pars, logger=self.logger)
         else:
-            self.mutator = NeoMutatorBase(self.neo_pars, logger=self.logger)
+            self.mutator = NeoMutatorGABase(self.neo_pars, logger=self.logger)
             raise ValueError("Invalid mutator type")
 
         return self.mutator
