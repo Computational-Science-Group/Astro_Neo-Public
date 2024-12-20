@@ -121,6 +121,10 @@ def validate_input_file(file_dict):
     mutation_options = optional_var(mutations_dict, 'mutated_options', 0, int)
     crossover_options = optional_var(mutations_dict, 'crossover_options', 0, int)
 
+    mutf = optional_var(mutations_dict, 'mutf', 0.8, float)
+    mutcf = optional_var(mutations_dict, 'mutcf', 0.9, float)
+
+
     # Solver Options
     solver_type = int(solver_dict['solver_type'])
 

@@ -61,11 +61,7 @@ def neomutator_int2str(mutator_type):
     elif mutator_type == 3:
         return "Mutate Metropolis"
     elif mutator_type == 4:
-        return "Mutate Bounded Per Range"
-    elif mutator_type == 5:
         return "Mutate Differential Evolution"
-    elif mutator_type == 6:
-        return "Mutate DE"
     else:
         return "Unknown Mutator"
 

@@ -184,19 +184,21 @@ class NeoCrossOverDEBase:
         self.logger = logger
         self.neo_pars = neo_pars
         self.croOpt = self.neo_pars.crossPars.croOpt
+        self.cR = self.neo_pars.crossPars.cR
         self.croType = None
 
     def crossover(self, pops, individual1, individual2):
         pass
 
     def __str__(self):
-        return f"Crossover Option: {self.croType}"
+        return f"Crossover Option: {self.croType}, cR: {self.cR}"
 
     def _generate_individual(self):
         npaths = self.neo_pars.neo_paths.npaths
         this_fits = self.neo_pars.neo_paths.fits[0]
         ind = Individual(npaths=npaths, fits=this_fits)
         return ind
+
 
 class NeoDECrossOver(NeoCrossOverDEBase):
     def __init__(self, neo_pars, logger):

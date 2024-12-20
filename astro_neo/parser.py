@@ -6,7 +6,6 @@ from astro_neo.helper import Bcolors
 
 
 def check_key(data_list, key_list):
-
     for this_key in key_list:
         if this_key not in data_list:
             raise KeyError(str(this_key) + ' is missing')
@@ -60,11 +59,12 @@ class InputParamsParser:
         check_key(populations_dict.keys(), population_min)
 
         mutation_min = ['chance_of_mutation', 'original_chance_of_mutation']
-        mutation_optional = ['mutated_options', 'selection_options', 'crossover_options']
+        mutation_optional = ['mutated_options', 'selection_options', 'crossover_options', 'mutf', 'mutcr']
         check_key(mutations_dict.keys(), mutation_min)
-        # mut_optional = CheckOptionalKey(Mutations_dict,mutation_optional)
+        mut_optional = check_optional_key(mutations_dict, mutation_optional)
 
         solver_optional = ['solver_type']
+        solver_missing = check_optional_key(solvers_dict, solver_optional)
 
         path_min = ['npaths', 'center', 'fits']
         path_optional = []
@@ -110,11 +110,17 @@ class InputParamsParser:
             'selOpt': int(self.input_dict['Mutations']['selection_options']),
             'nBestSample': int(self.input_dict['Populations']['best_sample']),
             'nLuckySample': int(self.input_dict['Populations']['lucky_few']),
+            # Mutation
 
             'mut_options': int(self.input_dict['Mutations']['mutated_options']),
             'mutChance': int(self.input_dict['Mutations']['chance_of_mutation']),
 
             'croOpt': int(self.input_dict['Mutations']['crossover_options']),
+
+            'cR': float(self.input_dict['Mutations']['mutcr']),
+            'mutF': float(self.input_dict['Mutations']['mutf']),
+
+            # Solver
             'solver_type': int(self.input_dict['Solvers']['solver_type']),
 
             # Paths

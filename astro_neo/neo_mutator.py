@@ -34,7 +34,7 @@ class NeoMutatorGABase:
 class NeoMutatorGAPerIndividual(NeoMutatorGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
-        self.mutOpt = 1
+        self.mutOpt = 0
         self.mutType = "Mutate Per Individual"
 
     def mutate(self, pops):
@@ -48,7 +48,7 @@ class NeoMutatorGAPerIndividual(NeoMutatorGABase):
 class NeoMutatorGAPerPars(NeoMutatorGABase):
     def __init__(self, neo_pars, logger):
         super().__init__(neo_pars, logger)
-        self.mutOpt = 2
+        self.mutOpt = 1
         self.mutType = "Mutate Per Parameters"
 
     def mutate(self, pops):
@@ -59,6 +59,16 @@ class NeoMutatorGAPerPars(NeoMutatorGABase):
         for i, individual in enumerate(pops.population):
             if np.random.random() < self.mutChance:
                 individual.mutate()
+
+
+class NeoMutatorGAPerTrait(NeoMutatorGABase):
+    def __init__(self, neo_pars, logger):
+        super().__init__(neo_pars, logger)
+        self.mutOpt = 2
+        self.mutType = "Mutate Per Parameters"
+
+    def mutate(self, pops):
+        pass
 
 
 class NeoMutatorGAMetropolis(NeoMutatorGABase):
