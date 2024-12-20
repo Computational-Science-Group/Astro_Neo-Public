@@ -22,7 +22,7 @@ class NeoMutatorGABase:
         pass
 
     def __str__(self):
-        return f"mutation chance: {self.mutChance}%, mutation chance E0: {self.mutChanceE0}%"
+        return f"MutOpt: {self.mutOpt}, mutation chance: {self.mutChance}%, mutation chance E0: {self.mutChanceE0}%"
 
     def _generate_individual(self):
         npaths = self.neo_pars.neo_paths.npaths
@@ -100,15 +100,14 @@ class NeoMutatorDEBase:
         self.logger = logger
         self.neo_pars = neo_pars
         self.mutOpt = self.neo_pars.mutPars.mutOpt
-        self.mutChance = self.neo_pars.mutPars.mutChance
-        self.mutChanceE0 = self.neo_pars.mutPars.mutChanceE0
+        self.F = self.neo_pars.mutPars.mutF
         self.mutType = None
 
     def mutate(self, pops):
         pass
 
     def __str__(self):
-        return f"mutation chance: {self.mutChance}%, mutation chance E0: {self.mutChanceE0}%"
+        return f"Mutator Option: {self.mutOpt}, F: {self.F}"
 
     def _generate_individual(self):
         npaths = self.neo_pars.neo_paths.npaths

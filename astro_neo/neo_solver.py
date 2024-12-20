@@ -133,6 +133,7 @@ class NeoSolverDE(NeoSolverDEBase):
             self.neo_pars.crossPars.cR = cR
             self.logger.info(f"Cr has been adjusted to {np.round(cR, 4)}")
 
+
 class NeoSolverDEClustering(NeoSolverDEBase):
     """
     Differential Evolution with Clustering

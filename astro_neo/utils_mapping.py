@@ -16,6 +16,8 @@ def neocrossover_int2str(crossover_type):
         return "Or Crossover"
     elif crossover_type == 5:
         return "Average Crossover"
+    elif crossover_type == 6:
+        return "DE Crossover"
     else:
         return "Unknown Crossover"
 
@@ -38,6 +40,8 @@ def neocrossover_str2int(crossover_type):
         return 4
     elif crossover_type == "Average Crossover":
         return 5
+    elif crossover_type == "DE Crossover":
+        return 6
     else:
         return -1
 
@@ -60,6 +64,8 @@ def neomutator_int2str(mutator_type):
         return "Mutate Bounded Per Range"
     elif mutator_type == 5:
         return "Mutate Differential Evolution"
+    elif mutator_type == 6:
+        return "Mutate DE"
     else:
         return "Unknown Mutator"
 
@@ -82,6 +88,8 @@ def neomutator_str2int(mutator_type):
         return 4
     elif mutator_type == "Mutate Differential Evolution":
         return 5
+    elif mutator_type == "Mutate DE":
+        return 6
     else:
         return -1
 
