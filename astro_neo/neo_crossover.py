@@ -20,7 +20,7 @@ class NeoCrossOverGABase:
 
     def _generate_individual(self):
         npaths = self.neo_pars.neo_paths.npaths
-        this_fits = self.neo_pars.neo_paths.fits[0]
+        this_fits = self.neo_pars.neo_paths.fits
         ind = Individual(npaths=npaths, fits=this_fits)
         return ind
 
@@ -195,7 +195,7 @@ class NeoCrossOverDEBase:
 
     def _generate_individual(self):
         npaths = self.neo_pars.neo_paths.npaths
-        this_fits = self.neo_pars.neo_paths.fits[0]
+        this_fits = self.neo_pars.neo_paths.fits
         ind = Individual(npaths=npaths, fits=this_fits)
         return ind
 
@@ -213,18 +213,24 @@ class NeoDECrossOver(NeoCrossOverDEBase):
         for this_mut_pop, this_curr_pop in zip(mut_pops, curr_pops):
             trial_pops.append(self._crossover_DE(this_mut_pop, this_curr_pop, self.neo_pars.crossPars.cR))
 
-    def _crossover_DE(self, mutate_ind, pop_ind, cR: int):
+    def _crossover_DE(self, mutate_ind: Individual, pop_ind, cR: int):
         p = np.random.rand(len(mutate_ind))
         # temp_pars = self.generative
         temp_ind = self._generate_individual()
-        mutate_Pars = mutate_ind.get()
-        pop_Pars = pop_ind.get()[0]
+        mutate_Pars = mutate_ind.get_params()
+        pop_Pars = pop_ind.get_params()
+
         temp_Pars = []
-        for i in range(len(mutate_ind)):
-            if p[i] < cR:
-                temp_Pars.append(mutate_Pars[i])
+        for mut_par, pop_par, index in zip(mutate_Pars.items(), pop_Pars.items(), range(len(mutate_Pars))):
+            if p[index] < cR:
+                temp_Pars.append(mut_par[1])
             else:
-                temp_Pars.append(pop_Pars[i])
+                temp_Pars.append(pop_par[1])
+        # for i in range(len(mutate_ind)):
+        #     if p[i] < cR:
+        #         temp_Pars.append(mutate_Pars[i])
+        #     else:
+        #         temp_Pars.append(pop_Pars[i])
 
         temp_ind.set_path(temp_Pars)
         return temp_ind

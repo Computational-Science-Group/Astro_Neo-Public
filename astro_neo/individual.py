@@ -74,7 +74,7 @@ class Individual:
     def mutate(self):
         self.model.mutate()
 
-    def get_params(self):
+    def get_params(self) -> dict:
         return self.model.get_params()
 
     def get_bounds(self):

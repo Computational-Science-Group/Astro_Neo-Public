@@ -75,7 +75,6 @@ class NeoPopulations:
         if replace:
             self.__replace_bestfit()
 
-
     def initialize_process_pool(self, num_distributed):
         if num_distributed > 1:
             file_pars = self.neo_pars.neoFilePars
@@ -127,6 +126,7 @@ class NeoPopulations:
 
     def __len__(self):
         return self.num_pops
+
 
 if __name__ == "__main__":
     # /Users/andy/projects/Astro_Neo/input_files/astronomy_test 2/left_pha_grp.fits

@@ -26,7 +26,7 @@ class NeoMutatorGABase:
 
     def _generate_individual(self):
         npaths = self.neo_pars.neo_paths.npaths
-        this_fits = self.neo_pars.neo_paths.fits[0]
+        this_fits = self.neo_pars.neo_paths.fits
         ind = Individual(npaths=npaths, fits=this_fits)
         return ind
 
@@ -121,7 +121,7 @@ class NeoMutatorDEBase:
 
     def _generate_individual(self):
         npaths = self.neo_pars.neo_paths.npaths
-        this_fits = self.neo_pars.neo_paths.fits[0]
+        this_fits = self.neo_pars.neo_paths.fits
         ind = Individual(npaths=npaths, fits=this_fits)
         return ind
 
@@ -158,7 +158,9 @@ class NeoMutatorDE(NeoMutatorDEBase):
             temp_individual = self._check_for_bound(temp_individual)
             mutated_Populations.append(temp_individual)
 
-        return mutated_Populations
+
+        pops.mut_pops = mutated_Populations
+        # return mutated_Populations
 
     def _mutate_DE(self, mutation_vectors, F):
         """Performs the mutation operation for Differential Evolution.
