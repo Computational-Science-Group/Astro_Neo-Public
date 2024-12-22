@@ -36,7 +36,7 @@ class NeoSolverGA(NeoSolverGABase):
 
     def solve(self, pops, selector, crossover, mutator, exafs_pars):
         selector.select(pops)
-        crossover.crossover(pops, )
+        crossover.crossover(pops)
         mutator.mutate(pops)
         pops.eval_population()
 
@@ -54,11 +54,11 @@ class NeoSolverGARechenberg(NeoSolverGABase):
     def solve(self, pops, selector, crossover, mutator, exafs_pars):
         selector.select(pops)
         crossover.crossover(pops, )
-        self.rechenberg_mutation(exafs_pars)
+        self._rechenberg_mutation(exafs_pars)
         mutator.mutate(pops)
         pops.eval_population()
 
-    def rechenberg_mutation(self, exafs_pars):
+    def _rechenberg_mutation(self, exafs_pars):
         # Recehenberg mutation
         diffCounter = exafs_pars.runPars.diffCounter
         if exafs_pars.runPars.currGen > 20:
@@ -110,10 +110,20 @@ class NeoSolverDE(NeoSolverDEBase):
         self.solver_operator = "Differential Evolution"
 
     def solve(self, pops, selector, crossover, mutator, neo_pars):
+
+        # print(crossover)
+        # print(crossover.crossover)
+
+        # print("This is before selector")
+
         selector.select(pops)
-        mutated_pops = mutator.mutate(pops)
-        crossover.crossover(mutated_pops, pops)
-        pops.eval_population()
+        # print("This is before mutator")
+        mutator.mutate(pops)
+        # print("This is before crossover")
+        crossover.crossover(pops)
+        # print("This is before eval")
+        self._adjust_de_parameters()
+        pops.eval_population_compared()
 
     def _adjust_de_parameters(self):
         """Adjust the DE parameters
@@ -126,12 +136,12 @@ class NeoSolverDE(NeoSolverDEBase):
             F = 0.1 + rand_val[0] * 0.9
             self.neo_pars.mutPars.mutF = F
 
-            self.logger.info(f"F has been adjusted to {np.round(F, 4)}")
+            self.logger.print(f"F has been adjusted to {np.round(F, 4)}")
 
         if rand_val[3] < tau_2:
             cR = rand_val[2]
             self.neo_pars.crossPars.cR = cR
-            self.logger.info(f"Cr has been adjusted to {np.round(cR, 4)}")
+            self.logger.print(f"Cr has been adjusted to {np.round(cR, 4)}")
 
 
 class NeoSolverDEClustering(NeoSolverDEBase):

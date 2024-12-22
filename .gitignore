@@ -53,8 +53,12 @@ __pycache__/
 AstroNeo.egg-info/
 
 
+# IntelliJ IDEA #
+*.iml
+
 # Input File #
 #####################
 input_files/*
 result/*
 library/*
+*.i

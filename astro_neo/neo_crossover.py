@@ -187,7 +187,7 @@ class NeoCrossOverDEBase:
         self.cR = self.neo_pars.crossPars.cR
         self.croType = None
 
-    def crossover(self, pops, individual1, individual2):
+    def crossover(self, pops):
         pass
 
     def __str__(self):
@@ -212,6 +212,8 @@ class NeoDECrossOver(NeoCrossOverDEBase):
         curr_pops = pops.population
         for this_mut_pop, this_curr_pop in zip(mut_pops, curr_pops):
             trial_pops.append(self._crossover_DE(this_mut_pop, this_curr_pop, self.neo_pars.crossPars.cR))
+
+        pops.trial_pops = trial_pops
 
     def _crossover_DE(self, mutate_ind: Individual, pop_ind, cR: int):
         p = np.random.rand(len(mutate_ind))

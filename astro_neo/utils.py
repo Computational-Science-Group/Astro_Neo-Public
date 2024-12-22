@@ -6,7 +6,7 @@ import sys
 import numpy as np
 
 from astro_neo.helper import time_call
-from astro_neo.utils_mapping import neocrossover_int2str, neomutator_int2str, neoselector_int2str
+from astro_neo.utils_mapping import neocrossover_int2str, neomutator_int2str, neoselector_int2str, neosolver_int2str
 
 
 def raise_error(msg='Error'):
@@ -94,6 +94,7 @@ def check_if_exists(path_file):
     pathFile.parent.mkdir(parents=True, exist_ok=True)
 
 
+
 class STRColors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -147,29 +148,38 @@ class STRColors:
         STRColors.logger_print_based_on_verbose_lvl(logger,
                                                     f"{STRColors.BOLD}Lucky Survivor{STRColors.ENDC}: {neo_pars.selPars.nLuckSample}",
                                                     verbose_lvl, 5)
-        STRColors.logger_print_based_on_verbose_lvl(logger, "-----------------Paths---------------------",
-                                                    verbose_lvl, 5)
-        STRColors.logger_print_based_on_verbose_lvl(logger, "-----------------Solvers-------------------",
+        # STRColors.logger_print_based_on_verbose_lvl(logger, "-----------------Paths---------------------",
+        #                                             verbose_lvl, 5)
+        STRColors.logger_print_based_on_verbose_lvl(logger, "-----------------Run Time Options-------------------",
                                                     verbose_lvl, 5)
         STRColors.logger_print_based_on_verbose_lvl(logger,
-                                                    f"{STRColors.BOLD}Solver Type:{STRColors.ENDC}: {neo_pars.fixedPars.solOpt}",
+                                                    f"{STRColors.BOLD}Solver Type:{STRColors.ENDC}: {neosolver_int2str(neo_pars.fixedPars.solOpt)}, ({neo_pars.fixedPars.solOpt})",
                                                     verbose_lvl, 5)
-        # STRColors.logger_print_based_on_verbose_lvl(logger,
-        #                                             f"{STRColors.BOLD}Solver Options{STRColors.ENDC}: {exafs_NeoPars.mutPars.}",
-        #                                             verbose_lvl, 5)
+        STRColors.logger_print_based_on_verbose_lvl(logger,
+                                                    f"{STRColors.BOLD}Mutation Type{STRColors.ENDC}: {neomutator_int2str(neo_pars.mutPars.mutOpt)}, ({neo_pars.mutPars.mutOpt})",
+                                                    verbose_lvl, 5)
+        STRColors.logger_print_based_on_verbose_lvl(logger,
+                                                    f"{STRColors.BOLD}Selection Type{STRColors.ENDC}: {neoselector_int2str(neo_pars.selPars.selOpt)}, ({neo_pars.selPars.selOpt})",
+                                                    verbose_lvl, 5)
+        STRColors.logger_print_based_on_verbose_lvl(logger,
+                                                    f"{STRColors.BOLD}Crossover Type{STRColors.ENDC}: {neocrossover_int2str(neo_pars.crossPars.croOpt)}, ({neo_pars.selPars.selOpt})",
+                                                    verbose_lvl, 5)
         STRColors.logger_print_based_on_verbose_lvl(logger, "----------------Mutations------------------",
                                                     verbose_lvl, 5)
-        STRColors.logger_print_based_on_verbose_lvl(logger,
-                                                    f"{STRColors.BOLD}Mutations{STRColors.ENDC}: {neo_pars.mutPars.mutChance}",
-                                                    verbose_lvl, 5)
-        STRColors.logger_print_based_on_verbose_lvl(logger,
-                                                    f"{STRColors.BOLD}Mutation Options{STRColors.ENDC}: {neomutator_int2str(neo_pars.mutPars.mutOpt)}",
-                                                    verbose_lvl, 5)
-        STRColors.logger_print_based_on_verbose_lvl(logger,
-                                                    f"{STRColors.BOLD}Selection Options{STRColors.ENDC}: {neoselector_int2str(neo_pars.selPars.selOpt)}",
-                                                    verbose_lvl, 5)
-        STRColors.logger_print_based_on_verbose_lvl(logger,
-                                                    f"{STRColors.BOLD}Crossover Options{STRColors.ENDC}: {neocrossover_int2str(neo_pars.crossPars.croOpt)}",
+        if neo_pars.mutPars.mutOpt == 4:
+            # DE
+            STRColors.logger_print_based_on_verbose_lvl(logger,
+                                                        f"{STRColors.BOLD}Mutations F{STRColors.ENDC}: {neo_pars.mutPars.mutF}",
+                                                        verbose_lvl, 5)
+            STRColors.logger_print_based_on_verbose_lvl(logger,
+                                                        f"{STRColors.BOLD}Crossover cF{STRColors.ENDC}: {neo_pars.crossPars.cR}",
+                                                        verbose_lvl, 5)
+        else:
+            STRColors.logger_print_based_on_verbose_lvl(logger,
+                                                        f"{STRColors.BOLD}Mutations{STRColors.ENDC}: {neo_pars.mutPars.mutChance}",
+                                                        verbose_lvl, 5)
+
+        STRColors.logger_print_based_on_verbose_lvl(logger, "----------------CrossOver------------------",
                                                     verbose_lvl, 5)
         STRColors.logger_print_based_on_verbose_lvl(logger, "-------------------------------------------", verbose_lvl,
                                                     5)
@@ -185,7 +195,7 @@ class STRColors:
     @staticmethod
     def run_verbose_gen(logger, neo_pars, neo_population, verbose_lvl=5):
         """
-        Verbose generation
+        Verbose at the end of generation
         """
         st = time_call()
         neo_pars.runPars.calc_curr_gen_time()

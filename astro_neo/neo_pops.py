@@ -15,6 +15,7 @@ class NeoPopulations:
     neo_pars: NeoPars = None
     population: list = field(factory=list)
     population_sorted: list = field(factory=list)
+    score: list = field(factory=list)
     score_sorted: list = field(factory=list)
     next_population: list = field(factory=list)
     num_distributed: int = None
@@ -22,6 +23,7 @@ class NeoPopulations:
     num_pops: int = None
     logger: NeoLogger = None
     mut_pops: list = field(factory=list)  # For DE only
+    trial_pops: list = field(factory=list)  # For DE only
     verbose: bool = False
 
     def initialize(self, neo_pars: NeoPars):
@@ -61,19 +63,29 @@ class NeoPopulations:
             if replace:
                 self.__replace_bestfit()
 
-    def eval_population_out_of_place(self, population: list, replace=True, sorting=True):
+    def eval_population_compared(self, replace=True, sorting=True):
         if self.num_distributed > 1:
-            score_list = list(self.processPool.map(fitness, population))
+            trial_score_list = list(self.processPool.map(fitness, self.trial_pops))
+            self.score = list(self.processPool.map(fitness, self.population))
         else:
-            score_list = [fitness(individual) for individual in population]
+            trial_score_list = [fitness(individual) for individual in self.trial_pops]
+            self.score = [fitness(individual) for individual in self.population]
 
-        combined_list = [[score_list[i], population[i]] for i in range(len(score_list))]
+        score_list = []
+        for i in range(self.num_pops):
+            if trial_score_list[i] < self.score[i]:
+                self.population[i] = self.trial_pops[i]
+                score_list.append(trial_score_list[i])
+            else:
+                score_list.append(self.score[i])
+
+        combined_list = [[score_list[i], self.population[i]] for i in range(len(score_list))]
         if sorting:
-            population_sorted = [x[1] for x in sorted(combined_list, key=operator.itemgetter(0))]
-            score_sorted = sorted(score_list)
-
-        if replace:
-            self.__replace_bestfit()
+            self.population_sorted = [x[1] for x in sorted(combined_list, key=operator.itemgetter(0))]
+            self.score_sorted = sorted(score_list)
+            #
+            if replace:
+                self.__replace_bestfit()
 
     def initialize_process_pool(self, num_distributed):
         if num_distributed > 1:
