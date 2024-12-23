@@ -25,11 +25,13 @@ class NeoPopulations:
     mut_pops: list = field(factory=list)  # For DE only
     trial_pops: list = field(factory=list)  # For DE only
     verbose: bool = False
+    data_file_pack: tuple = ()
 
     def initialize(self, neo_pars: NeoPars):
         self.neo_pars = neo_pars
         self.num_pops = neo_pars.fixedPars.nPops
         self.num_distributed = neo_pars.fixedPars.distributed
+        self.data_file_pack = self._create_datapack()
         # print(self.num_distributed)
 
         if self.verbose:
@@ -47,11 +49,20 @@ class NeoPopulations:
         ind = Individual(npaths=npaths, fits=this_fits)
         return ind
 
+    def _create_datapack(self):
+        file_pars = self.neo_pars.neoFilePars
+        data_pack = (
+            str(file_pars.data_dir), str(file_pars.data_file), str(file_pars.bg_file), str(file_pars.rsp_file))
+        return data_pack
+
     def eval_population(self, replace=True, sorting=True):
         if self.num_distributed > 1:
             score_list = list(self.processPool.map(fitness, self.population))
         else:
-            score_list = [fitness(individual) for individual in self.population]
+            score_list = []
+            init_process(self.data_file_pack)
+            for individual in self.population:
+                score_list.append(fitness(individual))
 
         combined_list = [[score_list[i], self.population[i]] for i in range(len(score_list))]
         if sorting:
@@ -89,11 +100,8 @@ class NeoPopulations:
 
     def initialize_process_pool(self, num_distributed):
         if num_distributed > 1:
-            file_pars = self.neo_pars.neoFilePars
-            data_pack = (
-                str(file_pars.data_dir), str(file_pars.data_file), str(file_pars.bg_file), str(file_pars.rsp_file))
             self.processPool = ProcessPoolExecutor(num_distributed, initializer=init_process,
-                                                   initargs=(data_pack,))
+                                                   initargs=(self.data_file_pack,))
 
     def test_process_pool(self):
         """
