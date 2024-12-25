@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.cluster import KMeans
 
 from astro_neo.neo_pops import NeoPopulations
 from astro_neo.neo_pars import NeoPars
@@ -154,8 +155,82 @@ class NeoSolverDEClustering(NeoSolverDEBase):
         self.solver_type = 3
         self.solver_operator = "Differential Evolution with Clustering"
 
-    def solve(self, pops, selector, crossover, mutator, exafs_pars):
-        pass
+    def solve(self, pops, selector, crossover, mutator, neo_pars):
+
+        selector.select(pops)
+        # print("This is before mutator")
+        mutator.mutate(pops)
+        # print("This is before crossover")
+        crossover.crossover(pops)
+        # print("This is before eval")
+        self._adjust_de_parameters()
+        pops.eval_population_compared()
+        self._cluster_generation(pops)
+
+    def _cluster_generation(self,pops, num_cluster_factors=4):
+        num_cluster = num_cluster_factors * pops.population[0].model.get_indept()
+
+        # Create a matrix of the data with [samples, features]
+        combined_pars = np.zeros((100, 15))
+        for i, individual in enumerate(pops):
+            combined_pars[i, :] = individual.get_model_params()
+        # Perform cluster
+        kmeans = KMeans(n_clusters=num_cluster, n_init=10, random_state=42)
+        kmeans.fit(combined_pars)
+
+        c_kmeans = kmeans.predict(combined_pars)
+        centers = kmeans.cluster_centers_
+        clabels = c_kmeans
+
+        # c_kmeans = kmeans.predict(X)
+        centers = kmeans.cluster_centers_
+        # clabels = c_kmeans
+
+        # Testing - find num_replace lowest fitness values for generation
+
+        # idx = np.argpartition(gen_function_value, num_replace)
+        # idx = idx[:num_replace]
+
+        # Find worst vector and replace with center
+
+        # max_value = np.amax(gen_function_value)
+        # resultm = np.where(gen_function_value == np.amax(gen_function_value))
+        # resultm = resultm[0][0]  # index integer
+
+        # Find minimum center value
+
+        # center_function_value = test_function_evaluation(centers.T, d)
+        # center_result = np.where(center_function_value == np.amin(center_function_value))
+        # center_result = center_result[0][0]  # index integer
+
+        # Testing - find k highest fitness values for centers
+
+        # center_function_value = test_function_evaluation(centers.T, d)
+        # cidx = np.argpartition(center_function_value, num_replace)
+        # cidx = cidx[:num_replace]
+
+        # gen worst index, center points, center best index
+
+        # return idx, centers, cidx
+
+
+    def _adjust_de_parameters(self):
+        """Adjust the DE parameters
+        """
+        # self.F =
+        rand_val = np.random.rand(4)
+        tau_1 = 0.1
+        tau_2 = 0.1
+        if rand_val[1] < tau_1:
+            F = 0.1 + rand_val[0] * 0.9
+            self.neo_pars.mutPars.mutF = F
+
+            self.logger.print(f"F has been adjusted to {np.round(F, 4)}")
+
+        if rand_val[3] < tau_2:
+            cR = rand_val[2]
+            self.neo_pars.crossPars.cR = cR
+            self.logger.print(f"Cr has been adjusted to {np.round(cR, 4)}")
 
 
 class NeoSolver:
