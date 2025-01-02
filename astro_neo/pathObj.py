@@ -1048,7 +1048,7 @@ class XspecSpectrum(BaseObj):
             'TBabs_2_nH': (0.00, 2e-5, 1e7, 'number'),
             # Powerlaw
             'PhoIndex': (0.05, 1.1, 1e7, 'number'),
-            'Pl_norm': (1e-4, 1e-3, 1e7, 'number'),
+            'Pl_norm': (1e-5, 1e-3, 1e7, 'number'),
             # lsmooth
             # 'Sig_6keV': (0.001, 0.1, 0.001),
             # vapec <5>
@@ -1060,17 +1060,17 @@ class XspecSpectrum(BaseObj):
             'vapec_Mg': (0.0, 2.00, 0.0001),
             'vapec_Fe': (0.0, 1.00, 1e-4),
             # 'Redshift': (0.0001, 0.00081, 1e-5),
-            'vapec_norm': (0.0001, 0.0010, 1e8, 'number'),
-            'vapec_6_kT': (0.0808, 0.75, 1e4, 'number'),
-            'vapec_6_norm': (0, 0.0010, 1e8, 'number'),
+            'vapec_norm': (0.0001, 0.00, 1e20, 'number'),
+            'vapec_6_kT': (0.0808, 0.0808, 68.447, 'number'),
+            'vapec_6_norm': (0, 0.0, 1e20, 'number'),
             # zashift <6>
             # vacx2 <7>
-            'vacx2_collnpar': (250, 500, 1e6, 'number'),
+            'vacx2_collnpar': (200, 0.01, 1e6, 'number'),
             # 'vacx2_C': (0, 0.005, 1e-5),
             # 'vacx2_N': (0, 10, 0.01),
             # 'vacx2_O': (0, 10, 0.01),
             # 'vacx2_Ne': (0, 10, 0.01),
-            'vacx2_norm': (2e-4, 5e-4, 1e6, 'number'),
+            'vacx2_norm': (2e-4, 0.0, 1e6, 'number'),
         }
         self._Params = ParamsDict(self._params_names, params_type='DE')
         self._Params.initialize_range(self.range_dicts)
