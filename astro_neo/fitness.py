@@ -2,6 +2,7 @@ import os
 import sys
 
 import xspec
+
 xspec.xset.Xset.chatter = 0
 
 acx2_path = os.path.expanduser("~") + "/projects/Astro_Neo/input_files/ACX2"
@@ -58,7 +59,7 @@ def init_process(data_pack):
     xspec.Fit.statMethod = "cstat"  # using the Cash statistic
 
 
-def fitness(individual):
+def fitness(individual, verbose=False):
     """
   Evaluate fitness of an individual
 
@@ -223,5 +224,8 @@ def fitness(individual):
     model.setPars(model_params)  # set the model with GA parameters
 
     loss = xspec.Fit.statistic  # <- calculate loss
-
+    if verbose:
+        xspec.xset.Xset.chatter = 10
+        model.show()
+        xspec.xset.Xset.chatter = 0
     return loss  # <-- return loss

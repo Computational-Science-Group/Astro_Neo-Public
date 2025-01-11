@@ -5,6 +5,7 @@ import sys
 
 import numpy as np
 
+from astro_neo.fitness import fitness
 from astro_neo.helper import time_call
 from astro_neo.utils_mapping import neocrossover_int2str, neomutator_int2str, neoselector_int2str, neosolver_int2str
 
@@ -92,7 +93,6 @@ def check_if_exists(path_file):
         pathFile.unlink()
     # Make Directory when its missing
     pathFile.parent.mkdir(parents=True, exist_ok=True)
-
 
 
 class STRColors:
@@ -240,6 +240,9 @@ class STRColors:
         STRColors.logger_print_based_on_verbose_lvl(logger,
                                                     "Time: " + str(round(neo_pars.runPars.currGen_tt, 5)) + "s",
                                                     verbose_lvl, 5)
+        logger.print("---------------------------------------------------------")
+        fitness(neo_population.population_sorted[0], verbose=True)
+        logger.print("---------------------------------------------------------")
 
     @staticmethod
     def run_verbose_end(logger, neo_pars, verbose_lvl=5):
