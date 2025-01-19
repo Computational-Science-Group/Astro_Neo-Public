@@ -74,9 +74,8 @@ class NeoFilePars:
     def write_data_outputs(self, bestFitPars):
         globBestFit = bestFitPars.globBestInd.get_model().get_params()
         with open(self.output_datafile, "a") as f2:
-            # bestFit = globBestFit
             for key, value in sorted(globBestFit.items()):
-                line = f"{key},{round(value,4)}\n"
+                line = f"{key},{value}\n"
                 f2.writelines(line)
             f2.write("#################################\n")
 
